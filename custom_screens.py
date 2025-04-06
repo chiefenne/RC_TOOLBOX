@@ -1,6 +1,7 @@
 
 from screens import ValueScreen
 from lang import AVAILABLE_LANGUAGES, set_language, current_language, translate
+from settings import settings # instantiates a global settings object automatically
 
 
 # PWM Increment Screen: Updates the increment value of the 'Servo PWM'
@@ -97,6 +98,7 @@ class LanguageScreen(ValueScreen):
                 return True
             elif input_data in ('double_click', 'long_press'):
                 set_language(self.languages[self.lang_index])
+                settings.set("language", self.value) # save for next boot
                 self.edit_mode = False
                 self.show()
                 return True
