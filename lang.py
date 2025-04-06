@@ -27,10 +27,10 @@ LANGUAGES = {
         'WiFi Password': 'Passwort',
         'Language': 'Sprache',
     },
-    'Francais': {
+    'Français': {
         'SERVO': 'SERVO',
         'WIFI': 'WiFi',
-        'SETTINGS': 'PARAMETRES',
+        'SETTINGS': 'PARAMÈTRES',
         'HELP': 'AIDE',
         'Servo PWM': 'Servo PWM',
         'PWM Increment': 'Pas PWM',
@@ -40,17 +40,17 @@ LANGUAGES = {
         'WiFi Password': 'Mot de passe',
         'Language': 'Langue',
     },
-    'Espanol': {
+    'Español': {
         'SERVO': 'SERVO',
         'WIFI': 'WiFi',
         'SETTINGS': 'AJUSTES',
         'HELP': 'AYUDA',
         'Servo PWM': 'Servo PWM',
         'PWM Increment': 'Paso PWM',
-        'PWM Minimum': 'PWM Minimo',
-        'PWM Maximum': 'PWM Maximo',
+        'PWM Minimum': 'PWM Mínimo',
+        'PWM Maximum': 'PWM Máximo',
         'WiFi SSID': 'SSID',
-        'WiFi Password': 'Contrasena',
+        'WiFi Password': 'Contraseña',
         'Language': 'Idioma',
     },
 }
