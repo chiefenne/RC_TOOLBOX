@@ -23,7 +23,7 @@ from custom_screens import (
 
 # Show splash screen first
 splash = SplashScreen(
-    app_name="SERVO Tester",
+    app_name="RC TOOLS",
     version="v1.0",
     company="(c) MHB Electronics",
     duration=4
