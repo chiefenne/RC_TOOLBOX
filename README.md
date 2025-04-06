@@ -1,10 +1,11 @@
-RC TOOLBOX is a collection of software tools designed for RC enthusiasts. The software is meant to run on MicroPython based boards (e.g., Raspberry Pi Pico, Seeed Xiao RP2040).
+RC TOOLBOX is a suite of software tools tailored for RC enthusiasts. Designed to run on MicroPython-based boards such as the Raspberry Pi Pico and Seeed Xiao RP2040, it provides a versatile platform for enhancing your RC experience.
 
 It includes modules to:
 
-- Test and adjust servos for optimal performance.
-- Measure flap deflection with precision.
-- Calculate angles between the wing chord and vertical stabilizer for accurate alignment.
+- Test and fine-tune servos.
+- Accurately measure flap deflection with precision tools.
+- Calculate angles between the wing chord and vertical stabilizer for precise alignment.
+- Additional features available upon request.
 
 ## Credits
 
