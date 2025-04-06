@@ -7,7 +7,7 @@ DEBUG = False
 
 
 class TextRenderer:
-    def __init__(self, display, font='arial14'):
+    def __init__(self, display, font='Arial_14'):
         self.display = display
         self.set_font(font)
 
