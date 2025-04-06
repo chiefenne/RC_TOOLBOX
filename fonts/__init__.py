@@ -1,31 +1,36 @@
 
-from fonts import arial8
-from fonts import arial10
-from fonts import arial12
-from fonts import arial14
-from fonts import arial16
-from fonts import arial_bold12
-from fonts import arial_bold14
-from fonts import arial_bold16
-from fonts import courier_new10
-from fonts import courier_new12
-from fonts import courier_new14
-from fonts import courier_new16
-
+from fonts import Arial_8
+from fonts import Arial_10
+from fonts import Arial_12
+from fonts import Arial_14
+from fonts import Arial_16
+from fonts import Arial_Bold_8
+from fonts import Arial_Bold_10
+from fonts import Arial_Bold_12
+from fonts import Arial_Bold_14
+from fonts import Arial_Bold_16
+from fonts import Courier_New_8
+from fonts import Courier_New_10
+from fonts import Courier_New_12
+from fonts import Courier_New_14
+from fonts import Courier_New_16
 
 FONTS = {
-    "arial8": arial8,
-    "arial10": arial10,
-    "arial12": arial12,
-    "arial14": arial14,
-    "arial16": arial16,
-    "arial_bold12": arial_bold12,
-    "arial_bold14": arial_bold14,
-    "arial_bold16": arial_bold16,
-    "courier_new10": courier_new10,
-    "courier_new12": courier_new12,
-    "courier_new14": courier_new14,
-    "courier_new16": courier_new16,
+    "Arial_8": Arial_8,
+    "Arial_10": Arial_10,
+    "Arial_12": Arial_12,
+    "Arial_14": Arial_14,
+    "Arial_16": Arial_16,
+    "Arial_Bold_8": Arial_Bold_8,
+    "Arial_Bold_10": Arial_Bold_10,
+    "Arial_Bold_12": Arial_Bold_12,
+    "Arial_Bold_14": Arial_Bold_14,
+    "Arial_Bold_16": Arial_Bold_16,
+    "Courier_New_8": Courier_New_8,
+    "Courier_New_10": Courier_New_10,
+    "Courier_New_12": Courier_New_12,
+    "Courier_New_14": Courier_New_14,
+    "Courier_New_16": Courier_New_16,
 }
 
 # check that all imports are available in FONTS
