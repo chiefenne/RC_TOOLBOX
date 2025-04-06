@@ -4,7 +4,6 @@ from display import oled
 from text_render import TextRenderer
 from graphics import create_bar_buffer, draw_bar_graph
 from lang import translate
-from fonts import FONTS
 
 
 # Text Renderer Setup
@@ -121,7 +120,7 @@ class ValueScreen(Screen):
         text_render.draw(f'{translate(self.name)}', y=10, align='center',
                          clear_screen=True, font='Arial_Bold_16', show=False)
         text_render.draw(f'{self.value}', y=30, align='center',
-                         clear_screen=False, font='Arial_Bold_14', invert=invert, show=False)
+                         clear_screen=False, font='Arial_16', invert=invert, show=False)
 
         if self.edit_mode and self.bargraph:
             self.last_filled_width = draw_bar_graph(
