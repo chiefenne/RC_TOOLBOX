@@ -4,9 +4,11 @@ from display import oled
 from text_render import TextRenderer
 from graphics import create_bar_buffer, draw_bar_graph
 from lang import translate
+from fonts import FONTS
+
 
 # Text Renderer Setup
-text_render = TextRenderer(oled, font='arial14')
+text_render = TextRenderer(oled, font='Arial_14')
 
 DEBUG = False
 
@@ -59,7 +61,7 @@ class MenuScreen(Screen):
 
     def show(self):
         text_render.draw(f'{translate(self.name)}', y=20, align='center',
-                         clear_screen=True, font='arial_bold16', show=True)
+                         clear_screen=True, font='Arial_Bold_16', show=True)
 
     def handle_input(self, input_data):
         if DEBUG:
@@ -117,9 +119,9 @@ class ValueScreen(Screen):
     def show(self):
         invert = self.edit_mode
         text_render.draw(f'{translate(self.name)}', y=10, align='center',
-                         clear_screen=True, font='arial_bold14', show=False)
+                         clear_screen=True, font='Arial_Bold_16', show=False)
         text_render.draw(f'{self.value}', y=30, align='center',
-                         clear_screen=False, font='arial14', invert=invert, show=False)
+                         clear_screen=False, font='Arial_Bold_14', invert=invert, show=False)
 
         if self.edit_mode and self.bargraph:
             self.last_filled_width = draw_bar_graph(
@@ -169,13 +171,13 @@ class SplashScreen:
         self.version = version
         self.company = company
         self.duration = duration  # in seconds
-        self.text_render = TextRenderer(oled, font='arial14')  # Optional: use bold for splash
+        self.text_render = TextRenderer(oled, font='Arial_14')  # Optional: use bold for splash
 
     def show(self):
         oled.fill(0)
-        self.text_render.draw(self.app_name, y=10, align='center', font='arial_bold16', show=False)
-        self.text_render.draw(self.version, y=30, align='center', font='arial12', show=False)
-        self.text_render.draw(self.company, y=50, align='center', font='arial10', show=True)
+        self.text_render.draw(self.app_name, y=10, align='center', font='Arial_Bold_16', show=False)
+        self.text_render.draw(self.version, y=30, align='center', font='Arial_14', show=False)
+        self.text_render.draw(self.company, y=50, align='center', font='Arial_14', show=True)
         time.sleep(self.duration)
 
 
