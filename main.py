@@ -11,7 +11,7 @@ from machine import Pin
 
 from encoder import KY040
 from screens import ScreenManager, MenuScreen, ValueScreen, SplashScreen
-from lang import AVAILABLE_LANGUAGES, set_language, current_language, translate
+from lang import language_manager as lm
 from settings import settings # instantiates a global settings object automatically
 from custom_screens import (
     PWMIncrementScreen,
@@ -23,34 +23,33 @@ from custom_screens import (
 )
 
 
-# Load settings from previous session
-current_language = settings.get('language') # Get the saved language from last session
-lang_index = AVAILABLE_LANGUAGES.index(current_language)
-set_language(AVAILABLE_LANGUAGES[lang_index])
+# Load settings from previous session (stored in settings.json)
+language = settings.get('language')
+lm.set_language(language)
 
 # Show splash screen first
 splash = SplashScreen(
     app_name="RC TOOLS",
     version="v1.0",
     company="(c) MHB Electronics",
-    duration=4
+    duration=3
 )
 splash.show()
 
 # Top-Level Menus
-servo_menu = MenuScreen(translate('SERVO'))
-wifi_menu = MenuScreen(translate('WIFI'))
-settings_menu = MenuScreen(translate('SETTINGS'))
-help_menu = MenuScreen(translate('HELP'))
+servo_menu = MenuScreen(lm.translate('SERVO'))
+wifi_menu = MenuScreen(lm.translate('WIFI'))
+settings_menu = MenuScreen(lm.translate('SETTINGS'))
+help_menu = MenuScreen(lm.translate('HELP'))
 
 # Servo Menu
-servo_submenu_1 = ValueScreen(translate('Servo PWM'), initial_value=1500, increment=10,
+servo_submenu_1 = ValueScreen(lm.translate('Servo PWM'), initial_value=1500, increment=10,
                               bargraph=True, min_value=1000, max_value=2000)
-servo_submenu_2 = PWMIncrementScreen(translate('PWM Increment'), initial_value=10, increment=1,
+servo_submenu_2 = PWMIncrementScreen(lm.translate('PWM Increment'), initial_value=10, increment=1,
                                      min_value=1, max_value=100)
-servo_submenu_3 = PWMMinScreen(translate('PWM Minimum'), initial_value=1000, increment=10,
+servo_submenu_3 = PWMMinScreen(lm.translate('PWM Minimum'), initial_value=1000, increment=10,
                                min_value=900, max_value=1100)
-servo_submenu_4 = PWMMaxScreen(translate('PWM Maximum'), initial_value=2000, increment=10,
+servo_submenu_4 = PWMMaxScreen(lm.translate('PWM Maximum'), initial_value=2000, increment=10,
                                min_value=1900, max_value=2100)
 servo_menu.add_child(servo_submenu_1)
 servo_menu.add_child(servo_submenu_2)
@@ -58,13 +57,13 @@ servo_menu.add_child(servo_submenu_3)
 servo_menu.add_child(servo_submenu_4)
 
 # WiFi Menu
-wifi_ssid = WiFiSSIDScreen(translate('WiFi SSID'), initial_value='MySSID')
-wifi_password = WiFiPasswordScreen(translate('WiFi Password'), initial_value='MyPassword')
+wifi_ssid = WiFiSSIDScreen(lm.translate('WiFi SSID'), initial_value='MySSID')
+wifi_password = WiFiPasswordScreen(lm.translate('WiFi Password'), initial_value='MyPassword')
 wifi_menu.add_child(wifi_ssid)
 wifi_menu.add_child(wifi_password)
 
 # Settings Menu
-settings_language = LanguageScreen(translate('Language'))
+settings_language = LanguageScreen('Language') # do NOT translate here
 option2 = ValueScreen('Option 2')
 settings_menu.add_child(settings_language)
 settings_menu.add_child(option2)
