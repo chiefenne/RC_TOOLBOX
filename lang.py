@@ -1,7 +1,7 @@
 # lang.py
 
 LANGUAGES = {
-    'English': {
+    'en': {
         'SERVO': 'SERVO',
         'WIFI': 'WiFi',
         'SETTINGS': 'SETTINGS',
@@ -14,7 +14,7 @@ LANGUAGES = {
         'WiFi Password': 'Password',
         'Language': 'Language',
     },
-    'Deutsch': {
+    'de': {
         'SERVO': 'SERVO',
         'WIFI': 'WLAN',
         'SETTINGS': 'EINSTELLUNGEN',
@@ -27,7 +27,7 @@ LANGUAGES = {
         'WiFi Password': 'Passwort',
         'Language': 'Sprache',
     },
-    'Français': {
+    'fr': {
         'SERVO': 'SERVO',
         'WIFI': 'WiFi',
         'SETTINGS': 'PARAMÈTRES',
@@ -40,7 +40,7 @@ LANGUAGES = {
         'WiFi Password': 'Mot de passe',
         'Language': 'Langue',
     },
-    'Español': {
+    'es': {
         'SERVO': 'SERVO',
         'WIFI': 'WiFi',
         'SETTINGS': 'AJUSTES',
@@ -57,7 +57,7 @@ LANGUAGES = {
 
 AVAILABLE_LANGUAGES = list(LANGUAGES.keys())
 
-current_language = 'EN'
+current_language = 'en'  # Default language
 
 def set_language(lang_code):
     global current_language
