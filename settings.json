@@ -1,1 +1,1 @@
-{"language": "de", "pwm_increment": 10, "servo_pwm": 1500, "wifi_ssid": "MySSID", "wifi_password": "MyPassword"}
+{"wifi_ssid": "MySSID", "pwm_increment": 10, "language": "en", "wifi_password": "MyPassword", "servo_pwm": 1500}
