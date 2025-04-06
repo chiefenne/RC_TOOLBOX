@@ -10,18 +10,12 @@ from fonts import Courier_New_14
 from fonts import Courier_New_16
 
 FONTS = {
-    "Arial_8": Arial_8,
-    "Arial_10": Arial_10,
     "Arial_12": Arial_12,
     "Arial_14": Arial_14,
     "Arial_16": Arial_16,
-    "Arial_Bold_8": Arial_Bold_8,
-    "Arial_Bold_10": Arial_Bold_10,
     "Arial_Bold_12": Arial_Bold_12,
     "Arial_Bold_14": Arial_Bold_14,
     "Arial_Bold_16": Arial_Bold_16,
-    "Courier_New_8": Courier_New_8,
-    "Courier_New_10": Courier_New_10,
     "Courier_New_12": Courier_New_12,
     "Courier_New_14": Courier_New_14,
     "Courier_New_16": Courier_New_16,
