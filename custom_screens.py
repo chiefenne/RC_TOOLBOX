@@ -1,6 +1,6 @@
 
 from screens import ValueScreen
-from lang import AVAILABLE_LANGUAGES, set_language, current_language, translate
+from lang import language_manager as lm
 from settings import settings # instantiates a global settings object automatically
 
 
@@ -29,7 +29,7 @@ class PWMIncrementScreen(ValueScreen):
         if self.edit_mode:
             # Update Servo PWM increment if in same menu
             for sibling in self.parent.children:
-                if sibling.name == translate('Servo PWM'):
+                if sibling.name == lm.translate('Servo PWM'):
                     sibling.increment = self.value
         return result
 
@@ -41,7 +41,7 @@ class PWMMinScreen(ValueScreen):
 
         if self.edit_mode:
             for sibling in self.parent.children:
-                if sibling.name == translate('Servo PWM'):
+                if sibling.name == lm.translate('Servo PWM'):
                     sibling.min_value = self.value
                     sibling.value = max(sibling.value, sibling.min_value)
         return result
@@ -54,7 +54,7 @@ class PWMMaxScreen(ValueScreen):
 
         if self.edit_mode:
             for sibling in self.parent.children:
-                if sibling.name == translate('Servo PWM'):
+                if sibling.name == lm.translate('Servo PWM'):
                     sibling.max_value = self.value
                     sibling.value = min(sibling.value, sibling.max_value)
         return result
@@ -76,9 +76,9 @@ class WiFiPasswordScreen(ValueScreen):
 
 class LanguageScreen(ValueScreen):
     def __init__(self, name='Language'):
-        self.languages = AVAILABLE_LANGUAGES
-        self.lang_index = self.languages.index(current_language) if current_language in self.languages else 0
-        super().__init__(name=name, initial_value=self.languages[self.lang_index])
+        self.lang_index = (lm.languages.index(lm.get_language())
+                           if lm.get_language() in lm.languages else 0)
+        super().__init__(name=name, initial_value=lm.languages[self.lang_index])
         self.edit_mode = False
 
     def get_increment(self, input_type):
@@ -92,12 +92,12 @@ class LanguageScreen(ValueScreen):
         if self.edit_mode:
             delta = self.get_increment(input_data)
             if delta != 0:
-                self.lang_index = (self.lang_index + delta) % len(self.languages)
-                self.value = self.languages[self.lang_index]
+                self.lang_index = (self.lang_index + delta) % len(lm.languages)
+                self.value = lm.languages[self.lang_index]
                 self.show()
                 return True
             elif input_data in ('double_click', 'long_press'):
-                set_language(self.languages[self.lang_index])
+                lm.set_language(self.value)
                 settings.set("language", self.value) # save for next boot
                 self.edit_mode = False
                 self.show()
