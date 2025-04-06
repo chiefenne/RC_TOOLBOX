@@ -3,7 +3,7 @@ import time
 from display import oled
 from text_render import TextRenderer
 from graphics import create_bar_buffer, draw_bar_graph
-from lang import translate
+from lang import language_manager as lm
 
 
 # Text Renderer Setup
@@ -59,7 +59,10 @@ class MenuScreen(Screen):
         self.current_selection = 0
 
     def show(self):
-        text_render.draw(f'{translate(self.name)}', y=20, align='center',
+        if DEBUG:
+            print(f"MenuScreen - self.name: {self.name}")
+            print(f"MenuScreen - lm.translate(self.name): {lm.translate(self.name)}")
+        text_render.draw(f'{lm.translate(self.name)}', y=20, align='center',
                          clear_screen=True, font='Arial_Bold_16', show=True)
 
     def handle_input(self, input_data):
@@ -117,10 +120,10 @@ class ValueScreen(Screen):
 
     def show(self):
         invert = self.edit_mode
-        text_render.draw(f'{translate(self.name)}', y=10, align='center',
+        text_render.draw(f'{lm.translate(self.name)}', y=10, align='center',
                          clear_screen=True, font='Arial_Bold_16', show=False)
         text_render.draw(f'{self.value}', y=30, align='center',
-                         clear_screen=False, font='Arial_16', invert=invert, show=False)
+                         clear_screen=False, font='Courier_New_16', invert=invert, show=False)
 
         if self.edit_mode and self.bargraph:
             self.last_filled_width = draw_bar_graph(
