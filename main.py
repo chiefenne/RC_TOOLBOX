@@ -1,98 +1,33 @@
-'''
-Menu screen manager for a simple menu system.
-Navigation using the KY040 rotary encoder.
+"""
+RC Toolbox
+
+A collection of tools to test/adjust servos, measure flap deflection or angles
+between wing chord and vertical stabilizer, etc.
 
 Author: Dipl.-Ing. A. Ennemoser
 Date: 03-2025
-
-'''
-
+"""
 from machine import Pin
 
-from encoder import KY040
-from screens import ScreenManager, MenuScreen, ValueScreen, SplashScreen
-from lang import language_manager as lm
-from settings import settings # instantiates a global settings object automatically
-from custom_screens import (
-    PWMIncrementScreen,
-    PWMMinScreen,
-    PWMMaxScreen,
-    WiFiSSIDScreen,
-    WiFiPasswordScreen,
-    LanguageScreen,
-)
+from splash import show_splash
+from screens import ScreenManager
+from encoder.setup import setup_encoder
+from menus import build_menus
+from language import language_manager as lm
+from settings import settings
 
 
-# Load settings from previous session (stored in settings.json)
-language = settings.get('language')
-lm.set_language(language)
+# Apply saved language
+lm.set_language(settings.get("language"))
 
-# Show splash screen first
-splash = SplashScreen(
-    app_name="RC TOOLS",
-    version="v1.0",
-    company="(c) MHB Electronics",
-    duration=3
-)
-splash.show()
+# Show splash screen
+show_splash()
 
-# Top-Level Menus
-servo_menu = MenuScreen(lm.translate('SERVO'))
-wifi_menu = MenuScreen(lm.translate('WIFI'))
-settings_menu = MenuScreen(lm.translate('SETTINGS'))
-help_menu = MenuScreen(lm.translate('HELP'))
+# Build menus and screens
+top_level_screens = build_menus()
 
-# Servo Menu
-servo_submenu_1 = ValueScreen(lm.translate('Servo PWM'), initial_value=1500, increment=10,
-                              bargraph=True, min_value=1000, max_value=2000)
-servo_submenu_2 = PWMIncrementScreen(lm.translate('PWM Increment'), initial_value=10, increment=1,
-                                     min_value=1, max_value=100)
-servo_submenu_3 = PWMMinScreen(lm.translate('PWM Minimum'), initial_value=1000, increment=10,
-                               min_value=900, max_value=1100)
-servo_submenu_4 = PWMMaxScreen(lm.translate('PWM Maximum'), initial_value=2000, increment=10,
-                               min_value=1900, max_value=2100)
-servo_menu.add_child(servo_submenu_1)
-servo_menu.add_child(servo_submenu_2)
-servo_menu.add_child(servo_submenu_3)
-servo_menu.add_child(servo_submenu_4)
-
-# WiFi Menu
-wifi_ssid = WiFiSSIDScreen(lm.translate('WiFi SSID'), initial_value='MySSID')
-wifi_password = WiFiPasswordScreen(lm.translate('WiFi Password'), initial_value='MyPassword')
-wifi_menu.add_child(wifi_ssid)
-wifi_menu.add_child(wifi_password)
-
-# Settings Menu
-settings_language = LanguageScreen('Language') # do NOT translate here
-option2 = ValueScreen('Option 2')
-settings_menu.add_child(settings_language)
-settings_menu.add_child(option2)
-
-# Help Menu
-help_option1 = ValueScreen('Help Option 1')
-help_option2 = ValueScreen('Help Option 2')
-help_menu.add_child(help_option1)
-help_menu.add_child(help_option2)
-
-# Create the Screen Manager
-top_level_screens = [servo_menu, wifi_menu, settings_menu, help_menu]
+# Setup screen manager
 screen_manager = ScreenManager(top_level_screens)
 
-# Encoder Setup
-encoder_clk = Pin(4, Pin.IN, Pin.PULL_UP)
-encoder_dt = Pin(2, Pin.IN, Pin.PULL_UP)
-encoder_sw = Pin(1, Pin.IN, Pin.PULL_UP)
-
-ky40 = KY040(
-    screen_manager=screen_manager,
-    encoder_clk=encoder_clk,
-    encoder_dt=encoder_dt,
-    encoder_sw=encoder_sw,
-    encoder_step=2, # used to filter out pin jitter
-    half_step=True,
-    debounce_ms=55, # used to filter out pin jitter
-    step_ms=200,
-    fast_ms=35,
-    hold_ms=1000,
-    click_ms=400
-)
+# Setup encoder
+ky40 = setup_encoder(screen_manager)

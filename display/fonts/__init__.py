@@ -1,13 +1,13 @@
 
-from fonts import Arial_12
-from fonts import Arial_14
-from fonts import Arial_16
-from fonts import Arial_Bold_12
-from fonts import Arial_Bold_14
-from fonts import Arial_Bold_16
-from fonts import Courier_New_12
-from fonts import Courier_New_14
-from fonts import Courier_New_16
+from . import Arial_12
+from . import Arial_14
+from . import Arial_16
+from . import Arial_Bold_12
+from . import Arial_Bold_14
+from . import Arial_Bold_16
+from . import Courier_New_12
+from . import Courier_New_14
+from . import Courier_New_16
 
 FONTS = {
     "Arial_12": Arial_12,

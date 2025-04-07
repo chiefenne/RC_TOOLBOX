@@ -1,8 +1,9 @@
 
 from machine import Pin
-from drivers.ky040.rotary_encoder_rp2 import RotaryEncoderRP2
-from drivers.ky040.rotary_encoder import RotaryEncoderEvent
 import uasyncio as asyncio
+
+from encoder import RotaryEncoderRP2
+from encoder import RotaryEncoderEvent
 
 
 DEBUG = False

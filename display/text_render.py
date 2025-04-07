@@ -1,7 +1,8 @@
 
-from writer import Writer
-from fonts import *
-from fonts import FONTS
+from .writer import Writer
+from .fonts import *
+from .fonts import FONTS
+
 
 DEBUG = False
 

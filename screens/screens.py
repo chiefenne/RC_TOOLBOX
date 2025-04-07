@@ -1,9 +1,9 @@
 
 import time
 from display import oled
-from text_render import TextRenderer
-from graphics import create_bar_buffer, draw_bar_graph
-from lang import language_manager as lm
+from display import TextRenderer
+from display import create_bar_buffer, draw_bar_graph
+from language import language_manager as lm
 
 
 # Text Renderer Setup
@@ -88,7 +88,7 @@ class MenuScreen(Screen):
 
 class ValueScreen(Screen):
     def __init__(self, name='Value', initial_value=0, increment=1,
-                 bargraph=False, min_value=0, max_value=10):
+                 bargraph=False, min_value=0, max_value=10, action=None):
         super().__init__(name)
         self.value = initial_value
         self.increment = increment  # Base/default increment
@@ -96,6 +96,7 @@ class ValueScreen(Screen):
         self.min_value = min_value
         self.max_value = max_value
         self.edit_mode = False
+        self.action = action  # # attach an Action (can be None if no hardware action)
 
         if self.bargraph:
             self.bar_fb = create_bar_buffer(88, 8)
@@ -141,11 +142,17 @@ class ValueScreen(Screen):
                 self.value += delta
                 self.value = max(self.min_value, min(self.value, self.max_value))
                 self.show()
+                # Immediate action trigger
+                if self.action:
+                    self.action.on_value_changed(self.value)
                 return True
 
             if input_data in ('double_click', 'long_press'):
                 self.edit_mode = False
                 self.show()
+                # On-demand action trigger (or final confirmation)
+                if self.action:
+                    self.action.on_value_confirmed(self.value)
                 return True
 
         else:

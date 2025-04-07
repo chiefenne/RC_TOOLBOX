@@ -6,6 +6,8 @@ SETTINGS_FILE = "settings.json"
 DEFAULTS = {
     "language": "en",
     "servo_pwm": 1500,
+    "pwm_min": 1000,
+    "pwm_max": 2000,
     "pwm_increment": 10,
     "wifi_ssid": "MySSID",
     "wifi_password": "MyPassword"

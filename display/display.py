@@ -1,8 +1,9 @@
+# This script sets up the display for the project.
 
-# This script sets up the hardware for the project.
 from machine import I2C
 import gc
-from drivers.sh1106.sh1106 import SH1106_I2C as OLED
+
+from .sh1106 import SH1106_I2C as OLED
 
 
 # Setup an I2C interface for the OLED display
