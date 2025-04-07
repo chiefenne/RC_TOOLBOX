@@ -6,22 +6,9 @@ from settings import settings  # instantiates a global settings object automatic
 
 # PWM Increment Screen: Updates the increment value of the 'Servo PWM'
 class PWMIncrementScreen(ValueScreen):
-    def get_increment(self, input_type):
-        # Exponential speed: faster input = bigger steps
-        base = 1 if self.value < 100 else 5
-        if input_type == 'right':
-            return base
-        elif input_type == 'right_fast':
-            return base * 5
-        elif input_type == 'right_super_fast':
-            return base * 10
-        elif input_type == 'left':
-            return -base
-        elif input_type == 'left_fast':
-            return -base * 5
-        elif input_type == 'left_super_fast':
-            return -base * 10
-        return 0
+    def __init__(self, name='PWM Increment', initial_value=10, increment=1,
+                 min_value=1, max_value=100):
+        super().__init__(name, initial_value, increment, min_value, max_value)
 
     def handle_input(self, input_data):
         result = super().handle_input(input_data)
