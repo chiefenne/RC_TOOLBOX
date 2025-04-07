@@ -104,19 +104,25 @@ class ValueScreen(Screen):
 
     # --- Hook methods ---
     def get_increment(self, input_type):
-        """Override in subclasses to define dynamic or custom increment logic"""
-        if input_type == 'right':
-            return self.increment
-        elif input_type == 'right_fast':
-            return self.increment * 10
-        elif input_type == 'right_super_fast':
-            return self.increment * 20
-        elif input_type == 'left':
-            return -self.increment
-        elif input_type == 'left_fast':
-            return -self.increment * 10
-        elif input_type == 'left_super_fast':
-            return -self.increment * 20
+        """Encoder speed mapping for smoother movement"""
+        base = self.increment
+
+        speed_map = {
+            '': 1,               # normal turn
+            '_fast': 4,          # fast turn = 2× base
+            '_super_fast': 8     # super fast turn = 4× base
+        }
+
+        if input_type.startswith('right'):
+            speed = input_type.replace('right', '')
+            factor = speed_map.get(speed, 1)
+            return base * factor
+
+        elif input_type.startswith('left'):
+            speed = input_type.replace('left', '')
+            factor = speed_map.get(speed, 1)
+            return -base * factor
+
         return 0
 
     def show(self):
