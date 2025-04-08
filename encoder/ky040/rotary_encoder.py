@@ -101,6 +101,9 @@ class RotaryEncoder:
         self.enc_fast_ms = fast_ms
         self.sw_click_ms = click_ms
 
+        # AE: added for encoder speed
+        self._step_speed = 1.0  # Default speed
+
     def on(self, event: int, callback: callable):
         if event not in self._listeners:
             self._listeners[event] = []
@@ -208,9 +211,24 @@ class RotaryEncoder:
 
         self._enc_last_status = new_status
 
+    ''' ORIGINAL
     def _enc_process_event(self, direction: int):
         self._enc_last_dir += direction
         self._enc_last_event_ms = utime.ticks_ms()
+    '''
+    # This is a modified version of the original _enc_process_event method
+    def _enc_process_event(self, direction: int):
+        now = utime.ticks_ms()
+        dt = utime.ticks_diff(now, self._enc_last_event_ms)
+
+        self._enc_last_event_ms = now
+        self._enc_last_dir += direction
+
+        # Compute step speed (inverse of time delta)
+        if dt < 300:  # Ignore very slow turns
+            self._step_speed = max(1.0, 20_000 / (dt + 1))  # +1 to avoid division by zero
+        else:
+            self._step_speed = 1.0  # Slow/default speed
 
     def _enc_tick_process_turn_event(self):
         # local cache
@@ -273,7 +291,52 @@ class RotaryEncoder:
 
             self._flag_last_event = 0
 
+    # AE: added for encoder speed and reworked variable names
     def __call_listeners(self):
+        event = self._flag_last_event
+        speed = self._step_speed
+        clicks = self._sw_clicks
+
+        if event == 0:
+            return
+
+        # Rotation events that accept speed
+        rotation_events = {
+            RotaryEncoderEvent.TURN_LEFT,
+            RotaryEncoderEvent.TURN_LEFT_FAST,
+            RotaryEncoderEvent.TURN_LEFT_SUPER_FAST,
+            RotaryEncoderEvent.TURN_RIGHT,
+            RotaryEncoderEvent.TURN_RIGHT_FAST,
+            RotaryEncoderEvent.TURN_RIGHT_SUPER_FAST,
+        }
+
+        # Fire exact event
+        for listener in self._listeners.get(event, []):
+            try:
+                if event == RotaryEncoderEvent.MULTIPLE_CLICK:
+                    listener(clicks)
+                elif event in rotation_events:
+                    print("Calling:", listener, "with speed =", speed)
+                    listener(speed)
+                else:
+                    listener()
+            except Exception as e:
+                print(f"RotaryEncoder callback error. Event: {event}, Listener: {listener}, Error: {e}")
+
+        # Fire ANY event listener (if used)
+        for listener in self._listeners.get(RotaryEncoderEvent.ANY, []):
+            try:
+                if event == RotaryEncoderEvent.MULTIPLE_CLICK:
+                    listener(event, clicks)
+                elif event in rotation_events:
+                    listener(event, speed)
+                else:
+                    listener(event, 0)
+            except Exception as e:
+                print(f"RotaryEncoder callback error. Event: ANY, Listener: {listener}, Error: {e}")
+
+
+'''    def __call_listeners(self):
         # local cache
         __l_e = self._flag_last_event
 
@@ -302,3 +365,4 @@ class RotaryEncoder:
                             __l(__l_e, 0)
                     except Exception as e:
                         print(f"RotaryEncoder callback error. Event: {__e_e}, Listener: {__l}, Error: {e}")
+'''
