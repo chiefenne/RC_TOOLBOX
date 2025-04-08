@@ -71,49 +71,49 @@ class KY040:
         if DEBUG:
             print(f"Released")
 
-    def turn_left_listener(self):
+    def turn_left_listener(self, speed):
         if DEBUG:
             print(f"Turn Left")
-        self.screen_manager.handle_input("left")
+        self.screen_manager.handle_input("left", speed)
+
+    def turn_left_fast_listener(self, speed):
+        if DEBUG:
+            print(f"Turn Left Fast")
+        self.screen_manager.handle_input("left_fast", speed)
+
+    def turn_left_super_fast_listener(self, speed):
+        if DEBUG:
+            print(f"Turn Left Super Fast")
+        self.screen_manager.handle_input("left_super_fast", speed)
 
     def turn_left_hold(self):
         if DEBUG:
             print(f"Turn Left Hold")
 
-    def turn_left_fast_listener(self):
-        if DEBUG:
-            print(f"Turn Left Fast")
-        self.screen_manager.handle_input("left_fast")
-
-    def turn_left_super_fast_listener(self):
-        if DEBUG:
-            print(f"Turn Left Super Fast")
-        self.screen_manager.handle_input("left_super_fast")
-
     def turn_left_fast_hold(self):
         if DEBUG:
             print(f"Turn Left Fast Hold")
 
-    def turn_right_listener(self):
+    def turn_right_listener(self, speed):
         if DEBUG:
             print(f"Turn Right")
-        self.screen_manager.handle_input("right")
+        self.screen_manager.handle_input("right", speed)
+
+    def turn_right_fast_listener(self, speed):
+        if DEBUG:
+            print(f"Turn Right Fast")
+        self.screen_manager.handle_input("right_fast", speed)
+
+    def turn_right_super_fast_listener(self, speed):
+        if DEBUG:
+            print(f"Turn Right Super Fast")
+        self.screen_manager.handle_input("right_super_fast", speed)
 
     def turn_right_hold(self):
         if DEBUG:
             print(f"Turn Right Hold")
         if DEBUG:
             print(f"Turn Right Hold")
-
-    def turn_right_fast_listener(self):
-        if DEBUG:
-            print(f"Turn Right Fast")
-        self.screen_manager.handle_input("right_fast")
-
-    def turn_right_super_fast_listener(self):
-        if DEBUG:
-            print(f"Turn Right Super Fast")
-        self.screen_manager.handle_input("right_super_fast")
 
     def turn_right_fast_hold(self):
         if DEBUG:
@@ -136,4 +136,3 @@ class KY040:
         self.encoder.on(RotaryEncoderEvent.TURN_RIGHT_FAST, self.turn_right_fast_listener)
         self.encoder.on(RotaryEncoderEvent.TURN_RIGHT_SUPER_FAST, self.turn_right_super_fast_listener)
         self.encoder.on(RotaryEncoderEvent.TURN_RIGHT_FAST_HOLD, self.turn_right_fast_hold)
-
