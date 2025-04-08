@@ -22,7 +22,7 @@ class Screen:
     def show(self):
         raise NotImplementedError('Subclasses must implement this method.')
 
-    def handle_input(self, input_data):
+    def handle_input(self, input_data, speed=None):
         raise NotImplementedError('Subclasses must implement this method.')
 
     def add_child(self, child):
@@ -65,7 +65,7 @@ class MenuScreen(Screen):
         text_render.draw(f'{lm.translate(self.name)}', y=20, align='center',
                          clear_screen=True, font='Arial_Bold_16', show=True)
 
-    def handle_input(self, input_data):
+    def handle_input(self, input_data, speed=None): # speed is not used here
         if DEBUG:
             print(f'MenuScreen {self.name} received input: {input_data}')
         if self.parent is None and input_data in ('left', 'right'):
@@ -102,26 +102,26 @@ class ValueScreen(Screen):
             self.bar_fb = create_bar_buffer(88, 8)
             self.last_filled_width = None
 
-    # --- Hook methods ---
-    def get_increment(self, input_type):
-        """Encoder speed mapping for smoother movement"""
-        base = self.increment
+    def get_increment(self, input_type, speed=None):
+        """Return the scaled increment for encoder input, optionally speed-aware."""
+        if speed is not None:
+            # Cap the maximum scaling if needed
+            speed = min(max(speed, 1.0), 3.0)  # clamp between 1.0 and 3.0
+            return int(self.increment * speed)
 
-        speed_map = {
-            '': 1,               # normal turn
-            '_fast': 4,          # fast turn = 2× base
-            '_super_fast': 8     # super fast turn = 4× base
-        }
-
-        if input_type.startswith('right'):
-            speed = input_type.replace('right', '')
-            factor = speed_map.get(speed, 1)
-            return base * factor
-
-        elif input_type.startswith('left'):
-            speed = input_type.replace('left', '')
-            factor = speed_map.get(speed, 1)
-            return -base * factor
+        # Fallback for label-based input (if speed wasn't passed)
+        if input_type == 'right':
+            return self.increment
+        elif input_type == 'right_fast':
+            return self.increment * 2
+        elif input_type == 'right_super_fast':
+            return self.increment * 3
+        elif input_type == 'left':
+            return -self.increment
+        elif input_type == 'left_fast':
+            return -self.increment * 2
+        elif input_type == 'left_super_fast':
+            return -self.increment * 3
 
         return 0
 
@@ -141,9 +141,9 @@ class ValueScreen(Screen):
 
         oled.show()
 
-    def handle_input(self, input_data):
+    def handle_input(self, input_data, speed=None):
         if self.edit_mode:
-            delta = self.get_increment(input_data)
+            delta = self.get_increment(input_data, speed)
             if delta != 0:
                 self.value += delta
                 self.value = max(self.min_value, min(self.value, self.max_value))
@@ -209,8 +209,8 @@ class ScreenManager:
             self.current_screen = new_screen
             self.current_screen.activate()
 
-    def handle_input(self, input_data):
-        result = self.current_screen.handle_input(input_data)
+    def handle_input(self, input_data, speed=None):
+        result = self.current_screen.handle_input(input_data, speed=speed)
 
         if input_data == 'triple_click': # go to top level
             # switch of edit mode of current value screen
