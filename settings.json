@@ -1,1 +1,0 @@
-{"pwm_min": 1000, "pwm_max": 2000, "encoder_sw_pin": 1, "wifi_ssid": "MySSID", "wifi_password": "MyPassword", "language": "de", "pwm_increment": 10, "servo_pwm": 1500, "encoder_dt_pin": 2, "encoder_clk_pin": 4}
