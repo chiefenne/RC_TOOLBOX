@@ -29,9 +29,3 @@ extern const lv_font_t courier_new_28;
 #define FONT_MONO_LG   (&courier_new_24)
 #define FONT_MONO_XL   (&courier_new_28)
 
-// Legacy Roboto Mono fonts
-extern const lv_font_t lv_font_roboto_mono_40;
-extern const lv_font_t lv_font_roboto_mono_46;
-
-#define FONT_ROBOTO_40 (&lv_font_roboto_mono_40)
-#define FONT_ROBOTO_46 (&lv_font_roboto_mono_46)
