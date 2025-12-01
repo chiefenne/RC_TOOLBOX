@@ -1,9 +1,9 @@
 > **⚠️ Work in Progress**
 > This project is currently under active development. Features and documentation may change frequently. Contributions and feedback are welcome!
 
-> **Note:** The GUI implementation recently moved to C++ with LVGL. Core RC logic may still be implemented in either C++ or MicroPython depending on the module.
+> **Note:** The implementation recently moved to C++ with LVGL. Core RC logic may lter still be implemented in MicroPython depending on the module.
 
-RC TOOLBOX is a suite of software tools tailored for RC enthusiasts. Designed to run on MicroPython-based boards such as the Raspberry Pi Pico, ESP32 boards and [more](https://micropython.org/download/). It provides a versatile platform for enhancing your RC experience in the Python ecosystem.
+RC TOOLBOX is a suite of software tools tailored for RC enthusiasts. Designed to run on mainly on ESP32 based boards. It provides a versatile platform for enhancing your RC experience in the Python ecosystem.
 
 It includes modules to:
 
