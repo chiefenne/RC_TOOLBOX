@@ -2,4 +2,3 @@
 #include "lvgl.h"
 
 void page_settings_create(lv_obj_t* parent);
-void page_settings_update();

@@ -2,6 +2,7 @@
 #include "gui/gui.h"
 #include "gui/fonts.h"
 #include "gui/color_palette.h"
+#include "gui/lang.h"
 #include "style_utils.h"
 #include "gui/pages/page_splash.h"
 #include "gui/pages/page_home.h"
@@ -32,7 +33,8 @@ static const lv_coord_t FOOTER_HEIGHT = 32;
 
 // Colors from color_palette.h
 static const lv_color_t COLOR_HEADER       = lv_color_hex(GUI_COLOR_MONO[0]);      // 0x1C5C8C
-static const lv_color_t COLOR_SURFACE      = lv_color_hex(GUI_COLOR_TINTS[9]);     // 0xE9F2F9
+static const lv_color_t COLOR_FOOTER       = lv_color_hex(GUI_COLOR_GRAYS[4]);     // 0xA8A8A8
+static const lv_color_t COLOR_SURFACE      = lv_color_hex(GUI_COLOR_GRAYS[8]);     // 0xD0D0D0
 static const lv_color_t COLOR_TAB_ACTIVE   = lv_color_hex(GUI_COLOR_TRIAD[1]);     // 0x86CC29
 static const lv_color_t COLOR_TAB_INACTIVE = lv_color_hex(GUI_COLOR_GRAYS[8]);     // 0xD0D0D0
 static const lv_color_t COLOR_TEXT_DARK    = lv_color_hex(GUI_COLOR_SHADES[7]);    // 0x0C283D
@@ -82,7 +84,7 @@ void gui_init()
     footer = lv_obj_create(scr);
     lv_obj_set_size(footer, LV_PCT(100), FOOTER_HEIGHT);
     lv_obj_align(footer, LV_ALIGN_BOTTOM_MID, 0, 0);
-    lv_obj_set_style_bg_color(footer, COLOR_SURFACE, 0);
+    lv_obj_set_style_bg_color(footer, COLOR_FOOTER, 0);
     lv_obj_set_style_border_width(footer, 0, 0);
     lv_obj_set_scrollbar_mode(footer, LV_SCROLLBAR_MODE_OFF);
     lv_obj_set_style_radius(footer, 0, 0);
@@ -198,31 +200,31 @@ void gui_set_page(GuiPage p)
     lv_obj_clean(content);
     switch (p) {
         case PAGE_HOME:
-            lv_label_set_text(header_title, "RC TOOLBOX");
+            lv_label_set_text(header_title, tr(STR_PAGE_HOME));
             page_home_create(content);
             break;
         case PAGE_SERVO:
-            lv_label_set_text(header_title, "Servo Tester");
+            lv_label_set_text(header_title, tr(STR_PAGE_SERVO));
             page_servo_create(content);
             break;
         case PAGE_LIPO:
-            lv_label_set_text(header_title, "Lipo Checker");
+            lv_label_set_text(header_title, tr(STR_PAGE_LIPO));
             page_lipo_create(content);
             break;
         case PAGE_DEFLECTION:
-            lv_label_set_text(header_title, "Flap Deflection");
+            lv_label_set_text(header_title, tr(STR_PAGE_DEFLECTION));
             page_deflection_create(content);
             break;
         case PAGE_ANGLE:
-            lv_label_set_text(header_title, "Angle Calculator");
+            lv_label_set_text(header_title, tr(STR_PAGE_ANGLE));
             page_angle_create(content);
             break;
         case PAGE_SETTINGS:
-            lv_label_set_text(header_title, "Settings");
+            lv_label_set_text(header_title, tr(STR_PAGE_SETTINGS));
             page_settings_create(content);
             break;
         case PAGE_ABOUT:
-            lv_label_set_text(header_title, "About");
+            lv_label_set_text(header_title, tr(STR_PAGE_ABOUT));
             page_about_create(content);
             break;
         default:

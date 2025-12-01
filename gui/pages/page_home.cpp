@@ -2,11 +2,12 @@
 #include "gui/gui.h"
 #include "gui/fonts.h"
 #include "gui/color_palette.h"
+#include "gui/lang.h"
 
 static void btn_servo_cb(lv_event_t* e) { LV_UNUSED(e); gui_set_page(PAGE_SERVO); }
 static void btn_lipo_cb(lv_event_t* e) { LV_UNUSED(e); gui_set_page(PAGE_LIPO); }
 static void btn_deflection_cb(lv_event_t* e) { LV_UNUSED(e); gui_set_page(PAGE_DEFLECTION); }
-static void btn_angle_cb(lv_event_t* e) { LV_UNUSED(e); gui_set_page(PAGE_ANGLE); }
+static void btn_incidence_cb(lv_event_t* e) { LV_UNUSED(e); gui_set_page(PAGE_ANGLE); }
 static void btn_about_cb(lv_event_t* e) { LV_UNUSED(e); gui_set_page(PAGE_ABOUT); }
 
 static lv_obj_t* create_nav_button(lv_obj_t* parent, const char* text, lv_event_cb_t cb) {
@@ -19,6 +20,7 @@ static lv_obj_t* create_nav_button(lv_obj_t* parent, const char* text, lv_event_
     lv_label_set_text(lbl, text);
     lv_obj_set_style_text_font(lbl, FONT_DEFAULT, 0);
     lv_obj_set_style_text_color(lbl, lv_color_hex(GUI_COLOR_TINTS[10]), 0);
+    lv_obj_set_style_text_align(lbl, LV_TEXT_ALIGN_CENTER, 0);
     lv_obj_center(lbl);
 
     lv_obj_add_event_cb(btn, cb, LV_EVENT_CLICKED, nullptr);
@@ -32,9 +34,9 @@ void page_home_create(lv_obj_t* parent) {
     lv_obj_set_style_pad_row(parent, 10, 0);
     lv_obj_set_style_pad_column(parent, 10, 0);
 
-    create_nav_button(parent, "Servo Tester", btn_servo_cb);
-    create_nav_button(parent, "Lipo Checker", btn_lipo_cb);
-    create_nav_button(parent, "Deflection", btn_deflection_cb);
-    create_nav_button(parent, "Angle Calc", btn_angle_cb);
-    create_nav_button(parent, "About", btn_about_cb);
+    create_nav_button(parent, tr(STR_BTN_SERVO), btn_servo_cb);
+    create_nav_button(parent, tr(STR_BTN_LIPO), btn_lipo_cb);
+    create_nav_button(parent, tr(STR_BTN_DEFLECTION), btn_deflection_cb);
+    create_nav_button(parent, tr(STR_BTN_ANGLE), btn_incidence_cb);
+    create_nav_button(parent, tr(STR_BTN_ABOUT), btn_about_cb);
 }

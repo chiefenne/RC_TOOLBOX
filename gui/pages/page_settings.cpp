@@ -1,25 +1,57 @@
 #include "lvgl.h"
-#include "gui_data.h"
+#include "gui/gui.h"
 #include "gui/fonts.h"
 #include "gui/color_palette.h"
+#include "gui/lang.h"
 
-static lv_obj_t* label;
-
-void page_settings_create(lv_obj_t* parent) {
-    label = lv_label_create(parent);
-    lv_label_set_text(label, "Settings");
-    lv_obj_set_style_text_align(label, LV_TEXT_ALIGN_CENTER, 0);
-    lv_obj_set_style_text_font(label, FONT_DEFAULT, 0);
-    lv_obj_set_style_text_color(label, lv_color_hex(GUI_COLOR_SHADES[7]), 0);
-    lv_obj_set_style_text_opa(label, LV_OPA_COVER, 0);
-    lv_obj_set_style_border_width(label, 0, 0);
-    lv_label_set_long_mode(label, LV_LABEL_LONG_WRAP);
-    lv_obj_set_width(label, LV_PCT(90));
-    lv_obj_center(label);
+static void lang_en_cb(lv_event_t* e) {
+    LV_UNUSED(e);
+    lang_set(LANG_EN);
+    gui_set_page(PAGE_SETTINGS);  // Refresh to show new language
 }
 
-void page_settings_update() {
-    lv_label_set_text_fmt(label,
-        "Settings\n\nConfigure your options here\nScreen: %s",
-        gui_data.current_screen);
+static void lang_de_cb(lv_event_t* e) {
+    LV_UNUSED(e);
+    lang_set(LANG_DE);
+    gui_set_page(PAGE_SETTINGS);  // Refresh to show new language
+}
+
+void page_settings_create(lv_obj_t* parent) {
+    // Language label
+    lv_obj_t* lang_label = lv_label_create(parent);
+    lv_label_set_text(lang_label, tr(STR_SETTINGS_LANGUAGE));
+    lv_obj_set_style_text_font(lang_label, FONT_DEFAULT, 0);
+    lv_obj_set_style_text_color(lang_label, lv_color_hex(GUI_COLOR_SHADES[7]), 0);
+
+    // Language buttons container
+    lv_obj_t* lang_cont = lv_obj_create(parent);
+    lv_obj_set_size(lang_cont, LV_PCT(80), LV_SIZE_CONTENT);
+    lv_obj_set_style_bg_opa(lang_cont, LV_OPA_TRANSP, 0);
+    lv_obj_set_style_border_width(lang_cont, 0, 0);
+    lv_obj_set_style_pad_all(lang_cont, 5, 0);
+    lv_obj_set_flex_flow(lang_cont, LV_FLEX_FLOW_ROW);
+    lv_obj_set_flex_align(lang_cont, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+    lv_obj_set_style_pad_column(lang_cont, 10, 0);
+
+    // English button
+    lv_obj_t* btn_en = lv_button_create(lang_cont);
+    lv_obj_set_size(btn_en, 80, 35);
+    lv_obj_set_style_bg_color(btn_en,
+        lang_get() == LANG_EN ? lv_color_hex(GUI_COLOR_TRIAD[1]) : lv_color_hex(GUI_COLOR_GRAYS[6]), 0);
+    lv_obj_t* lbl_en = lv_label_create(btn_en);
+    lv_label_set_text(lbl_en, "English");
+    lv_obj_set_style_text_font(lbl_en, FONT_DEFAULT, 0);
+    lv_obj_center(lbl_en);
+    lv_obj_add_event_cb(btn_en, lang_en_cb, LV_EVENT_CLICKED, nullptr);
+
+    // German button
+    lv_obj_t* btn_de = lv_button_create(lang_cont);
+    lv_obj_set_size(btn_de, 80, 35);
+    lv_obj_set_style_bg_color(btn_de,
+        lang_get() == LANG_DE ? lv_color_hex(GUI_COLOR_TRIAD[1]) : lv_color_hex(GUI_COLOR_GRAYS[6]), 0);
+    lv_obj_t* lbl_de = lv_label_create(btn_de);
+    lv_label_set_text(lbl_de, "Deutsch");
+    lv_obj_set_style_text_font(lbl_de, FONT_DEFAULT, 0);
+    lv_obj_center(lbl_de);
+    lv_obj_add_event_cb(btn_de, lang_de_cb, LV_EVENT_CLICKED, nullptr);
 }
