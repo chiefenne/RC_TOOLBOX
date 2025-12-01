@@ -1,39 +1,40 @@
 #include "lvgl.h"
-#include "gui_data.h"
+#include "gui/gui.h"
 #include "gui/fonts.h"
+#include "gui/color_palette.h"
 
-static lv_obj_t* label;
+static void btn_servo_cb(lv_event_t* e) { LV_UNUSED(e); gui_set_page(PAGE_SERVO); }
+static void btn_lipo_cb(lv_event_t* e) { LV_UNUSED(e); gui_set_page(PAGE_LIPO); }
+static void btn_deflection_cb(lv_event_t* e) { LV_UNUSED(e); gui_set_page(PAGE_DEFLECTION); }
+static void btn_angle_cb(lv_event_t* e) { LV_UNUSED(e); gui_set_page(PAGE_ANGLE); }
+static void btn_about_cb(lv_event_t* e) { LV_UNUSED(e); gui_set_page(PAGE_ABOUT); }
 
-void page_home_create(lv_obj_t* parent) {
-    label = lv_label_create(parent);
-    lv_label_set_text(label, "LVGL Simulator on macOS!");
-    lv_obj_set_style_text_align(label, LV_TEXT_ALIGN_CENTER, 0);
+static lv_obj_t* create_nav_button(lv_obj_t* parent, const char* text, lv_event_cb_t cb) {
+    lv_obj_t* btn = lv_button_create(parent);
+    lv_obj_set_size(btn, 140, 40);
+    lv_obj_set_style_bg_color(btn, lv_color_hex(GUI_COLOR_MONO[1]), 0);
+    lv_obj_set_style_radius(btn, 5, 0);
 
-    lv_obj_t* desc_label = lv_label_create(parent);
-    lv_label_set_text(desc_label,
-        "The GUI code is completely independent "
-        "from the program logic - you design the interface, perfect the "
-        "look and feel, and test the user experience entirely in the simulator.");
-    lv_obj_set_style_text_font(desc_label, FONT_DEFAULT, 0);
-    lv_obj_set_style_text_color(desc_label, lv_color_hex(0x1D242F), 0);
-    lv_obj_set_style_text_opa(desc_label, LV_OPA_COVER, 0);
-    lv_obj_set_style_border_width(desc_label, 0, 0);
-    lv_label_set_long_mode(desc_label, LV_LABEL_LONG_WRAP);
-    lv_obj_set_width(desc_label, LV_PCT(90));
-    lv_obj_align_to(desc_label, label, LV_ALIGN_OUT_BOTTOM_MID, 0, 10);
-    lv_obj_set_style_text_font(label, FONT_DEFAULT, 0);
-    lv_obj_set_style_text_color(label, lv_color_hex(0x1D242F), 0);
-    lv_obj_set_style_text_opa(label, LV_OPA_COVER, 0);
-    lv_obj_set_style_border_width(label, 0, 0);
-    lv_label_set_long_mode(label, LV_LABEL_LONG_WRAP);
-    lv_obj_set_width(label, LV_PCT(90));
-    lv_obj_center(label);
+    lv_obj_t* lbl = lv_label_create(btn);
+    lv_label_set_text(lbl, text);
+    lv_obj_set_style_text_font(lbl, FONT_DEFAULT, 0);
+    lv_obj_set_style_text_color(lbl, lv_color_hex(GUI_COLOR_TINTS[10]), 0);
+    lv_obj_center(lbl);
+
+    lv_obj_add_event_cb(btn, cb, LV_EVENT_CLICKED, nullptr);
+    return btn;
 }
 
-void page_home_update() {
-    lv_label_set_text_fmt(label,
-        "Screen: %s\nValue1: %.2f\nMessage: %s",
-        gui_data.current_screen,
-        gui_data.value1,
-        gui_data.message[0] ? gui_data.message : "—");
+void page_home_create(lv_obj_t* parent) {
+    // Create a grid of buttons
+    lv_obj_set_flex_flow(parent, LV_FLEX_FLOW_ROW_WRAP);
+    lv_obj_set_flex_align(parent, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+    lv_obj_set_style_pad_row(parent, 10, 0);
+    lv_obj_set_style_pad_column(parent, 10, 0);
+
+    create_nav_button(parent, "Servo Tester", btn_servo_cb);
+    create_nav_button(parent, "Lipo Checker", btn_lipo_cb);
+    create_nav_button(parent, "Deflection", btn_deflection_cb);
+    create_nav_button(parent, "Angle Calc", btn_angle_cb);
+    create_nav_button(parent, "About", btn_about_cb);
 }

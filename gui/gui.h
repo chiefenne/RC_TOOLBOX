@@ -4,8 +4,12 @@
 
 enum GuiPage {
     PAGE_HOME = 0,
-    PAGE_DATA,
+    PAGE_SERVO,
+    PAGE_LIPO,
+    PAGE_DEFLECTION,
+    PAGE_ANGLE,
     PAGE_SETTINGS,
+    PAGE_ABOUT,
     PAGE_COUNT
 };
 

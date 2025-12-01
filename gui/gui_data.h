@@ -5,7 +5,7 @@
 
 typedef struct {
     // ────── Always needed ──────
-    char        current_screen[24];   // "home", "servo", "lipo", "settings"
+    char        current_screen[24];
     int         selected_index;       // highlighted item
 
     // ────── Generic values – rename in your head ──────
