@@ -8,6 +8,7 @@
 #include "gui/pages/page_home.h"
 #include "gui/pages/page_servo.h"
 #include "gui/pages/page_lipo.h"
+#include "gui/pages/page_cg_scale.h"
 #include "gui/pages/page_deflection.h"
 #include "gui/pages/page_angle.h"
 #include "gui/pages/page_settings.h"
@@ -210,6 +211,10 @@ void gui_set_page(GuiPage p)
         case PAGE_LIPO:
             lv_label_set_text(header_title, tr(STR_PAGE_LIPO));
             page_lipo_create(content);
+            break;
+        case PAGE_CG_SCALE:
+            lv_label_set_text(header_title, tr(STR_PAGE_CG_SCALE));
+            page_cg_scale_create(content);
             break;
         case PAGE_DEFLECTION:
             lv_label_set_text(header_title, tr(STR_PAGE_DEFLECTION));

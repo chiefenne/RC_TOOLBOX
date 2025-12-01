@@ -9,6 +9,7 @@ static const char* strings_de[STR_COUNT] = {
     // Splash features
     "Servo-Tester",
     "Lipo-Prüfer",
+    "Schwerpunktwaage",
     "Ruderausschlag-Messung",
     "Einstellwinkeldifferenz",
 
@@ -16,6 +17,7 @@ static const char* strings_de[STR_COUNT] = {
     "RC TOOLBOX",
     "Servo-Tester",
     "Lipo-Prüfer",
+    "SP-Waage",
     "Ruderausschlag",
     "EWD",
     "Einstellungen",
@@ -24,6 +26,7 @@ static const char* strings_de[STR_COUNT] = {
     // Home buttons
     "Servo-Tester",
     "Lipo-Prüfer",
+    "SP-Waage",
     "Ruderausschlag",
     "EWD",
     "Über",
@@ -43,6 +46,7 @@ static const char* strings_de[STR_COUNT] = {
     // Page content placeholders
     "Servo-Tester",
     "Lipo-Prüfer",
+    "Schwerpunktwaage",
     "Ruderausschlag",
     "Einstellwinkel hier messen."
 };

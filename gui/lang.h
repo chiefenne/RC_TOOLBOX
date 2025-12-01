@@ -16,6 +16,7 @@ enum StringId {
     // Splash features
     STR_FEATURE_SERVO,
     STR_FEATURE_LIPO,
+    STR_FEATURE_CG_SCALE,
     STR_FEATURE_DEFLECTION,
     STR_FEATURE_ANGLE,
 
@@ -23,6 +24,7 @@ enum StringId {
     STR_PAGE_HOME,
     STR_PAGE_SERVO,
     STR_PAGE_LIPO,
+    STR_PAGE_CG_SCALE,
     STR_PAGE_DEFLECTION,
     STR_PAGE_ANGLE,
     STR_PAGE_SETTINGS,
@@ -31,6 +33,7 @@ enum StringId {
     // Home buttons
     STR_BTN_SERVO,
     STR_BTN_LIPO,
+    STR_BTN_CG_SCALE,
     STR_BTN_DEFLECTION,
     STR_BTN_ANGLE,
     STR_BTN_ABOUT,
@@ -50,6 +53,7 @@ enum StringId {
     // Page content placeholders
     STR_SERVO_CONTENT,
     STR_LIPO_CONTENT,
+    STR_CG_SCALE_CONTENT,
     STR_DEFLECTION_CONTENT,
     STR_ANGLE_CONTENT,
 

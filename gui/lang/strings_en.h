@@ -9,6 +9,7 @@ static const char* strings_en[STR_COUNT] = {
     // Splash features
     "Servo tester",
     "Lipo checker",
+    "CG scale",
     "Flap deflection measurement",
     "Angle of incidence",
 
@@ -16,6 +17,7 @@ static const char* strings_en[STR_COUNT] = {
     "RC TOOLBOX",
     "Servo Tester",
     "Lipo Checker",
+    "CG Scale",
     "Flap Deflection",
     "Angle of Incidence",
     "Settings",
@@ -24,6 +26,7 @@ static const char* strings_en[STR_COUNT] = {
     // Home buttons
     "Servo Tester",
     "Lipo Checker",
+    "CG\nScale",
     "Flap\nDeflection",
     "Angle of\nIncidence",
     "About",
@@ -43,6 +46,7 @@ static const char* strings_en[STR_COUNT] = {
     // Page content placeholders
     "Servo Tester",
     "Lipo Checker",
+    "CG Scale",
     "Flap Deflection",
     "Measure angle of incidence here."
 };

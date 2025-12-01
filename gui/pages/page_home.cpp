@@ -6,6 +6,7 @@
 
 static void btn_servo_cb(lv_event_t* e) { LV_UNUSED(e); gui_set_page(PAGE_SERVO); }
 static void btn_lipo_cb(lv_event_t* e) { LV_UNUSED(e); gui_set_page(PAGE_LIPO); }
+static void btn_cg_scale_cb(lv_event_t* e) { LV_UNUSED(e); gui_set_page(PAGE_CG_SCALE); }
 static void btn_deflection_cb(lv_event_t* e) { LV_UNUSED(e); gui_set_page(PAGE_DEFLECTION); }
 static void btn_incidence_cb(lv_event_t* e) { LV_UNUSED(e); gui_set_page(PAGE_ANGLE); }
 static void btn_about_cb(lv_event_t* e) { LV_UNUSED(e); gui_set_page(PAGE_ABOUT); }
@@ -36,6 +37,7 @@ void page_home_create(lv_obj_t* parent) {
 
     create_nav_button(parent, tr(STR_BTN_SERVO), btn_servo_cb);
     create_nav_button(parent, tr(STR_BTN_LIPO), btn_lipo_cb);
+    create_nav_button(parent, tr(STR_BTN_CG_SCALE), btn_cg_scale_cb);
     create_nav_button(parent, tr(STR_BTN_DEFLECTION), btn_deflection_cb);
     create_nav_button(parent, tr(STR_BTN_ANGLE), btn_incidence_cb);
     create_nav_button(parent, tr(STR_BTN_ABOUT), btn_about_cb);

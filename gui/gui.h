@@ -6,6 +6,7 @@ enum GuiPage {
     PAGE_HOME = 0,
     PAGE_SERVO,
     PAGE_LIPO,
+    PAGE_CG_SCALE,
     PAGE_DEFLECTION,
     PAGE_ANGLE,
     PAGE_SETTINGS,

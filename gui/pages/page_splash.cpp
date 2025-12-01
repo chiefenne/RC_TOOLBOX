@@ -17,9 +17,10 @@ void page_splash_create(lv_obj_t* parent) {
     // Features list - build dynamically
     static char features_text[256];
     snprintf(features_text, sizeof(features_text),
-        "• %s\n• %s\n• %s\n• %s",
+        "• %s\n• %s\n• %s\n• %s\n• %s",
         tr(STR_FEATURE_SERVO),
         tr(STR_FEATURE_LIPO),
+        tr(STR_FEATURE_CG_SCALE),
         tr(STR_FEATURE_DEFLECTION),
         tr(STR_FEATURE_ANGLE));
 
