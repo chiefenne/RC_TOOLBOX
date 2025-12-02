@@ -7,16 +7,22 @@ RC TOOLBOX is a suite of software tools tailored for RC enthusiasts. Designed to
 
 It includes modules to:
 
-- Test and fine-tune servos.
-- Accurately measure flap deflection with precision tools.
-- Calculate angles between the wing chord and vertical stabilizer for precise alignment.
-- Additional features available upon request.
+- Servo tester
+- Lipo tester
+- Measure flap deflection
+- Measure incidence angle
+  - Angle between the wing chord and vertical stabilizer
+- CG scale
 
 ## Credits
 
 This project was inspired by following resources:
 
 - [Servotester_Deluxe by "Der RC-Modellbauer"(Ziege-One)](https://github.com/Ziege-One/Servotester_Deluxe)
-- [Tjark Schwartau (shockyfan)](https://github.com/shockyfan/Servotester_Deluxe)
+- [TheDIYGuy999](https://github.com/TheDIYGuy999/Servotester_Deluxe)
+- [shockyfan](https://github.com/shockyfan/Servotester_Deluxe)
 
 Special thanks to the RC modeling community for their invaluable contributions and insights.
+
+## GUI Template for LVGL
+- [LVGL Simulator Template](https://github.com/chiefenne/LVGL_Simulator) - GUI template for LVGL with macOS simulator
