@@ -7,28 +7,28 @@ static const char* strings_de[STR_COUNT] = {
     "Das Tool für RC-Enthusiasten",
 
     // Splash features
-    "Servo-Tester",
-    "Lipo-Prüfer",
+    "Servo Tester",
+    "Lipo Tester",
     "Schwerpunktwaage",
-    "Ruderausschlag-Messung",
-    "Einstellwinkeldifferenz",
+    "Ruderweg Messung",
+    "EDW Messung",
 
     // Page titles
     "RC TOOLBOX",
-    "Servo-Tester",
-    "Lipo-Prüfer",
+    "Servo Tester",
+    "Lipo Tester",
     "SP-Waage",
-    "Ruderausschlag",
-    "EWD",
+    "Ruderweg Messung",
+    "EDW Messung",
     "Einstellungen",
     "Über",
 
     // Home buttons
-    "Servo-Tester",
-    "Lipo-Prüfer",
+    "Servo Tester",
+    "Lipo Tester",
     "SP-Waage",
-    "Ruderausschlag",
-    "EWD",
+    "Ruderweg Messung",
+    "EDW Messung",
     "Über",
     "HOME",
 
@@ -48,5 +48,15 @@ static const char* strings_de[STR_COUNT] = {
     "Lipo-Prüfer",
     "Schwerpunktwaage",
     "Ruderausschlag",
-    "Einstellwinkel hier messen."
+    "Einstellwinkel messen.",
+
+    // Servo page
+    "Auto",
+    "Manuell",
+    "PWM",
+    "Position",
+    "Start",
+    "Stop",
+    "Tempo",
+    "µs"
 };

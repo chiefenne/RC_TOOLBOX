@@ -1,0 +1,4 @@
+#
+# List of fonts and sizes to be converted for LVGL
+#
+/System/Library/Fonts/Supplemental/STIXTwoMath.otf; 12,14,16,18,20,24,28

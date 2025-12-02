@@ -48,5 +48,15 @@ static const char* strings_en[STR_COUNT] = {
     "Lipo Checker",
     "CG Scale",
     "Flap Deflection",
-    "Measure angle of incidence here."
+    "Measure angle of incidence here.",
+
+    // Servo page
+    "Auto",
+    "Manual",
+    "PWM",
+    "Position",
+    "Start",
+    "Stop",
+    "Speed",
+    "µs"
 };

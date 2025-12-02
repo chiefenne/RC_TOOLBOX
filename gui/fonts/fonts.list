@@ -1,0 +1,7 @@
+#
+# List of fonts and sizes to be converted for LVGL
+#
+/System/Library/Fonts/Supplemental/Arial.ttf; 12,14,16,18,20,24,28
+/System/Library/Fonts/Supplemental/Arial Bold.ttf; 12,14,16,18,20,24,28
+/System/Library/Fonts/Supplemental/Courier New.ttf; 12,14,16,18,20,24,28
+/System/Library/Fonts/Supplemental/Courier New Bold.ttf; 12,14,16,18,20,24,28

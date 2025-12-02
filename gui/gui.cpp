@@ -94,8 +94,8 @@ void gui_init()
     create_splash_footer();
     page_splash_create(content);
 
-    // Timer to switch to home after x seconds
-    lv_timer_create(splash_timer_cb, 5000, nullptr);
+    // Timer to switch to home after 3 seconds
+    lv_timer_create(splash_timer_cb, 3000, nullptr);
 }
 
 static void create_splash_footer()
@@ -109,7 +109,7 @@ static void create_splash_footer()
     lv_obj_align(splash_footer_left, LV_ALIGN_LEFT_MID, 10, 0);
 
     splash_footer_right = lv_label_create(footer);
-    lv_label_set_text(splash_footer_right, "(c) 2025");
+    lv_label_set_text(splash_footer_right, SYM_COPYWRIGHT " 2025");  // Adjacent string literals are concatenated
     lv_obj_set_style_text_font(splash_footer_right, FONT_FOOTER, 0);
     lv_obj_set_style_text_color(splash_footer_right, COLOR_TEXT_BLACK, 0);
     lv_obj_align(splash_footer_right, LV_ALIGN_RIGHT_MID, -10, 0);
@@ -139,51 +139,45 @@ static void create_nav_buttons()
 
     // Previous button (◄ symbol)
     btn_prev = lv_button_create(footer);
+    lv_obj_set_size(btn_prev, 50, 24);  // Fixed size
     lv_obj_set_style_bg_color(btn_prev, COLOR_TAB_INACTIVE, 0);
     lv_obj_set_style_border_width(btn_prev, 2, 0);
     lv_obj_set_style_border_color(btn_prev, lv_color_black(), 0);
     lv_obj_t *lbl_prev = lv_label_create(btn_prev);
-    lv_label_set_text(lbl_prev, LV_SYMBOL_LEFT);
+    lv_label_set_text(lbl_prev, SYM_LEFT);
     lv_obj_set_style_text_font(lbl_prev, FONT_FOOTER, 0);
     lv_obj_set_style_text_color(lbl_prev, lv_color_black(), 0);
     lv_obj_set_style_text_opa(lbl_prev, LV_OPA_COVER, 0);
+    lv_obj_center(lbl_prev);  // Center the symbol in the button
     lv_obj_add_event_cb(btn_prev, btn_prev_event_cb, LV_EVENT_CLICKED, nullptr);
-    lv_obj_set_style_pad_left(btn_prev, 15, 0);
-    lv_obj_set_style_pad_right(btn_prev, 15, 0);
-    lv_obj_set_style_pad_top(btn_prev, 0, 0);
-    lv_obj_set_style_pad_bottom(btn_prev, 0, 0);
 
     // Next button (► symbol)
     btn_next = lv_button_create(footer);
+    lv_obj_set_size(btn_next, 50, 24);  // Fixed size
     lv_obj_set_style_bg_color(btn_next, COLOR_TAB_INACTIVE, 0);
     lv_obj_set_style_border_width(btn_next, 2, 0);
     lv_obj_set_style_border_color(btn_next, lv_color_black(), 0);
     lv_obj_t *lbl_next = lv_label_create(btn_next);
-    lv_label_set_text(lbl_next, LV_SYMBOL_RIGHT);
+    lv_label_set_text(lbl_next, SYM_RIGHT);
     lv_obj_set_style_text_font(lbl_next, FONT_FOOTER, 0);
     lv_obj_set_style_text_color(lbl_next, lv_color_black(), 0);
     lv_obj_set_style_text_opa(lbl_next, LV_OPA_COVER, 0);
+    lv_obj_center(lbl_next);  // Center the symbol in the button
     lv_obj_add_event_cb(btn_next, btn_next_event_cb, LV_EVENT_CLICKED, nullptr);
-    lv_obj_set_style_pad_left(btn_next, 15, 0);
-    lv_obj_set_style_pad_right(btn_next, 15, 0);
-    lv_obj_set_style_pad_top(btn_next, 0, 0);
-    lv_obj_set_style_pad_bottom(btn_next, 0, 0);
 
     // Settings button (⚙ symbol)
     btn_settings = lv_button_create(footer);
+    lv_obj_set_size(btn_settings, 50, 24);  // Fixed size to match other buttons
     lv_obj_set_style_bg_color(btn_settings, COLOR_TAB_INACTIVE, 0);
     lv_obj_set_style_border_width(btn_settings, 2, 0);
     lv_obj_set_style_border_color(btn_settings, lv_color_black(), 0);
     lv_obj_t *lbl_settings = lv_label_create(btn_settings);
-    lv_label_set_text(lbl_settings, LV_SYMBOL_SETTINGS);
-    lv_obj_set_style_text_font(lbl_settings, FONT_FOOTER, 0);
+    lv_label_set_text(lbl_settings, SYM_SETTINGS);
+    lv_obj_set_style_text_font(lbl_settings, FONT_SYMBOLS, 0);  // Use STIXTwoMath for gear symbol
     lv_obj_set_style_text_color(lbl_settings, lv_color_black(), 0);
     lv_obj_set_style_text_opa(lbl_settings, LV_OPA_COVER, 0);
+    lv_obj_center(lbl_settings);  // Center the symbol in the button
     lv_obj_add_event_cb(btn_settings, btn_settings_event_cb, LV_EVENT_CLICKED, nullptr);
-    lv_obj_set_style_pad_left(btn_settings, 15, 0);
-    lv_obj_set_style_pad_right(btn_settings, 15, 0);
-    lv_obj_set_style_pad_top(btn_settings, 0, 0);
-    lv_obj_set_style_pad_bottom(btn_settings, 0, 0);
 }
 
 static void splash_timer_cb(lv_timer_t *timer)
