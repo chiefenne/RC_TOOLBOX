@@ -1,7 +1,7 @@
 > **⚠️ Work in Progress**
 > This project is currently under active development. Features and documentation may change frequently. Contributions and feedback are welcome!
 
-> **Note:** The implementation recently moved to C++ with LVGL. Core RC logic may lter still be implemented in MicroPython depending on the module.
+> **Note:** The implementation recently moved to C++ with LVGL. Core RC logic may later still be implemented in MicroPython depending on the module.
 
 RC TOOLBOX is a suite of software tools tailored for RC enthusiasts. Designed to run on mainly on ESP32 based boards. It provides a versatile platform for enhancing your RC experience.
 
