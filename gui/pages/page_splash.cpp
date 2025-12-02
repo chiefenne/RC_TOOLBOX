@@ -6,13 +6,15 @@
 #include <cstdio>
 
 void page_splash_create(lv_obj_t* parent) {
+    // Set up flex layout for vertical centering
+    lv_obj_set_flex_flow(parent, LV_FLEX_FLOW_COLUMN);
+    lv_obj_set_flex_align(parent, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
 
     // Tagline
     lv_obj_t* tagline = lv_label_create(parent);
     lv_label_set_text(tagline, tr(STR_APP_TAGLINE));
     lv_obj_set_style_text_font(tagline, FONT_FOOTER, 0);
     lv_obj_set_style_text_color(tagline, lv_color_hex(GUI_COLOR_SHADES[10]), 0);
-    lv_obj_center(tagline);
 
     // Features list - build dynamically
     static char features_text[256];
@@ -28,5 +30,5 @@ void page_splash_create(lv_obj_t* parent) {
     lv_label_set_text(features, features_text);
     lv_obj_set_style_text_font(features, FONT_DEFAULT, 0);
     lv_obj_set_style_text_color(features, lv_color_hex(GUI_COLOR_SHADES[7]), 0);
-    lv_obj_align_to(features, tagline, LV_ALIGN_OUT_BOTTOM_MID, 0, 15);
+    lv_obj_set_style_pad_top(features, 15, 0);  // Space between tagline and features
 }

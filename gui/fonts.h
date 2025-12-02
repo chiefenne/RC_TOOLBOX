@@ -27,6 +27,12 @@ extern const lv_font_t arial_bold_28;
 #define FONT_BOLD_MD   (&arial_bold_18)
 #define FONT_BOLD_LG   (&arial_bold_24)
 
+// Button/UI fonts
+#define FONT_BUTTON_SM (&arial_14)
+#define FONT_BUTTON_MD (&arial_18)
+#define FONT_BUTTON_LG (&arial_20)
+#define FONT_BUTTON_XL (&arial_24)
+
 // Courier New fonts (monospace/fixed-width) for numeric displays
 extern const lv_font_t courier_new_12;
 extern const lv_font_t courier_new_14;

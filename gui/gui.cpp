@@ -72,14 +72,16 @@ void gui_init()
     lv_obj_set_style_text_font(header_title, FONT_HEADER, 0);
     lv_obj_center(header_title);
 
-    // Content area
+    // Content area - fixed height between header and footer
+    lv_coord_t screen_height = lv_display_get_vertical_resolution(NULL);
+    lv_coord_t content_height = screen_height - HEADER_HEIGHT - FOOTER_HEIGHT;
+
     content = lv_obj_create(scr);
-    lv_obj_set_size(content, LV_PCT(100), LV_SIZE_CONTENT);
+    lv_obj_set_size(content, LV_PCT(100), content_height);
     lv_obj_set_pos(content, 0, HEADER_HEIGHT);
-    lv_obj_set_flex_flow(content, LV_FLEX_FLOW_COLUMN);
-    lv_obj_set_flex_align(content, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
     lv_obj_set_style_bg_color(content, COLOR_SURFACE, 0);
     lv_obj_set_style_border_width(content, 0, 0);
+    lv_obj_set_style_pad_all(content, 0, 0);  // No padding - let pages control their layout
 
     // Footer
     footer = lv_obj_create(scr);
@@ -125,7 +127,7 @@ static void create_nav_buttons()
     btn_home = lv_button_create(footer);
     lv_obj_set_style_bg_color(btn_home, COLOR_TAB_ACTIVE, 0);
     lv_obj_set_style_border_width(btn_home, 2, 0);
-    lv_obj_set_style_border_color(btn_home, lv_color_black(), 0);
+    lv_obj_set_style_border_color(btn_home, COLOR_TEXT_GRAY, 0);
     lv_obj_t *lbl_home = lv_label_create(btn_home);
     lv_label_set_text(lbl_home, "HOME");
     lv_obj_set_style_text_font(lbl_home, FONT_FOOTER, 0);
@@ -142,7 +144,7 @@ static void create_nav_buttons()
     lv_obj_set_size(btn_prev, 50, 24);  // Fixed size
     lv_obj_set_style_bg_color(btn_prev, COLOR_TAB_INACTIVE, 0);
     lv_obj_set_style_border_width(btn_prev, 2, 0);
-    lv_obj_set_style_border_color(btn_prev, lv_color_black(), 0);
+    lv_obj_set_style_border_color(btn_prev, COLOR_TEXT_GRAY, 0);
     lv_obj_t *lbl_prev = lv_label_create(btn_prev);
     lv_label_set_text(lbl_prev, SYM_LEFT);
     lv_obj_set_style_text_font(lbl_prev, FONT_FOOTER, 0);
@@ -156,7 +158,7 @@ static void create_nav_buttons()
     lv_obj_set_size(btn_next, 50, 24);  // Fixed size
     lv_obj_set_style_bg_color(btn_next, COLOR_TAB_INACTIVE, 0);
     lv_obj_set_style_border_width(btn_next, 2, 0);
-    lv_obj_set_style_border_color(btn_next, lv_color_black(), 0);
+    lv_obj_set_style_border_color(btn_next, COLOR_TEXT_GRAY, 0);
     lv_obj_t *lbl_next = lv_label_create(btn_next);
     lv_label_set_text(lbl_next, SYM_RIGHT);
     lv_obj_set_style_text_font(lbl_next, FONT_FOOTER, 0);
@@ -170,7 +172,7 @@ static void create_nav_buttons()
     lv_obj_set_size(btn_settings, 50, 24);  // Fixed size to match other buttons
     lv_obj_set_style_bg_color(btn_settings, COLOR_TAB_INACTIVE, 0);
     lv_obj_set_style_border_width(btn_settings, 2, 0);
-    lv_obj_set_style_border_color(btn_settings, lv_color_black(), 0);
+    lv_obj_set_style_border_color(btn_settings, COLOR_TEXT_GRAY, 0);
     lv_obj_t *lbl_settings = lv_label_create(btn_settings);
     lv_label_set_text(lbl_settings, SYM_SETTINGS);
     lv_obj_set_style_text_font(lbl_settings, FONT_SYMBOLS, 0);  // Use STIXTwoMath for gear symbol

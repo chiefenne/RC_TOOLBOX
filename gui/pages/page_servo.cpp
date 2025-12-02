@@ -85,7 +85,7 @@ void page_servo_create(lv_obj_t* parent) {
 
     // === Mode buttons row ===
     lv_obj_t* mode_row = lv_obj_create(parent);
-    lv_obj_set_size(mode_row, LV_PCT(90), 30);
+    lv_obj_set_size(mode_row, LV_PCT(90), 35);
     lv_obj_set_style_bg_opa(mode_row, LV_OPA_TRANSP, 0);
     lv_obj_set_style_border_width(mode_row, 0, 0);
     lv_obj_set_style_pad_all(mode_row, 0, 0);
@@ -99,7 +99,7 @@ void page_servo_create(lv_obj_t* parent) {
     lv_obj_set_style_bg_color(btn_auto, COLOR_BTN_ACTIVE, 0);
     lv_obj_t* lbl_auto = lv_label_create(btn_auto);
     lv_label_set_text(lbl_auto, tr(STR_SERVO_MODE_AUTO));
-    lv_obj_set_style_text_font(lbl_auto, FONT_DEFAULT, 0);
+    lv_obj_set_style_text_font(lbl_auto, FONT_BUTTON_MD, 0);
     lv_obj_center(lbl_auto);
     lv_obj_add_event_cb(btn_auto, btn_auto_cb, LV_EVENT_CLICKED, nullptr);
 
@@ -109,7 +109,7 @@ void page_servo_create(lv_obj_t* parent) {
     lv_obj_set_style_bg_color(btn_manual, COLOR_BTN_INACTIVE, 0);
     lv_obj_t* lbl_manual = lv_label_create(btn_manual);
     lv_label_set_text(lbl_manual, tr(STR_SERVO_MODE_MANUAL));
-    lv_obj_set_style_text_font(lbl_manual, FONT_DEFAULT, 0);
+    lv_obj_set_style_text_font(lbl_manual, FONT_BUTTON_MD, 0);
     lv_obj_center(lbl_manual);
     lv_obj_add_event_cb(btn_manual, btn_manual_cb, LV_EVENT_CLICKED, nullptr);
 
@@ -123,39 +123,27 @@ void page_servo_create(lv_obj_t* parent) {
     lv_obj_set_flex_align(pwm_container, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
     lv_obj_set_style_pad_column(pwm_container, 5, 0);
 
-    // PWM label (small)
+    // PWM label
     lv_obj_t* pwm_title = lv_label_create(pwm_container);
-    lv_label_set_text(pwm_title, tr(STR_SERVO_PWM_LABEL));
-    lv_obj_set_style_text_font(pwm_title, FONT_DEFAULT, 0);
+    lv_label_set_text_fmt(pwm_title, "%s (%s):", tr(STR_SERVO_PWM_LABEL), tr(STR_SERVO_US));
+    lv_obj_set_style_text_font(pwm_title, FONT_BUTTON_MD, 0);
     lv_obj_set_style_text_color(pwm_title, lv_color_hex(GUI_COLOR_SHADES[7]), 0);
 
-    // PWM value (large, monospace)
+    // PWM value monospace - updated by encoder/auto mode
     pwm_label = lv_label_create(pwm_container);
     lv_label_set_text(pwm_label, "1500");
-    lv_obj_set_style_text_font(pwm_label, FONT_MONO_LG, 0);
+    lv_obj_set_style_text_font(pwm_label, FONT_MONO_BOLD_LG, 0);
     lv_obj_set_style_text_color(pwm_label, lv_color_hex(GUI_COLOR_MONO[0]), 0);
-
-    // µs unit
-    lv_obj_t* pwm_unit = lv_label_create(pwm_container);
-    lv_label_set_text(pwm_unit, tr(STR_SERVO_US));
-    lv_obj_set_style_text_font(pwm_unit, FONT_DEFAULT, 0);
-    lv_obj_set_style_text_color(pwm_unit, lv_color_hex(GUI_COLOR_SHADES[7]), 0);
 
     // === Position Bar ===
     lv_obj_t* bar_container = lv_obj_create(parent);
-    lv_obj_set_size(bar_container, LV_PCT(90), 35);
+    lv_obj_set_size(bar_container, LV_PCT(80), 30);
     lv_obj_set_style_bg_opa(bar_container, LV_OPA_TRANSP, 0);
     lv_obj_set_style_border_width(bar_container, 0, 0);
     lv_obj_set_style_pad_all(bar_container, 0, 0);
     lv_obj_set_flex_flow(bar_container, LV_FLEX_FLOW_COLUMN);
     lv_obj_set_flex_align(bar_container, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
     lv_obj_set_style_pad_row(bar_container, 2, 0);
-
-    // Position label
-    lv_obj_t* pos_title = lv_label_create(bar_container);
-    lv_label_set_text(pos_title, tr(STR_SERVO_POSITION));
-    lv_obj_set_style_text_font(pos_title, FONT_DEFAULT, 0);
-    lv_obj_set_style_text_color(pos_title, lv_color_hex(GUI_COLOR_SHADES[7]), 0);
 
     // Position bar
     position_bar = lv_bar_create(bar_container);
@@ -167,11 +155,11 @@ void page_servo_create(lv_obj_t* parent) {
 
     // === Start/Stop Button ===
     btn_start_stop = lv_button_create(parent);
-    lv_obj_set_size(btn_start_stop, 120, 35);
+    lv_obj_set_size(btn_start_stop, 100, 30);
     lv_obj_set_style_bg_color(btn_start_stop, COLOR_BTN_ACTIVE, 0);
     lbl_start_stop = lv_label_create(btn_start_stop);
     lv_label_set_text(lbl_start_stop, tr(STR_SERVO_START));
-    lv_obj_set_style_text_font(lbl_start_stop, FONT_DEFAULT, 0);
+    lv_obj_set_style_text_font(lbl_start_stop, FONT_BUTTON_MD, 0);
     lv_obj_center(lbl_start_stop);
     lv_obj_add_event_cb(btn_start_stop, btn_start_stop_cb, LV_EVENT_CLICKED, nullptr);
 
