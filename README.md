@@ -12,6 +12,21 @@ The application features a graphical user interface (GUI) built with [LVGL](http
 - **Touch screen** – intuitive touch-based interaction
 - **EN11 rotary encoder with push button** – alternative input method for precise control and navigation
 
+<p align="center">
+  <img src="assets/Splash_screen.png" width="400"><br>
+  <em>LVGL Simulator running on macOS for 320×240 display size</em>
+</p>
+
+<p align="center">
+  <img src="assets/Home_screen.png" width="400"><br>
+  <em>Navigation menu with HOME, previous/next, and settings buttons</em>
+</p>
+
+<p align="center">
+  <img src="assets/Servo_screen.png" width="400"><br>
+  <em>Navigation menu with HOME, previous/next, and settings buttons</em>
+</p>
+
 ## Modules
 
 It includes modules to:
