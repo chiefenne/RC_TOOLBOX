@@ -8,10 +8,12 @@
 static int pwm_value = 1500;  // 1000-2000 µs
 static bool is_auto_mode = true;
 static bool is_running = false;
+static int sweep_direction = 1;  // 1 = right, -1 = left
+static lv_timer_t* sweep_timer = nullptr;
 
 // GUI elements
 static lv_obj_t* pwm_label = nullptr;
-static lv_obj_t* position_bar = nullptr;
+static lv_obj_t* position_slider = nullptr;
 static lv_obj_t* btn_auto = nullptr;
 static lv_obj_t* btn_manual = nullptr;
 static lv_obj_t* btn_start_stop = nullptr;
@@ -27,9 +29,9 @@ static void update_pwm_display() {
     snprintf(buf, sizeof(buf), "%d", pwm_value);
     lv_label_set_text(pwm_label, buf);
 
-    // Update position bar (0-100 from 1000-2000)
+    // Update slider position (0-100 from 1000-2000)
     int percent = (pwm_value - 1000) / 10;
-    lv_bar_set_value(position_bar, percent, LV_ANIM_ON);
+    lv_slider_set_value(position_slider, percent, LV_ANIM_ON);
 }
 
 static void update_mode_buttons() {
@@ -38,12 +40,19 @@ static void update_mode_buttons() {
 }
 
 static void update_start_stop_button() {
-    if (is_running) {
+    if (!is_auto_mode) {
+        // Grey out in manual mode
+        lv_label_set_text(lbl_start_stop, tr(STR_SERVO_START));
+        lv_obj_set_style_bg_color(btn_start_stop, COLOR_BTN_INACTIVE, 0);
+        lv_obj_set_style_text_opa(lbl_start_stop, LV_OPA_50, 0);
+    } else if (is_running) {
         lv_label_set_text(lbl_start_stop, tr(STR_SERVO_STOP));
         lv_obj_set_style_bg_color(btn_start_stop, COLOR_BTN_STOP, 0);
+        lv_obj_set_style_text_opa(lbl_start_stop, LV_OPA_100, 0);
     } else {
         lv_label_set_text(lbl_start_stop, tr(STR_SERVO_START));
         lv_obj_set_style_bg_color(btn_start_stop, COLOR_BTN_ACTIVE, 0);
+        lv_obj_set_style_text_opa(lbl_start_stop, LV_OPA_100, 0);
     }
 }
 
@@ -51,12 +60,36 @@ static void btn_auto_cb(lv_event_t* e) {
     LV_UNUSED(e);
     is_auto_mode = true;
     update_mode_buttons();
+    update_start_stop_button();
+}
+
+// Timer callback for auto sweep
+static void sweep_timer_cb(lv_timer_t* timer) {
+    LV_UNUSED(timer);
+    if (!is_running || !is_auto_mode) return;
+
+    // Always start by moving right, reverse at endpoints
+    pwm_value += sweep_direction * 10;  // 10µs steps
+
+    if (pwm_value >= 2000) {
+        pwm_value = 2000;
+        sweep_direction = -1;  // Reverse to left
+    } else if (pwm_value <= 1000) {
+        pwm_value = 1000;
+        sweep_direction = 1;   // Reverse to right
+    }
+
+    update_pwm_display();
 }
 
 static void btn_manual_cb(lv_event_t* e) {
     LV_UNUSED(e);
     is_auto_mode = false;
     is_running = false;
+    // Stop sweep timer
+    if (sweep_timer) {
+        lv_timer_pause(sweep_timer);
+    }
     update_mode_buttons();
     update_start_stop_button();
 }
@@ -65,7 +98,42 @@ static void btn_start_stop_cb(lv_event_t* e) {
     LV_UNUSED(e);
     if (is_auto_mode) {
         is_running = !is_running;
+
+        if (is_running) {
+            // Start: continue in current direction (direction only reset on page create)
+            if (sweep_timer) {
+                lv_timer_resume(sweep_timer);
+            }
+        } else {
+            // Stop: pause the timer
+            if (sweep_timer) {
+                lv_timer_pause(sweep_timer);
+            }
+        }
+
         update_start_stop_button();
+    }
+}
+
+// Slider callback - update PWM when slider is dragged
+static void slider_cb(lv_event_t* e) {
+    lv_obj_t* slider = (lv_obj_t*)lv_event_get_target(e);
+    int percent = lv_slider_get_value(slider);
+    pwm_value = 1000 + percent * 10;  // Convert 0-100 to 1000-2000
+
+    // Update PWM label (but not slider, as it's already at correct position)
+    static char buf[16];
+    snprintf(buf, sizeof(buf), "%d", pwm_value);
+    lv_label_set_text(pwm_label, buf);
+}
+
+// Public function to adjust PWM from keyboard/encoder
+void page_servo_adjust_pwm(int delta) {
+    if (position_slider != nullptr) {
+        pwm_value += delta;
+        if (pwm_value < 1000) pwm_value = 1000;
+        if (pwm_value > 2000) pwm_value = 2000;
+        update_pwm_display();
     }
 }
 
@@ -74,6 +142,14 @@ void page_servo_create(lv_obj_t* parent) {
     pwm_value = 1500;
     is_auto_mode = true;
     is_running = false;
+    sweep_direction = 1;
+
+    // Create sweep timer (paused initially) - 20ms = 50Hz update
+    if (sweep_timer) {
+        lv_timer_delete(sweep_timer);
+    }
+    sweep_timer = lv_timer_create(sweep_timer_cb, 20, nullptr);
+    lv_timer_pause(sweep_timer);
 
     // Flex column layout with even spacing
     lv_obj_set_flex_flow(parent, LV_FLEX_FLOW_COLUMN);
@@ -135,23 +211,29 @@ void page_servo_create(lv_obj_t* parent) {
     lv_obj_set_style_text_font(pwm_label, FONT_MONO_BOLD_LG, 0);
     lv_obj_set_style_text_color(pwm_label, lv_color_hex(GUI_COLOR_MONO[0]), 0);
 
-    // === Position Bar ===
-    lv_obj_t* bar_container = lv_obj_create(parent);
-    lv_obj_set_size(bar_container, LV_PCT(80), 30);
-    lv_obj_set_style_bg_opa(bar_container, LV_OPA_TRANSP, 0);
-    lv_obj_set_style_border_width(bar_container, 0, 0);
-    lv_obj_set_style_pad_all(bar_container, 0, 0);
-    lv_obj_set_flex_flow(bar_container, LV_FLEX_FLOW_COLUMN);
-    lv_obj_set_flex_align(bar_container, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
-    lv_obj_set_style_pad_row(bar_container, 2, 0);
+    // === Position Slider ===
+    lv_obj_t* slider_container = lv_obj_create(parent);
+    lv_obj_set_size(slider_container, LV_PCT(80), 35);
+    lv_obj_set_style_bg_opa(slider_container, LV_OPA_TRANSP, 0);
+    lv_obj_set_style_border_width(slider_container, 0, 0);
+    lv_obj_set_style_pad_left(slider_container, 18, 0);   // Space for knob at left
+    lv_obj_set_style_pad_right(slider_container, 18, 0);  // Space for knob at right
+    lv_obj_set_style_pad_top(slider_container, 0, 0);
+    lv_obj_set_style_pad_bottom(slider_container, 0, 0);
+    lv_obj_set_flex_flow(slider_container, LV_FLEX_FLOW_COLUMN);
+    lv_obj_set_flex_align(slider_container, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+    lv_obj_set_style_pad_row(slider_container, 2, 0);
+    lv_obj_clear_flag(slider_container, LV_OBJ_FLAG_SCROLLABLE);  // Prevent clipping
 
-    // Position bar
-    position_bar = lv_bar_create(bar_container);
-    lv_obj_set_size(position_bar, LV_PCT(100), 16);
-    lv_bar_set_range(position_bar, 0, 100);
-    lv_bar_set_value(position_bar, 50, LV_ANIM_OFF);
-    lv_obj_set_style_bg_color(position_bar, lv_color_hex(GUI_COLOR_GRAYS[7]), 0);
-    lv_obj_set_style_bg_color(position_bar, lv_color_hex(GUI_COLOR_MONO[1]), LV_PART_INDICATOR);
+    // Position slider - interactive in manual mode
+    position_slider = lv_slider_create(slider_container);
+    lv_obj_set_size(position_slider, LV_PCT(100), 20);
+    lv_slider_set_range(position_slider, 0, 100);
+    lv_slider_set_value(position_slider, 50, LV_ANIM_OFF);
+    lv_obj_set_style_bg_color(position_slider, lv_color_hex(GUI_COLOR_GRAYS[7]), 0);
+    lv_obj_set_style_bg_color(position_slider, lv_color_hex(GUI_COLOR_MONO[1]), LV_PART_INDICATOR);
+    lv_obj_set_style_bg_color(position_slider, lv_color_hex(GUI_COLOR_MONO[0]), LV_PART_KNOB);
+    lv_obj_add_event_cb(position_slider, slider_cb, LV_EVENT_VALUE_CHANGED, nullptr);
 
     // === Start/Stop Button ===
     btn_start_stop = lv_button_create(parent);

@@ -6,12 +6,17 @@
 #include <cstring>
 #include "gui/gui.h" // is not a compatibility shim, so we need the folder
 #include "gui/gui_data.h"
+#include "gui/pages/page_servo.h"
 
 constexpr int HRES = 320;
 constexpr int VRES = 240;
 
 static SDL_Texture*  tex  = nullptr;
 static SDL_Renderer* ren  = nullptr;
+
+// Keyboard state for arrow keys
+static uint32_t last_key = 0;
+static lv_indev_state_t key_state = LV_INDEV_STATE_RELEASED;
 
 static void flush_cb(lv_display_t* disp, const lv_area_t* area, uint8_t* data) {
     const int w = lv_area_get_width(area);
@@ -73,7 +78,17 @@ int main(int argc, char** argv) {
         last = now;
         lv_timer_handler();
         SDL_Event e;
-        while (SDL_PollEvent(&e)) if (e.type == SDL_QUIT) return 0;
+        while (SDL_PollEvent(&e)) {
+            if (e.type == SDL_QUIT) return 0;
+            // Handle keyboard for PWM adjustment
+            if (e.type == SDL_KEYDOWN) {
+                if (e.key.keysym.sym == SDLK_LEFT) {
+                    page_servo_adjust_pwm(-10);  // Decrease PWM by 10µs
+                } else if (e.key.keysym.sym == SDLK_RIGHT) {
+                    page_servo_adjust_pwm(10);   // Increase PWM by 10µs
+                }
+            }
+        }
         SDL_Delay(5);
     }
 }

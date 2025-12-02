@@ -34,7 +34,7 @@ static const lv_coord_t FOOTER_HEIGHT = 32;
 
 // Colors from color_palette.h
 static const lv_color_t COLOR_HEADER       = lv_color_hex(GUI_COLOR_MONO[0]);      // 0x1C5C8C
-static const lv_color_t COLOR_FOOTER       = lv_color_hex(GUI_COLOR_GRAYS[4]);     // 0xA8A8A8
+static const lv_color_t COLOR_FOOTER       = lv_color_hex(GUI_COLOR_GRAYS[6]);     // 0xBCBCBC
 static const lv_color_t COLOR_SURFACE      = lv_color_hex(GUI_COLOR_GRAYS[8]);     // 0xD0D0D0
 static const lv_color_t COLOR_TAB_ACTIVE   = lv_color_hex(GUI_COLOR_TRIAD[1]);     // 0x86CC29
 static const lv_color_t COLOR_TAB_INACTIVE = lv_color_hex(GUI_COLOR_GRAYS[8]);     // 0xD0D0D0
