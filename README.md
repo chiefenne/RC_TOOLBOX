@@ -14,17 +14,17 @@ The application features a graphical user interface (GUI) built with [LVGL](http
 
 <p align="center">
   <img src="assets/Splash_screen.png" width="400"><br>
-  <em>LVGL Simulator running on macOS for 320×240 display size</em>
+  <em>Splash screen running in the LVGL simulator</em>
 </p>
 
 <p align="center">
   <img src="assets/Home_screen.png" width="400"><br>
-  <em>Navigation menu with HOME, previous/next, and settings buttons</em>
+  <em>Home screen running in the LVGL simulator</em>
 </p>
 
 <p align="center">
   <img src="assets/Servo_screen.png" width="400"><br>
-  <em>Navigation menu with HOME, previous/next, and settings buttons</em>
+  <em>Servo screen running in the LVGL simulator</em>
 </p>
 
 ## Modules
