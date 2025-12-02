@@ -5,6 +5,15 @@
 
 RC TOOLBOX is a suite of software tools tailored for RC enthusiasts. Designed to run on mainly on ESP32 based boards. It provides a versatile platform for enhancing your RC experience in the Python ecosystem.
 
+## GUI
+
+The application features a graphical user interface (GUI) built with [LVGL](https://lvgl.io/) for displaying information and controlling the software. The GUI is optimized for **ILI9341 TFT touch displays** (320x240 resolution). User input is supported via:
+
+- **Touch screen** – intuitive touch-based interaction
+- **EN11 rotary encoder with push button** – alternative input method for precise control and navigation
+
+## Modules
+
 It includes modules to:
 
 - Servo tester
