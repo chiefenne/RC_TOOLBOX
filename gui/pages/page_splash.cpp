@@ -30,5 +30,5 @@ void page_splash_create(lv_obj_t* parent) {
     lv_label_set_text(features, features_text);
     lv_obj_set_style_text_font(features, FONT_DEFAULT, 0);
     lv_obj_set_style_text_color(features, lv_color_hex(GUI_COLOR_SHADES[7]), 0);
-    lv_obj_set_style_pad_top(features, 10, 0);  // Space between tagline and features
+    lv_obj_set_style_pad_top(features, 5, 0);  // Space between tagline and features
 }
