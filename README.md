@@ -50,3 +50,24 @@ Special thanks to the RC modeling community for their invaluable contributions a
 
 ## GUI Template for LVGL
 - [LVGL Simulator Template](https://github.com/chiefenne/LVGL_Simulator) - GUI template for LVGL with macOS simulator
+
+## Building
+
+### Prerequisites
+- **macOS**: Xcode command line tools, SDL2 (`brew install sdl2`)
+- **VS Code**: PlatformIO extension for ESP32 development
+
+### macOS Simulator (for rapid GUI development)
+```bash
+./simulator/build_sim.sh           # Release build
+./simulator/build_sim_debug.sh     # Debug build
+./binaries/lvgl_simulator_macOS    # Run simulator
+```
+
+### ESP32 (via VS Code + PlatformIO)
+Use the PlatformIO sidebar in VS Code:
+- **Build**: Click the checkmark icon or `Ctrl+Alt+B`
+- **Upload**: Click the arrow icon or `Ctrl+Alt+U`
+- **Monitor**: Click the plug icon for serial output
+
+See [LVGL_Simulator](https://github.com/chiefenne/LVGL_Simulator) for detailed LVGL library setup instructions.
