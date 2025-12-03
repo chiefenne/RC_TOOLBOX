@@ -19,7 +19,7 @@ static lv_obj_t* create_nav_button(lv_obj_t* parent, const char* text, lv_event_
 
     lv_obj_t* lbl = lv_label_create(btn);
     lv_label_set_text(lbl, text);
-    lv_obj_set_style_text_font(lbl, FONT_DEFAULT, 0);
+    lv_obj_set_style_text_font(lbl, FONT_BUTTON_SMMD, 0);
     lv_obj_set_style_text_color(lbl, lv_color_hex(GUI_COLOR_TINTS[10]), 0);
     lv_obj_set_style_text_align(lbl, LV_TEXT_ALIGN_CENTER, 0);
     lv_obj_center(lbl);
