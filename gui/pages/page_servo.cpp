@@ -37,6 +37,19 @@ static void update_pwm_display() {
 static void update_mode_buttons() {
     lv_obj_set_style_bg_color(btn_auto, is_auto_mode ? COLOR_BTN_ACTIVE : COLOR_BTN_INACTIVE, 0);
     lv_obj_set_style_bg_color(btn_manual, !is_auto_mode ? COLOR_BTN_ACTIVE : COLOR_BTN_INACTIVE, 0);
+
+    // Disable mode buttons while running
+    if (is_running) {
+        lv_obj_add_state(btn_auto, LV_STATE_DISABLED);
+        lv_obj_add_state(btn_manual, LV_STATE_DISABLED);
+        lv_obj_set_style_opa(btn_auto, LV_OPA_50, 0);
+        lv_obj_set_style_opa(btn_manual, LV_OPA_50, 0);
+    } else {
+        lv_obj_clear_state(btn_auto, LV_STATE_DISABLED);
+        lv_obj_clear_state(btn_manual, LV_STATE_DISABLED);
+        lv_obj_set_style_opa(btn_auto, LV_OPA_100, 0);
+        lv_obj_set_style_opa(btn_manual, LV_OPA_100, 0);
+    }
 }
 
 static void update_start_stop_button() {
@@ -58,6 +71,7 @@ static void update_start_stop_button() {
 
 static void btn_auto_cb(lv_event_t* e) {
     LV_UNUSED(e);
+    if (is_running) return;  // Ignore while running
     is_auto_mode = true;
     update_mode_buttons();
     update_start_stop_button();
@@ -84,6 +98,7 @@ static void sweep_timer_cb(lv_timer_t* timer) {
 
 static void btn_manual_cb(lv_event_t* e) {
     LV_UNUSED(e);
+    if (is_running) return;  // Ignore while running
     is_auto_mode = false;
     is_running = false;
     // Stop sweep timer
@@ -112,6 +127,7 @@ static void btn_start_stop_cb(lv_event_t* e) {
         }
 
         update_start_stop_button();
+        update_mode_buttons();  // Update disabled state of mode buttons
     }
 }
 
@@ -134,6 +150,20 @@ void page_servo_adjust_pwm(int delta) {
         if (pwm_value < 1000) pwm_value = 1000;
         if (pwm_value > 2000) pwm_value = 2000;
         update_pwm_display();
+    }
+}
+
+// Check if servo auto-sweep is running
+bool page_servo_is_running() {
+    return is_running && is_auto_mode;
+}
+
+// Stop servo and clean up timer
+void page_servo_stop() {
+    is_running = false;
+    if (sweep_timer) {
+        lv_timer_delete(sweep_timer);
+        sweep_timer = nullptr;
     }
 }
 

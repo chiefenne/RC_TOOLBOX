@@ -236,12 +236,14 @@ void gui_set_page(GuiPage p)
 static void btn_home_event_cb(lv_event_t *e)
 {
     LV_UNUSED(e);
+    if (active_page == PAGE_SERVO && page_servo_is_running()) return;  // Block while servo running
     gui_set_page(PAGE_HOME);
 }
 
 static void btn_prev_event_cb(lv_event_t *e)
 {
     LV_UNUSED(e);
+    if (active_page == PAGE_SERVO && page_servo_is_running()) return;  // Block while servo running
     // Navigate: HOME -> SETTINGS -> DATA -> HOME (skip splash)
     int next_page = (int)active_page - 1;
     if (next_page < PAGE_HOME) {
@@ -253,6 +255,7 @@ static void btn_prev_event_cb(lv_event_t *e)
 static void btn_next_event_cb(lv_event_t *e)
 {
     LV_UNUSED(e);
+    if (active_page == PAGE_SERVO && page_servo_is_running()) return;  // Block while servo running
     // Navigate: HOME -> DATA -> SETTINGS -> HOME (skip splash)
     int next_page = (int)active_page + 1;
     if (next_page >= PAGE_COUNT) {
@@ -264,5 +267,6 @@ static void btn_next_event_cb(lv_event_t *e)
 static void btn_settings_event_cb(lv_event_t *e)
 {
     LV_UNUSED(e);
+    if (active_page == PAGE_SERVO && page_servo_is_running()) return;  // Block while servo running
     gui_set_page(PAGE_SETTINGS);
 }
