@@ -29,6 +29,7 @@ extern const lv_font_t arial_bold_28;
 
 // Button/UI fonts
 #define FONT_BUTTON_SM (&arial_14)
+#define FONT_BUTTON_SMMD (&arial_16)
 #define FONT_BUTTON_MD (&arial_18)
 #define FONT_BUTTON_LG (&arial_20)
 #define FONT_BUTTON_XL (&arial_24)
