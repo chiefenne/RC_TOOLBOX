@@ -17,6 +17,11 @@ static void lang_de_cb(lv_event_t* e) {
 }
 
 void page_settings_create(lv_obj_t* parent) {
+    // Flex column layout - same pattern as page_servo
+    lv_obj_set_flex_flow(parent, LV_FLEX_FLOW_COLUMN);
+    lv_obj_set_flex_align(parent, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+    lv_obj_set_style_pad_top(parent, 20, 0);
+
     // Language label
     lv_obj_t* lang_label = lv_label_create(parent);
     lv_label_set_text(lang_label, tr(STR_SETTINGS_LANGUAGE));
@@ -25,7 +30,7 @@ void page_settings_create(lv_obj_t* parent) {
 
     // Language buttons container
     lv_obj_t* lang_cont = lv_obj_create(parent);
-    lv_obj_set_size(lang_cont, LV_PCT(80), LV_SIZE_CONTENT);
+    lv_obj_set_size(lang_cont, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
     lv_obj_set_style_bg_opa(lang_cont, LV_OPA_TRANSP, 0);
     lv_obj_set_style_border_width(lang_cont, 0, 0);
     lv_obj_set_style_pad_all(lang_cont, 5, 0);

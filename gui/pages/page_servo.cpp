@@ -18,6 +18,8 @@ static lv_obj_t* btn_auto = nullptr;
 static lv_obj_t* btn_manual = nullptr;
 static lv_obj_t* btn_start_stop = nullptr;
 static lv_obj_t* lbl_start_stop = nullptr;
+static lv_obj_t* start_stop_row = nullptr;   // Container for Start/Stop button
+static lv_obj_t* manual_btn_row = nullptr;   // Container for MIN/CENTER/MAX buttons
 
 // Colors
 static const lv_color_t COLOR_BTN_ACTIVE = lv_color_hex(GUI_COLOR_TRIAD[1]);    // Green
@@ -52,20 +54,23 @@ static void update_mode_buttons() {
     }
 }
 
-static void update_start_stop_button() {
-    if (!is_auto_mode) {
-        // Grey out in manual mode
-        lv_label_set_text(lbl_start_stop, tr(STR_SERVO_START));
-        lv_obj_set_style_bg_color(btn_start_stop, COLOR_BTN_INACTIVE, 0);
-        lv_obj_set_style_text_opa(lbl_start_stop, LV_OPA_50, 0);
-    } else if (is_running) {
-        lv_label_set_text(lbl_start_stop, tr(STR_SERVO_STOP));
-        lv_obj_set_style_bg_color(btn_start_stop, COLOR_BTN_STOP, 0);
-        lv_obj_set_style_text_opa(lbl_start_stop, LV_OPA_100, 0);
+static void update_bottom_buttons() {
+    if (is_auto_mode) {
+        // Show Start/Stop row, hide manual buttons
+        lv_obj_clear_flag(start_stop_row, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_add_flag(manual_btn_row, LV_OBJ_FLAG_HIDDEN);
+
+        if (is_running) {
+            lv_label_set_text(lbl_start_stop, tr(STR_SERVO_STOP));
+            lv_obj_set_style_bg_color(btn_start_stop, COLOR_BTN_STOP, 0);
+        } else {
+            lv_label_set_text(lbl_start_stop, tr(STR_SERVO_START));
+            lv_obj_set_style_bg_color(btn_start_stop, COLOR_BTN_ACTIVE, 0);
+        }
     } else {
-        lv_label_set_text(lbl_start_stop, tr(STR_SERVO_START));
-        lv_obj_set_style_bg_color(btn_start_stop, COLOR_BTN_ACTIVE, 0);
-        lv_obj_set_style_text_opa(lbl_start_stop, LV_OPA_100, 0);
+        // Hide Start/Stop row, show manual buttons
+        lv_obj_add_flag(start_stop_row, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_clear_flag(manual_btn_row, LV_OBJ_FLAG_HIDDEN);
     }
 }
 
@@ -74,7 +79,7 @@ static void btn_auto_cb(lv_event_t* e) {
     if (is_running) return;  // Ignore while running
     is_auto_mode = true;
     update_mode_buttons();
-    update_start_stop_button();
+    update_bottom_buttons();
 }
 
 // Timer callback for auto sweep
@@ -106,7 +111,26 @@ static void btn_manual_cb(lv_event_t* e) {
         lv_timer_pause(sweep_timer);
     }
     update_mode_buttons();
-    update_start_stop_button();
+    update_bottom_buttons();
+}
+
+// Manual mode button callbacks
+static void btn_min_cb(lv_event_t* e) {
+    LV_UNUSED(e);
+    pwm_value = 1000;
+    update_pwm_display();
+}
+
+static void btn_center_cb(lv_event_t* e) {
+    LV_UNUSED(e);
+    pwm_value = 1500;
+    update_pwm_display();
+}
+
+static void btn_max_cb(lv_event_t* e) {
+    LV_UNUSED(e);
+    pwm_value = 2000;
+    update_pwm_display();
 }
 
 static void btn_start_stop_cb(lv_event_t* e) {
@@ -126,7 +150,7 @@ static void btn_start_stop_cb(lv_event_t* e) {
             }
         }
 
-        update_start_stop_button();
+        update_bottom_buttons();
         update_mode_buttons();  // Update disabled state of mode buttons
     }
 }
@@ -265,9 +289,17 @@ void page_servo_create(lv_obj_t* parent) {
     lv_obj_set_style_bg_color(position_slider, lv_color_hex(GUI_COLOR_MONO[0]), LV_PART_KNOB);
     lv_obj_add_event_cb(position_slider, slider_cb, LV_EVENT_VALUE_CHANGED, nullptr);
 
-    // === Start/Stop Button ===
-    btn_start_stop = lv_button_create(parent);
-    lv_obj_set_size(btn_start_stop, 100, 30);
+    // === Start/Stop Button row (Auto mode) ===
+    start_stop_row = lv_obj_create(parent);
+    lv_obj_set_size(start_stop_row, LV_PCT(90), 35);
+    lv_obj_set_style_bg_opa(start_stop_row, LV_OPA_TRANSP, 0);
+    lv_obj_set_style_border_width(start_stop_row, 0, 0);
+    lv_obj_set_style_pad_all(start_stop_row, 0, 0);
+    lv_obj_set_flex_flow(start_stop_row, LV_FLEX_FLOW_ROW);
+    lv_obj_set_flex_align(start_stop_row, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+
+    btn_start_stop = lv_button_create(start_stop_row);
+    lv_obj_set_size(btn_start_stop, 90, 30);
     lv_obj_set_style_bg_color(btn_start_stop, COLOR_BTN_ACTIVE, 0);
     lbl_start_stop = lv_label_create(btn_start_stop);
     lv_label_set_text(lbl_start_stop, tr(STR_SERVO_START));
@@ -275,8 +307,49 @@ void page_servo_create(lv_obj_t* parent) {
     lv_obj_center(lbl_start_stop);
     lv_obj_add_event_cb(btn_start_stop, btn_start_stop_cb, LV_EVENT_CLICKED, nullptr);
 
+    // === Manual mode buttons row (MIN/CENTER/MAX) ===
+    manual_btn_row = lv_obj_create(parent);
+    lv_obj_set_size(manual_btn_row, LV_PCT(90), 35);
+    lv_obj_set_style_bg_opa(manual_btn_row, LV_OPA_TRANSP, 0);
+    lv_obj_set_style_border_width(manual_btn_row, 0, 0);
+    lv_obj_set_style_pad_all(manual_btn_row, 0, 0);
+    lv_obj_set_flex_flow(manual_btn_row, LV_FLEX_FLOW_ROW);
+    lv_obj_set_flex_align(manual_btn_row, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+    lv_obj_set_style_pad_column(manual_btn_row, 10, 0);
+    lv_obj_add_flag(manual_btn_row, LV_OBJ_FLAG_HIDDEN);  // Hidden initially (auto mode)
+
+    // MIN button
+    lv_obj_t* btn_min = lv_button_create(manual_btn_row);
+    lv_obj_set_size(btn_min, 65, 30);
+    lv_obj_set_style_bg_color(btn_min, lv_color_hex(GUI_COLOR_MONO[0]), 0);
+    lv_obj_t* lbl_min = lv_label_create(btn_min);
+    lv_label_set_text(lbl_min, "Min");
+    lv_obj_set_style_text_font(lbl_min, FONT_BUTTON_MD, 0);
+    lv_obj_center(lbl_min);
+    lv_obj_add_event_cb(btn_min, btn_min_cb, LV_EVENT_CLICKED, nullptr);
+
+    // CENTER button
+    lv_obj_t* btn_center = lv_button_create(manual_btn_row);
+    lv_obj_set_size(btn_center, 90, 30);
+    lv_obj_set_style_bg_color(btn_center, lv_color_hex(GUI_COLOR_MONO[0]), 0);
+    lv_obj_t* lbl_center = lv_label_create(btn_center);
+    lv_label_set_text(lbl_center, "Center");
+    lv_obj_set_style_text_font(lbl_center, FONT_BUTTON_MD, 0);
+    lv_obj_center(lbl_center);
+    lv_obj_add_event_cb(btn_center, btn_center_cb, LV_EVENT_CLICKED, nullptr);
+
+    // MAX button
+    lv_obj_t* btn_max = lv_button_create(manual_btn_row);
+    lv_obj_set_size(btn_max, 65, 30);
+    lv_obj_set_style_bg_color(btn_max, lv_color_hex(GUI_COLOR_MONO[0]), 0);
+    lv_obj_t* lbl_max = lv_label_create(btn_max);
+    lv_label_set_text(lbl_max, "Max");
+    lv_obj_set_style_text_font(lbl_max, FONT_BUTTON_MD, 0);
+    lv_obj_center(lbl_max);
+    lv_obj_add_event_cb(btn_max, btn_max_cb, LV_EVENT_CLICKED, nullptr);
+
     // Initial display update
     update_pwm_display();
     update_mode_buttons();
-    update_start_stop_button();
+    update_bottom_buttons();
 }
