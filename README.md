@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="assets/RC_Toolbox_Logo.png" width="200">
+</p>
+
 > **⚠️ Work in Progress**
 > This project is currently under active development. Features and documentation may change frequently. Contributions and feedback are welcome!
 
