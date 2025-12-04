@@ -8,7 +8,7 @@ EXECUTABLE="$OUTPUT_DIR/lvgl_simulator_macOS"
 # Create the binaries folder if it doesn't exist
 mkdir -p "$OUTPUT_DIR"
 
-INCLUDES="-I. -Ilvgl -Igui -Igui/pages -Igui/fonts"
+INCLUDES="-I. -Ilvgl -Igui -Igui/pages -Igui/fonts -Igui/images"
 
 # Pre-compile LVGL font .c files with plain clang (no C++ mangling)
 FONT_OBJS=()
@@ -18,15 +18,23 @@ for src in gui/fonts/*.c; do
     FONT_OBJS+=("$obj")
 done
 
+# Pre-compile LVGL image .c files with plain clang (no C++ mangling)
+IMAGE_OBJS=()
+for src in gui/images/*.c; do
+    obj="${src%.c}.o"
+    clang -c "$src" $INCLUDES -o "$obj"
+    IMAGE_OBJS+=("$obj")
+done
+
 # Build the simulator
 clang++ simulator/main.cpp simulator/sim_state.cpp \
-    gui/*.cpp gui/pages/*.cpp "${FONT_OBJS[@]}" \
+    gui/*.cpp gui/pages/*.cpp "${FONT_OBJS[@]}" "${IMAGE_OBJS[@]}" \
     $INCLUDES \
     -std=c++17 \
     lvgl/liblvgl.a -lSDL2 \
     -o "$EXECUTABLE"
 
-# Optional: remove temporary font objects
-rm -f "${FONT_OBJS[@]}"
+# Optional: remove temporary font and image objects
+rm -f "${FONT_OBJS[@]}" "${IMAGE_OBJS[@]}"
 
 echo "Build successful: $EXECUTABLE"

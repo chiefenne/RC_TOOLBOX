@@ -96,8 +96,8 @@ void gui_init()
     create_splash_footer();
     page_splash_create(content);
 
-    // Timer to switch to home after 3 seconds
-    lv_timer_create(splash_timer_cb, 3000, nullptr);
+    // Timer to switch to home after 6 seconds (3s logo + 3s text)
+    lv_timer_create(splash_timer_cb, 6000, nullptr);
 }
 
 static void create_splash_footer()
@@ -185,6 +185,7 @@ static void create_nav_buttons()
 static void splash_timer_cb(lv_timer_t *timer)
 {
     lv_timer_delete(timer);
+    page_splash_cleanup();  // Clean up splash phase timer before destroying page
     splash_shown = true;
     create_nav_buttons();
     gui_set_page(PAGE_HOME);
