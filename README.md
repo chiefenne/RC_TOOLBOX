@@ -3,7 +3,7 @@
 </p>
 
 > **⚠️ Work in Progress**
-> This project is currently under active development. Features and documentation may change frequently. Contributions and feedback are welcome!
+> This project is currently under active development. Features and documentation may change frequently.
 
 > **Note:** The implementation recently moved to C/C++ with LVGL.
 
