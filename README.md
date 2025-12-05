@@ -9,12 +9,21 @@
 
 RC TOOLBOX is a suite of software tools tailored for RC enthusiasts. Designed to run on mainly on ESP32 based boards. It provides a versatile platform for enhancing your RC experience.
 
+## Features
+
+- **Multi-language support** – English, German, French, Spanish, Italian, Dutch, Czech
+- **Persistent settings** – Language, background color, and preferences saved to JSON
+- **Customizable UI** – Multiple background color themes
+- **Dual input support** – Touch screen and rotary encoder with tactile buttons
+- **Cross-platform development** – macOS simulator for rapid GUI development
+
 ## GUI
 
 The application features a graphical user interface (GUI) built with [LVGL](https://lvgl.io/) for displaying information and controlling the software. The GUI is optimized for **ILI9341 TFT touch displays** (320x240 resolution). User input is supported via:
 
 - **Touch screen** – intuitive touch-based interaction
-- **EN11 rotary encoder with push button** – alternative input method for precise control and navigation
+- **EC11 rotary encoder with push button** – for precise value adjustment and navigation
+- **Tactile buttons** – quick shortcuts for common actions
 
 <p align="center">
   <img src="assets/Splash_screen.png" width="400"><br>
@@ -33,14 +42,16 @@ The application features a graphical user interface (GUI) built with [LVGL](http
 
 ## Modules
 
-It includes modules to:
+The toolbox includes the following modules:
 
-- Servo tester
-- Lipo tester
-- Measure flap deflection
-- Measure incidence angle
-  - Angle between the wing chord and vertical stabilizer
-- CG scale
+| Module | Description |
+|--------|-------------|
+| **Servo Tester** | Test and calibrate servos with manual PWM control or auto-sweep |
+| **Lipo Checker** | Monitor LiPo battery cell voltages |
+| **CG Scale** | Measure center of gravity for aircraft balancing |
+| **Flap Deflection** | Measure control surface deflection angles |
+| **Angle of Incidence** | Measure wing/stabilizer incidence angles |
+| **Settings** | Configure language, display brightness, background color |
 
 ## Credits
 
@@ -67,6 +78,15 @@ Special thanks to the RC modeling community for their invaluable contributions a
 ./simulator/build_sim_debug.sh     # Debug build
 ./binaries/lvgl_simulator_macOS    # Run simulator
 ```
+
+#### Simulator Keyboard Shortcuts
+| Key | Action |
+|-----|--------|
+| Arrow keys | Encoder rotation (adjust values) |
+| Enter | Encoder press (confirm) |
+| H | Home button |
+| Space | Action button (start/stop) |
+| Esc | Back |
 
 ### ESP32 (via VS Code + PlatformIO)
 Use the PlatformIO sidebar in VS Code:
