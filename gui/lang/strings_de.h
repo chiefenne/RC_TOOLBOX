@@ -38,7 +38,6 @@ static const char* strings_de[STR_COUNT] = {
     "Quellcode:",
     "github.com/chiefenne/RC_TOOLBOX",
     "Version:",
-    "0.1",
 
     // Settings
     "Sprache",

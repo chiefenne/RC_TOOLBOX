@@ -2,6 +2,7 @@
 #include "gui/fonts.h"
 #include "gui/color_palette.h"
 #include "gui/lang.h"
+#include "gui/version.h"
 #include <cstdio>
 
 void page_about_create(lv_obj_t* parent) {
@@ -28,7 +29,7 @@ void page_about_create(lv_obj_t* parent) {
     // Version
     lv_obj_t* version = lv_label_create(parent);
     char version_text[64];
-    snprintf(version_text, sizeof(version_text), "%s %s", tr(STR_ABOUT_VERSION), tr(STR_ABOUT_VERSION_NUM));
+    snprintf(version_text, sizeof(version_text), "%s %s", tr(STR_ABOUT_VERSION), APP_VERSION);
     lv_label_set_text(version, version_text);
     lv_obj_set_style_text_font(version, FONT_DEFAULT, 0);
     lv_obj_set_style_text_color(version, lv_color_hex(GUI_COLOR_SHADES[10]), 0);

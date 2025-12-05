@@ -4,6 +4,7 @@
 #include "gui/gui.h"
 #include "gui/settings_builder.h"
 #include "gui/lang.h"
+#include "gui/version.h"
 
 // Demo settings values (will be replaced with persistent storage later)
 static int s_brightness = 80;
@@ -46,7 +47,7 @@ void page_settings_create(lv_obj_t* parent) {
 
     // System section
     sb.begin_section("System");
-    sb.info("Firmware", "v0.1.0");
-    sb.info("LVGL", "9.4.0");
+    sb.info("Firmware", APP_VERSION);
+    sb.info("LVGL", LVGL_VERSION_STRING);
     sb.end_section();
 }

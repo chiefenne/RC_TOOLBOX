@@ -261,5 +261,5 @@ void SettingsBuilder::info(const char* label, const char* value) {
     lv_obj_t* val_lbl = lv_label_create(row);
     lv_label_set_text(val_lbl, value);
     lv_obj_set_style_text_font(val_lbl, FONT_DEFAULT, 0);
-    lv_obj_set_style_text_color(val_lbl, lv_color_hex(GUI_COLOR_GRAYS[5]), 0);
+    lv_obj_set_style_text_color(val_lbl, lv_color_hex(GUI_COLOR_SHADES[10]), 0);
 }
