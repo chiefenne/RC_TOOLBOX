@@ -14,6 +14,7 @@ RC TOOLBOX is a suite of software tools tailored for RC enthusiasts. Designed to
 ### Main Modules
 - **Servo Tester** – Test and calibrate servos with manual PWM control or auto-sweep mode
 - **Lipo Checker** – Monitor LiPo battery cell voltages for safe charging and storage
+- **NFC tag battery information** readout and storage
 - **CG Scale** – Measure center of gravity for precise aircraft balancing
 - **Flap Deflection** – Measure control surface deflection angles
 - **Angle of Incidence** – Measure wing and stabilizer incidence angles
