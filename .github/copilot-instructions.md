@@ -16,20 +16,50 @@ The `gui/` folder is shared between both targets—code must compile for both.
 - `gui/pages/` – one file per page: `page_*.cpp` + `page_*.h`
 - `gui/lang/` – translations: `strings_en.h`, `strings_de.h`
 - `gui/fonts/` – pre-generated LVGL font files (Arial, Courier New, STIXTwoMath)
+- `gui/images/` – image assets (C arrays, see `images.h`)
 - `simulator/` – macOS simulator with SDL2
 - `include/lv_conf.h` – ESP32 LVGL config
 - `lvgl/lv_conf.h` – Simulator LVGL config
 
-### Page Navigation Pattern
-Pages follow this pattern (see `gui/pages/page_home.cpp`):
+### Key Files
+- `gui/page_base.h` – base class `PageBase` for all pages with helper methods
+- `gui/settings_builder.h` – reusable `SettingsBuilder` for settings-style pages
+- `gui/style_utils.h` – helper functions like `gui_set_style_flat()`
+- `gui/gui_data.h` – global `gui_data_t` struct for shared state
+- `gui/version.h` – version string constants
+
+### Page Pattern (Class-Based)
+Pages inherit from `PageBase` (see `gui/page_base.h`):
 ```cpp
-#include "gui/gui.h"
-void page_xxx_create(lv_obj_t* parent) {
-    // Build UI inside parent container
-    // Use gui_set_page(PAGE_XXX) for navigation
-}
+#include "gui/page_base.h"
+
+class PageXxx : public PageBase {
+protected:
+    void on_create(lv_obj_t* parent) override {
+        // Build UI inside parent container
+    }
+    void on_destroy() override { /* cleanup timers, etc. */ }
+    bool is_busy() const override { return false; }
+    void stop() override { /* stop running processes */ }
+};
 ```
-Register new pages in `gui/gui.h` (enum `GuiPage`) and `gui/gui.cpp` (switch in `gui_set_page`).
+`PageBase` provides helpers: `create_row()`, `create_button()`, `set_button_text()`, `clamp()`.
+
+### Standard Button Colors
+Use `PageColors` namespace from `gui/page_base.h`:
+```cpp
+PageColors::BTN_ACTIVE    // Green - active state
+PageColors::BTN_INACTIVE  // Gray - inactive state
+PageColors::BTN_STOP      // Red - stop/danger
+PageColors::BTN_PRIMARY   // Blue - primary action
+PageColors::TEXT_DARK     // Dark text
+PageColors::TEXT_PRIMARY  // Primary text
+```
+
+### Registering Pages
+1. Add `PAGE_XXX` to `GuiPage` enum in `gui/gui.h`
+2. Add case in `gui_set_page()` in `gui/gui.cpp`
+3. Call `gui_set_page(PAGE_XXX)` for navigation
 
 ## Build Commands
 
@@ -39,6 +69,8 @@ Register new pages in `gui/gui.h` (enum `GuiPage`) and `gui/gui.cpp` (switch in 
 ./simulator/build_sim_debug.sh  # Debug build → binaries/lvgl_simulator_macOS_debug
 ```
 Requires: SDL2 (`brew install sdl2`), pre-built `lvgl/liblvgl.a`
+
+VS Code tasks are also available: "Build LVGL Simulator (Release)" and "Build LVGL Simulator (Debug)".
 
 ### Rebuilding LVGL Library (one-time or after LVGL updates)
 The simulator links against `lvgl/liblvgl.a`. To rebuild it:
