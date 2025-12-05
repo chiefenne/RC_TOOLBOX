@@ -26,5 +26,6 @@ enum BgColorPreset {
 
 void gui_init();
 void gui_set_page(GuiPage page);
+GuiPage gui_get_current_page();
 void gui_set_bg_color(BgColorPreset preset);
 BgColorPreset gui_get_bg_color();

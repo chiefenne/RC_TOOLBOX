@@ -28,7 +28,7 @@ for src in gui/images/*.c; do
 done
 
 # Build the simulator with debug symbols
-clang++ $DEBUG_FLAGS simulator/main.cpp simulator/sim_state.cpp \
+clang++ $DEBUG_FLAGS simulator/main.cpp simulator/sim_state.cpp simulator/input_sim.cpp \
     gui/*.cpp gui/config/*.cpp gui/pages/*.cpp "${FONT_OBJS[@]}" "${IMAGE_OBJS[@]}" \
     $INCLUDES \
     -std=c++17 \

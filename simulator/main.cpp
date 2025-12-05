@@ -4,9 +4,12 @@
 #include <SDL2/SDL.h>
 #include <vector>
 #include <cstring>
-#include "gui/gui.h" // is not a compatibility shim, so we need the folder
+#include "gui/gui.h"
 #include "gui/gui_data.h"
-#include "gui/pages/page_servo.h"
+#include "gui/input.h"
+
+// Forward declaration for input_sim.cpp
+void input_handle_sdl_event(const SDL_Event& e);
 
 constexpr int HRES = 320;
 constexpr int VRES = 240;
@@ -70,6 +73,7 @@ int main(int argc, char** argv) {
     });
 
     gui_sim_init();   // ← starts your real GUI
+    input_init();     // Initialize input system
 
     Uint32 last = SDL_GetTicks();
     while (true) {
@@ -80,14 +84,13 @@ int main(int argc, char** argv) {
         SDL_Event e;
         while (SDL_PollEvent(&e)) {
             if (e.type == SDL_QUIT) return 0;
-            // Handle keyboard for PWM adjustment
-            if (e.type == SDL_KEYDOWN) {
-                if (e.key.keysym.sym == SDLK_LEFT) {
-                    page_servo_adjust_pwm(-10);  // Decrease PWM by 10µs
-                } else if (e.key.keysym.sym == SDLK_RIGHT) {
-                    page_servo_adjust_pwm(10);   // Increase PWM by 10µs
-                }
-            }
+            // Handle keyboard input
+            input_handle_sdl_event(e);
+        }
+        // Process any pending input events
+        InputEvent ev = input_poll();
+        if (ev != INPUT_NONE) {
+            input_process(ev);
         }
         SDL_Delay(5);
     }

@@ -5,8 +5,11 @@ void page_servo_create(lv_obj_t* parent);
 void page_servo_destroy();
 void page_servo_on_hide();  // Stop sweep when leaving page
 
-// For simulator: adjust PWM value by delta (e.g., +10 or -10)
+// For encoder/keyboard: adjust PWM value by delta (e.g., +10 or -10)
 void page_servo_adjust_pwm(int delta);
+
+// Toggle auto-sweep on/off (for action button)
+void page_servo_toggle_sweep();
 
 // Check if servo auto-sweep is running (blocks navigation)
 bool page_servo_is_running();

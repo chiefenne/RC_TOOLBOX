@@ -254,3 +254,9 @@ void page_servo_stop() {
 void page_servo_adjust_pwm(int delta) {
     if (S.slider) { S.pwm += delta; S.clamp(); S.update_display(); }
 }
+
+void page_servo_toggle_sweep() {
+    if (!S.btn_start) return;
+    // Simulate clicking the start/stop button
+    lv_obj_send_event(S.btn_start, LV_EVENT_CLICKED, nullptr);
+}

@@ -300,3 +300,8 @@ BgColorPreset gui_get_bg_color()
 {
     return active_bg_color;
 }
+
+GuiPage gui_get_current_page()
+{
+    return active_page;
+}
