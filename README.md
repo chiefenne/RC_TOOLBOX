@@ -11,19 +11,27 @@ RC TOOLBOX is a suite of software tools tailored for RC enthusiasts. Designed to
 
 ## Features
 
+### Main Modules
+- **Servo Tester** – Test and calibrate servos with manual PWM control or auto-sweep mode
+- **Lipo Checker** – Monitor LiPo battery cell voltages for safe charging and storage
+- **CG Scale** – Measure center of gravity for precise aircraft balancing
+- **Flap Deflection** – Measure control surface deflection angles
+- **Angle of Incidence** – Measure wing and stabilizer incidence angles
+
+### User Input
+- **Touch screen** – Intuitive touch-based interaction on ILI9341 TFT display
+- **EC11 rotary encoder with push button** – Precise value adjustment and menu navigation
+- **Tactile buttons** – Quick shortcuts for Home, Back, and Action commands
+
+### User Experience
 - **Multi-language support** – English, German, French, Spanish, Italian, Dutch, Czech
 - **Persistent settings** – Language, background color, and preferences saved to JSON
-- **Customizable UI** – Multiple background color themes
-- **Dual input support** – Touch screen and rotary encoder with tactile buttons
-- **Cross-platform development** – macOS simulator for rapid GUI development
+- **Customizable UI** – Multiple background color themes (Light Gray, White, Light Blue, Light Green, Cream)
+- **Cross-platform development** – macOS simulator for rapid GUI development without hardware
 
 ## GUI
 
-The application features a graphical user interface (GUI) built with [LVGL](https://lvgl.io/) for displaying information and controlling the software. The GUI is optimized for **ILI9341 TFT touch displays** (320x240 resolution). User input is supported via:
-
-- **Touch screen** – intuitive touch-based interaction
-- **EC11 rotary encoder with push button** – for precise value adjustment and navigation
-- **Tactile buttons** – quick shortcuts for common actions
+The application features a graphical user interface (GUI) built with [LVGL](https://lvgl.io/) for displaying information and controlling the software. The GUI is optimized for **ILI9341 TFT touch displays** (320x240 resolution).
 
 <p align="center">
   <img src="assets/Splash_screen.png" width="400"><br>
