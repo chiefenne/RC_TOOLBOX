@@ -18,11 +18,21 @@ static const char* BG_COLOR_OPTIONS =
     "Light Green\n"
     "Cream";
 
+// Language options (must match Language enum order)
+static const char* LANGUAGE_OPTIONS =
+    "English\n"
+    "Deutsch\n"
+    "Français\n"
+    "Español\n"
+    "Italiano\n"
+    "Nederlands\n"
+    "Čeština";
+
 // Callbacks
 static void on_language_change(lv_event_t* e) {
     lv_obj_t* dd = lv_event_get_target_obj(e);
     uint16_t sel = lv_dropdown_get_selected(dd);
-    lang_set(sel == 0 ? LANG_EN : LANG_DE);
+    lang_set((Language)sel);
     gui_set_page(PAGE_SETTINGS);  // Refresh to show new language
 }
 
@@ -43,8 +53,8 @@ void page_settings_create(lv_obj_t* parent) {
 
     // Language section
     sb.begin_section(tr(STR_SETTINGS_LANGUAGE));
-    sb.dropdown(tr(STR_SETTINGS_LANGUAGE), "English\nDeutsch",
-                lang_get() == LANG_EN ? 0 : 1, on_language_change);
+    sb.dropdown(tr(STR_SETTINGS_LANGUAGE), LANGUAGE_OPTIONS,
+                lang_get(), on_language_change);
     sb.end_section();
 
     // Display section

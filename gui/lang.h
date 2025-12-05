@@ -4,6 +4,11 @@
 enum Language {
     LANG_EN = 0,
     LANG_DE,
+    LANG_FR,
+    LANG_ES,
+    LANG_IT,
+    LANG_NL,
+    LANG_CS,
     LANG_COUNT
 };
 

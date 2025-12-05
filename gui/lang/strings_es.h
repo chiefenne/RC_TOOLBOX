@@ -1,0 +1,61 @@
+// strings_es.h - Spanish translations (Español)
+#pragma once
+
+static const char* strings_es[STR_COUNT] = {
+    // App
+    "RC TOOLBOX",
+    "Herramientas para entusiastas de RC",
+
+    // Splash features
+    "Probador de servo",
+    "Comprobador Lipo",
+    "Balanza CG",
+    "Medición de deflexión",
+    "Ángulo de incidencia",
+
+    // Page titles
+    "RC TOOLBOX",
+    "Probador de Servo",
+    "Comprobador Lipo",
+    "Balanza CG",
+    "Deflexión",
+    "Ángulo de Incidencia",
+    "Ajustes",
+    "Acerca de",
+
+    // Home buttons
+    "Probador de Servo",
+    "Comprobador Lipo",
+    "Balanza\nCG",
+    "Deflexión",
+    "Ángulo de\nIncidencia",
+    "Acerca de",
+    "INICIO",
+
+    // About page
+    "Autor:",
+    "Dipl.-Ing. Andreas Ennemoser",
+    "Código fuente:",
+    "github.com/chiefenne/RC_TOOLBOX",
+    "Versión:",
+
+    // Settings
+    "Idioma",
+
+    // Page content placeholders
+    "Probador de Servo",
+    "Comprobador Lipo",
+    "Balanza CG",
+    "Deflexión",
+    "Medir ángulo de incidencia aquí.",
+
+    // Servo page
+    "Auto",
+    "Manual",
+    "PWM",
+    "Posición",
+    "Iniciar",
+    "Parar",
+    "Velocidad",
+    "µs"
+};
