@@ -14,5 +14,17 @@ enum GuiPage {
     PAGE_COUNT
 };
 
+// Background color presets
+enum BgColorPreset {
+    BG_COLOR_LIGHT_GRAY = 0,  // Default - GUI_COLOR_GRAYS[8]
+    BG_COLOR_WHITE,
+    BG_COLOR_LIGHT_BLUE,
+    BG_COLOR_LIGHT_GREEN,
+    BG_COLOR_CREAM,
+    BG_COLOR_COUNT
+};
+
 void gui_init();
 void gui_set_page(GuiPage page);
+void gui_set_bg_color(BgColorPreset preset);
+BgColorPreset gui_get_bg_color();

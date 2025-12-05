@@ -10,6 +10,9 @@
 static int s_brightness = 80;
 static bool s_dark_mode = false;
 
+// Background color options (must match BgColorPreset enum order)
+static const char* BG_COLOR_OPTIONS = "Light Gray\nWhite\nLight Blue\nLight Green\nCream";
+
 // Callbacks
 static void on_language_change(lv_event_t* e) {
     lv_obj_t* dd = lv_event_get_target_obj(e);
@@ -30,6 +33,12 @@ static void on_dark_mode_change(lv_event_t* e) {
     // TODO: Apply theme change
 }
 
+static void on_bg_color_change(lv_event_t* e) {
+    lv_obj_t* dd = lv_event_get_target_obj(e);
+    uint16_t sel = lv_dropdown_get_selected(dd);
+    gui_set_bg_color((BgColorPreset)sel);
+}
+
 void page_settings_create(lv_obj_t* parent) {
     SettingsBuilder sb(parent);
 
@@ -39,9 +48,10 @@ void page_settings_create(lv_obj_t* parent) {
                 lang_get() == LANG_EN ? 0 : 1, on_language_change);
     sb.end_section();
 
-    // Display section (demo)
+    // Display section
     sb.begin_section("Display");
     sb.slider("Brightness", 10, 100, s_brightness, on_brightness_change);
+    sb.dropdown("Background", BG_COLOR_OPTIONS, gui_get_bg_color(), on_bg_color_change);
     sb.toggle("Dark Mode", s_dark_mode, on_dark_mode_change);
     sb.end_section();
 
