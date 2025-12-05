@@ -29,15 +29,6 @@ static GuiPage active_page = PAGE_COUNT; // sentinel so first gui_set_page runs
 static bool splash_shown = false;
 static BgColorPreset active_bg_color = BG_COLOR_LIGHT_GRAY;
 
-// Background color lookup table
-static const uint32_t BG_COLORS[] = {
-    0xD0D0D0,  // Light Gray (default)
-    0xFFFFFF,  // White
-    0xE9F2F9,  // Light Blue (GUI_COLOR_TINTS[9])
-    0xE8F5E9,  // Light Green
-    0xFFF8E1,  // Cream
-};
-
 // Layout
 static const lv_coord_t HEADER_HEIGHT = 36;
 static const lv_coord_t FOOTER_HEIGHT = 32;
@@ -292,7 +283,7 @@ void gui_set_bg_color(BgColorPreset preset)
 {
     if (preset >= BG_COLOR_COUNT) return;
     active_bg_color = preset;
-    lv_color_t color = lv_color_hex(BG_COLORS[preset]);
+    lv_color_t color = lv_color_hex(GUI_COLOR_BG[preset]);
     lv_obj_set_style_bg_color(content, color, 0);
 }
 

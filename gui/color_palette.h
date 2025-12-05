@@ -60,3 +60,12 @@ static const uint32_t GUI_COLOR_TRIAD[] = {
     0xCC2986, // pressed tab feedback
     0x86CC29  // active tab highlight
 };
+
+// Background color presets for content area.
+static const uint32_t GUI_COLOR_BG[] = {
+    0xD0D0D0,  // Light Gray (default)
+    0xFFFFFF,  // White
+    0xE9F2F9,  // Light Blue
+    0xE8F5E9,  // Light Green
+    0xFFF8E1,  // Cream
+};

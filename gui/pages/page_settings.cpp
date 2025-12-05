@@ -11,7 +11,12 @@ static int s_brightness = 80;
 static bool s_dark_mode = false;
 
 // Background color options (must match BgColorPreset enum order)
-static const char* BG_COLOR_OPTIONS = "Light Gray\nWhite\nLight Blue\nLight Green\nCream";
+static const char* BG_COLOR_OPTIONS =
+    "Light Gray\n"
+    "White\n"
+    "Light Blue\n"
+    "Light Green\n"
+    "Cream";
 
 // Callbacks
 static void on_language_change(lv_event_t* e) {
@@ -25,12 +30,6 @@ static void on_brightness_change(lv_event_t* e) {
     lv_obj_t* sl = lv_event_get_target_obj(e);
     s_brightness = lv_slider_get_value(sl);
     // TODO: Apply brightness to display
-}
-
-static void on_dark_mode_change(lv_event_t* e) {
-    lv_obj_t* sw = lv_event_get_target_obj(e);
-    s_dark_mode = lv_obj_has_state(sw, LV_STATE_CHECKED);
-    // TODO: Apply theme change
 }
 
 static void on_bg_color_change(lv_event_t* e) {
@@ -52,7 +51,6 @@ void page_settings_create(lv_obj_t* parent) {
     sb.begin_section("Display");
     sb.slider("Brightness", 10, 100, s_brightness, on_brightness_change);
     sb.dropdown("Background", BG_COLOR_OPTIONS, gui_get_bg_color(), on_bg_color_change);
-    sb.toggle("Dark Mode", s_dark_mode, on_dark_mode_change);
     sb.end_section();
 
     // System section
