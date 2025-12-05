@@ -193,6 +193,12 @@ static void splash_timer_cb(lv_timer_t *timer)
 
 void gui_set_page(GuiPage p)
 {
+    // Clean up previous page if needed
+    if (active_page == PAGE_SERVO) {
+        page_servo_on_hide();  // Stop sweep gracefully
+        page_servo_destroy();  // Clean up timer
+    }
+
     active_page = p;
 
     lv_obj_clean(content);
