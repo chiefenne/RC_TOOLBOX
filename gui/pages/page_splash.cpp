@@ -1,4 +1,5 @@
 #include "lvgl.h"
+#include "gui/gui.h"
 #include "gui/fonts.h"
 #include "gui/color_palette.h"
 #include "gui/lang.h"
@@ -11,6 +12,7 @@
 static lv_obj_t* splash_logo = nullptr;
 static lv_obj_t* splash_text_container = nullptr;
 static lv_timer_t* splash_timer = nullptr;
+static lv_obj_t* splash_parent = nullptr;  // Store parent for background changes
 
 // Cleanup function - call before destroying splash page
 void page_splash_cleanup(void) {
@@ -20,6 +22,7 @@ void page_splash_cleanup(void) {
     }
     splash_logo = nullptr;
     splash_text_container = nullptr;
+    splash_parent = nullptr;
 }
 
 // Timer callback to transition from logo to text
@@ -35,6 +38,9 @@ static void splash_phase_callback(lv_timer_t* timer) {
         return;
     }
 
+    // Restore default background color
+    gui_set_bg_color(gui_get_bg_color());
+
     // Hide logo, show text
     lv_obj_add_flag(splash_logo, LV_OBJ_FLAG_HIDDEN);
     lv_obj_remove_flag(splash_text_container, LV_OBJ_FLAG_HIDDEN);
@@ -47,6 +53,11 @@ static void splash_phase_callback(lv_timer_t* timer) {
 }
 
 void page_splash_create(lv_obj_t* parent) {
+    splash_parent = parent;
+
+    // Set white background for logo phase
+    lv_obj_set_style_bg_color(parent, lv_color_hex(GUI_COLOR_BG[BG_COLOR_WHITE]), 0);
+
     // Set up flex layout for vertical centering
     lv_obj_set_flex_flow(parent, LV_FLEX_FLOW_COLUMN);
     lv_obj_set_flex_align(parent, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);

@@ -3,6 +3,7 @@
 #include "gui/fonts.h"
 #include "gui/color_palette.h"
 #include "gui/lang.h"
+#include "gui/config/settings.h"
 #include "style_utils.h"
 #include "gui/pages/page_splash.h"
 #include "gui/pages/page_home.h"
@@ -54,6 +55,14 @@ static void create_splash_footer();
 
 void gui_init()
 {
+    // Load saved settings
+    settings_init();
+    settings_load();
+
+    // Apply loaded settings
+    lang_set((Language)g_settings.language);
+    active_bg_color = (BgColorPreset)g_settings.bg_color;
+
     lv_obj_t *scr = lv_screen_active();
     lv_obj_set_style_bg_color(scr, COLOR_SURFACE, 0);
 
@@ -80,7 +89,7 @@ void gui_init()
     content = lv_obj_create(scr);
     lv_obj_set_size(content, LV_PCT(100), content_height);
     lv_obj_set_pos(content, 0, HEADER_HEIGHT);
-    lv_obj_set_style_bg_color(content, COLOR_SURFACE, 0);
+    lv_obj_set_style_bg_color(content, lv_color_hex(GUI_COLOR_BG[0]), 0);
     lv_obj_set_style_border_width(content, 0, 0);
     lv_obj_set_style_pad_all(content, 0, 0);  // No padding - let pages control their layout
 

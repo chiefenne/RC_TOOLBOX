@@ -29,7 +29,7 @@ done
 
 # Build the simulator with debug symbols
 clang++ $DEBUG_FLAGS simulator/main.cpp simulator/sim_state.cpp \
-    gui/*.cpp gui/pages/*.cpp "${FONT_OBJS[@]}" "${IMAGE_OBJS[@]}" \
+    gui/*.cpp gui/config/*.cpp gui/pages/*.cpp "${FONT_OBJS[@]}" "${IMAGE_OBJS[@]}" \
     $INCLUDES \
     -std=c++17 \
     lvgl/liblvgl.a -lSDL2 \
