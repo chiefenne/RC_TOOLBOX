@@ -66,7 +66,7 @@ The toolbox includes the following modules:
 
 ### Development PCB
 
-A custom PCB was designed for software development to minimize cable clutter and provide a clean, reliable test platform.
+A custom PCB [(produced at AISLER)](https://aisler.net/p/NGHJDVLN) was designed for software development to minimize cable clutter and provide a clean, reliable test platform.
 
 <p align="center">
   <img src="assets/Custom_PCB_01.png" width="380">
