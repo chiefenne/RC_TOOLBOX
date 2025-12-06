@@ -66,7 +66,7 @@ The toolbox includes the following modules:
 
 ### Development PCB
 
-A custom PCB was designed for software development to minimize cable clutter and provide a clean, reliable test platform. The PCB ODB++ files can be downloaded from [AISLER](https://aisler.net/p/NGHJDVLN). There is no guarantee that the PCB works (yet). The schematics are [here](assets/ESP32_DevkitC-1_TFT_Touch_Display_ILI9341.pdf).
+A custom PCB has been designed for software development to minimize cable clutter and provide a clean, reliable test platform. The PCB ODB++ files are available for download from [AISLER](https://aisler.net/p/NGHJDVLN). Please note that the PCB functionality has not yet been fully verified. The schematics can be found [here](assets/ESP32_DevkitC-1_TFT_Touch_Display_ILI9341.pdf). Note that this PCB is also used for developing a wireless CNC controller, which explains the naming conventions on the schematic.
 
 <p align="center">
   <img src="assets/Custom_PCB_01.png" width="380">
