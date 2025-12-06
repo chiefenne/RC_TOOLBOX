@@ -60,14 +60,14 @@ void page_settings_create(lv_obj_t* parent) {
     sb.end_section();
 
     // Display section
-    sb.begin_section("Display");
-    sb.slider("Brightness", 10, 100, g_settings.brightness, on_brightness_change);
-    sb.dropdown("Background", BG_COLOR_OPTIONS, gui_get_bg_color(), on_bg_color_change);
+    sb.begin_section(tr(STR_SETTINGS_DISPLAY));
+    sb.slider(tr(STR_SETTINGS_BRIGHTNESS), 10, 100, g_settings.brightness, on_brightness_change);
+    sb.dropdown(tr(STR_SETTINGS_BACKGROUND), BG_COLOR_OPTIONS, gui_get_bg_color(), on_bg_color_change);
     sb.end_section();
 
     // System section
-    sb.begin_section("System");
-    sb.info("Firmware", APP_VERSION);
+    sb.begin_section(tr(STR_SETTINGS_SYSTEM));
+    sb.info(tr(STR_SETTINGS_FIRMWARE), APP_VERSION);
     sb.info("LVGL", LVGL_VERSION_STRING);
     sb.end_section();
 }

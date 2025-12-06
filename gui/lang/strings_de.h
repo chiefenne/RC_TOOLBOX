@@ -41,6 +41,11 @@ static const char* strings_de[STR_COUNT] = {
 
     // Settings
     "Sprache",
+    "Anzeige",
+    "Helligkeit",
+    "Hintergrund",
+    "System",
+    "Firmware",
 
     // Page content placeholders
     "Servo-Tester",

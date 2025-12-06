@@ -53,6 +53,11 @@ enum StringId {
 
     // Settings
     STR_SETTINGS_LANGUAGE,
+    STR_SETTINGS_DISPLAY,
+    STR_SETTINGS_BRIGHTNESS,
+    STR_SETTINGS_BACKGROUND,
+    STR_SETTINGS_SYSTEM,
+    STR_SETTINGS_FIRMWARE,
 
     // Page content placeholders
     STR_SERVO_CONTENT,

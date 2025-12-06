@@ -41,6 +41,11 @@ static const char* strings_nl[STR_COUNT] = {
 
     // Settings
     "Taal",
+    "Weergave",
+    "Helderheid",
+    "Achtergrond",
+    "Systeem",
+    "Firmware",
 
     // Page content placeholders
     "Servo Tester",
