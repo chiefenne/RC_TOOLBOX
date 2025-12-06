@@ -49,7 +49,7 @@ struct ServoState {
     lv_obj_t* row_manual = nullptr;
 
     void reset() { pwm = PWM_CENTER; auto_mode = true; running = false; direction = 1; }
-    void clamp() { pwm = std::clamp(pwm, PWM_MIN, PWM_MAX); }
+    void clamp() { pwm = (pwm < PWM_MIN) ? PWM_MIN : (pwm > PWM_MAX) ? PWM_MAX : pwm; }
 
     void update_display() {
         char buf[8];
