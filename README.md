@@ -62,6 +62,18 @@ The toolbox includes the following modules:
 | **Angle of Incidence** | Measure wing/stabilizer incidence angles |
 | **Settings** | Configure language, display brightness, background color |
 
+## Hardware
+
+### Development PCB
+
+A custom PCB was designed for software development to minimize cable clutter and provide a clean, reliable test platform.
+
+<p align="center">
+  <img src="assets/Custom_PCB_01.png" width="380">
+  <img src="assets/Custom_PCB_02.png" width="380"><br>
+  <em>Custom development PCB for ESP32-S3 DevKitC-1 and ILI9341 2.4" TFT touch display</em>
+</p>
+
 ## Credits
 
 This project was inspired by following resources:
