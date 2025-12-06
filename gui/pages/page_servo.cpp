@@ -5,15 +5,13 @@
 #include "gui/fonts.h"
 #include "gui/color_palette.h"
 #include "gui/lang.h"
+#include "gui/config/settings.h"
 #include <algorithm>
 #include <cstdio>
 
 // Configuration constants
 namespace {
-    // PWM range (microseconds)
-    constexpr int PWM_MIN     = 1000;
-    constexpr int PWM_CENTER  = 1500;
-    constexpr int PWM_MAX     = 2000;
+    // PWM values now come from settings - these are just for step size
     constexpr int PWM_STEP    = 10;
 
     // Timer interval (50Hz update rate)
@@ -28,11 +26,16 @@ namespace {
     const lv_color_t COL_STOP     = lv_color_hex(0xCC3333);
     const lv_color_t COL_PRIMARY  = lv_color_hex(GUI_COLOR_MONO[0]);
     const lv_color_t COL_TEXT     = lv_color_hex(GUI_COLOR_SHADES[7]);
+
+    // Helper macros to get PWM values from settings
+    #define PWM_MIN    ((int)g_settings.servo_pwm_min)
+    #define PWM_CENTER ((int)g_settings.servo_pwm_center)
+    #define PWM_MAX    ((int)g_settings.servo_pwm_max)
 }
 
 // State
 struct ServoState {
-    int pwm = PWM_CENTER;
+    int pwm = 1500;  // Will be reset to PWM_CENTER on page load
     bool auto_mode = true;
     bool running = false;
     int direction = 1;
@@ -55,7 +58,10 @@ struct ServoState {
         char buf[8];
         snprintf(buf, sizeof(buf), "%d", pwm);
         lv_label_set_text(lbl_pwm, buf);
-        lv_slider_set_value(slider, (pwm - PWM_MIN) / PWM_STEP, LV_ANIM_ON);
+        // Scale slider to 0-100 range based on current PWM range
+        int range = PWM_MAX - PWM_MIN;
+        int slider_val = (range > 0) ? ((pwm - PWM_MIN) * 100 / range) : 50;
+        lv_slider_set_value(slider, slider_val, LV_ANIM_ON);
     }
 
     void update_ui() {
@@ -148,7 +154,10 @@ static void on_preset(lv_event_t* e) {
 }
 
 static void on_slider(lv_event_t* e) {
-    S.pwm = PWM_MIN + lv_slider_get_value(lv_event_get_target_obj(e)) * PWM_STEP;
+    // Slider is 0-100, map to PWM range from settings
+    int slider_val = lv_slider_get_value(lv_event_get_target_obj(e));
+    int range = PWM_MAX - PWM_MIN;
+    S.pwm = PWM_MIN + (slider_val * range / 100);
     char buf[8];
     snprintf(buf, sizeof(buf), "%d", S.pwm);
     lv_label_set_text(S.lbl_pwm, buf);

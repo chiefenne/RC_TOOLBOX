@@ -17,6 +17,7 @@
 
 static lv_obj_t *header;
 static lv_obj_t *header_title;
+static lv_obj_t *header_subtitle;
 static lv_obj_t *footer;
 static lv_obj_t *content;
 static lv_obj_t *btn_home;
@@ -53,6 +54,17 @@ static void splash_timer_cb(lv_timer_t *timer);
 static void create_nav_buttons();
 static void create_splash_footer();
 
+// Get servo protocol name for header display
+static const char* get_servo_protocol_name() {
+    static const char* names[] = {
+        "Standard", "Extended", "Sanwa", "Futaba", "Fast", "Custom"
+    };
+    if (g_settings.servo_protocol < SERVO_PROTOCOL_COUNT) {
+        return names[g_settings.servo_protocol];
+    }
+    return "";
+}
+
 void gui_init()
 {
     // Load saved settings
@@ -81,6 +93,13 @@ void gui_init()
     lv_obj_set_style_text_opa(header_title, LV_OPA_COVER, 0);
     lv_obj_set_style_text_font(header_title, FONT_HEADER, 0);
     lv_obj_center(header_title);
+
+    // Header subtitle (right-aligned, smaller font - for protocol indicator etc.)
+    header_subtitle = lv_label_create(header);
+    lv_label_set_text(header_subtitle, "");
+    lv_obj_set_style_text_color(header_subtitle, lv_color_hex(0xCCCCCC), 0);  // Light gray
+    lv_obj_set_style_text_font(header_subtitle, FONT_DEFAULT, 0);  // Smaller font
+    lv_obj_align(header_subtitle, LV_ALIGN_RIGHT_MID, -10, 0);
 
     // Content area - fixed height between header and footer
     lv_coord_t screen_height = lv_display_get_vertical_resolution(NULL);
@@ -211,6 +230,9 @@ void gui_set_page(GuiPage p)
 
     active_page = p;
 
+    // Clear header subtitle by default
+    lv_label_set_text(header_subtitle, "");
+
     lv_obj_clean(content);
     switch (p) {
         case PAGE_HOME:
@@ -219,6 +241,7 @@ void gui_set_page(GuiPage p)
             break;
         case PAGE_SERVO:
             lv_label_set_text(header_title, tr(STR_PAGE_SERVO));
+            lv_label_set_text(header_subtitle, get_servo_protocol_name());  // Show protocol
             page_servo_create(content);
             break;
         case PAGE_LIPO:

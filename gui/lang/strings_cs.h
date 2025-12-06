@@ -47,6 +47,14 @@ static const char* strings_cs[STR_COUNT] = {
     "Systém",
     "Firmware",
 
+    // Servo settings
+    "Servo",
+    "Protokol",
+    "PWM Min",
+    "PWM Střed",
+    "PWM Max",
+    "Frekvence",
+
     // Page content placeholders
     "Tester Serv",
     "Kontrola Lipo",

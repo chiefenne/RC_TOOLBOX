@@ -7,7 +7,18 @@
 #include "gui/lang.h"
 
 // Settings version - increment when adding/changing settings structure
-#define SETTINGS_VERSION 1
+#define SETTINGS_VERSION 2
+
+// Servo protocol presets
+enum ServoProtocol {
+    SERVO_STANDARD = 0,   // 1000-1500-2000 @ 50Hz
+    SERVO_EXTENDED,       // 500-1500-2500 @ 50Hz
+    SERVO_SANWA,          // 920-1520-2120 @ 50Hz
+    SERVO_FUTABA,         // 900-1500-2100 @ 50Hz
+    SERVO_DIGITAL_FAST,   // 1000-1500-2000 @ 333Hz
+    SERVO_CUSTOM,         // User-defined values
+    SERVO_PROTOCOL_COUNT
+};
 
 // Settings structure with defaults
 struct Settings {
@@ -15,7 +26,17 @@ struct Settings {
     uint8_t language   = LANG_EN;
     uint8_t bg_color   = BG_COLOR_LIGHT_GRAY;
     uint8_t brightness = 80;
+
+    // Servo settings
+    uint8_t  servo_protocol   = SERVO_STANDARD;
+    uint16_t servo_pwm_min    = 1000;
+    uint16_t servo_pwm_center = 1500;
+    uint16_t servo_pwm_max    = 2000;
+    uint16_t servo_frequency  = 50;   // Hz
 };
+
+// Apply servo preset values (updates min/center/max/frequency based on protocol)
+void servo_apply_preset(ServoProtocol protocol);
 
 // Global settings instance
 extern Settings g_settings;

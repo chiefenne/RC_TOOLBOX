@@ -47,6 +47,14 @@ static const char* strings_fr[STR_COUNT] = {
     "Système",
     "Micrologiciel",
 
+    // Servo settings
+    "Servo",
+    "Protocole",
+    "PWM Min",
+    "PWM Centre",
+    "PWM Max",
+    "Fréquence",
+
     // Page content placeholders
     "Testeur de Servo",
     "Vérificateur Lipo",
