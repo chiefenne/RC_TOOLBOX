@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/RC_Toolbox_Logo.png" width="400">
+  <img src="assets/RC_Toolbox_Logo.png" width="280">
 </p>
 
 > **⚠️ Work in Progress**
