@@ -1,4 +1,4 @@
-// gui/gui.cpp – bare minimum, works instantly in simulator
+// gui/gui.cpp – Page management with registry-based lifecycle
 #include "gui/gui.h"
 #include "gui/fonts.h"
 #include "gui/color_palette.h"
@@ -15,6 +15,55 @@
 #include "gui/pages/page_settings.h"
 #include "gui/pages/page_about.h"
 
+// ============================================================================
+// Page Registry - Uniform lifecycle for all pages
+// ============================================================================
+
+// Page entry with lifecycle function pointers (nullptr = no-op)
+struct PageEntry {
+    StringId       title_id;                    // Header title string ID
+    void         (*create)(lv_obj_t* parent);   // Required: build page UI
+    void         (*destroy)();                  // Optional: cleanup timers/state
+    bool         (*is_busy)();                  // Optional: block navigation if true
+    void         (*stop)();                     // Optional: graceful stop before destroy
+    const char*  (*subtitle)();                 // Optional: header subtitle (e.g., protocol)
+};
+
+// Get servo protocol name for header display
+static const char* get_servo_protocol_name() {
+    static const char* names[] = {
+        "Standard", "Extended", "Sanwa", "Futaba", "Fast", "Custom"
+    };
+    if (g_settings.servo_protocol < SERVO_PROTOCOL_COUNT) {
+        return names[g_settings.servo_protocol];
+    }
+    return "";
+}
+
+// Page registry - must match GuiPage enum order
+static const PageEntry PAGE_REGISTRY[PAGE_COUNT] = {
+    // PAGE_HOME
+    { STR_PAGE_HOME,       page_home_create,       nullptr,              nullptr,                 nullptr,           nullptr },
+    // PAGE_SERVO
+    { STR_PAGE_SERVO,      page_servo_create,      page_servo_destroy,   page_servo_is_running,   page_servo_stop,   get_servo_protocol_name },
+    // PAGE_LIPO
+    { STR_PAGE_LIPO,       page_lipo_create,       nullptr,              nullptr,                 nullptr,           nullptr },
+    // PAGE_CG_SCALE
+    { STR_PAGE_CG_SCALE,   page_cg_scale_create,   nullptr,              nullptr,                 nullptr,           nullptr },
+    // PAGE_DEFLECTION
+    { STR_PAGE_DEFLECTION, page_deflection_create, nullptr,              nullptr,                 nullptr,           nullptr },
+    // PAGE_ANGLE
+    { STR_PAGE_ANGLE,      page_angle_create,      nullptr,              nullptr,                 nullptr,           nullptr },
+    // PAGE_SETTINGS
+    { STR_PAGE_SETTINGS,   page_settings_create,   page_settings_destroy, nullptr,                nullptr,           nullptr },
+    // PAGE_ABOUT
+    { STR_PAGE_ABOUT,      page_about_create,      nullptr,              nullptr,                 nullptr,           nullptr },
+};
+
+// ============================================================================
+// UI State
+// ============================================================================
+
 static lv_obj_t *header;
 static lv_obj_t *header_title;
 static lv_obj_t *header_subtitle;
@@ -30,6 +79,14 @@ static lv_obj_t *splash_footer_right;
 static GuiPage active_page = PAGE_COUNT; // sentinel so first gui_set_page runs
 static bool splash_shown = false;
 static BgColorPreset active_bg_color = BG_COLOR_LIGHT_GRAY;
+
+// Check if current page is busy (blocks navigation)
+static bool gui_page_is_busy() {
+    if (active_page < PAGE_COUNT && PAGE_REGISTRY[active_page].is_busy) {
+        return PAGE_REGISTRY[active_page].is_busy();
+    }
+    return false;
+}
 
 // Layout
 static const lv_coord_t HEADER_HEIGHT = 36;
@@ -53,17 +110,6 @@ static void btn_settings_event_cb(lv_event_t *e);
 static void splash_timer_cb(lv_timer_t *timer);
 static void create_nav_buttons();
 static void create_splash_footer();
-
-// Get servo protocol name for header display
-static const char* get_servo_protocol_name() {
-    static const char* names[] = {
-        "Standard", "Extended", "Sanwa", "Futaba", "Fast", "Custom"
-    };
-    if (g_settings.servo_protocol < SERVO_PROTOCOL_COUNT) {
-        return names[g_settings.servo_protocol];
-    }
-    return "";
-}
 
 void gui_init()
 {
@@ -158,7 +204,7 @@ static void create_nav_buttons()
     lv_obj_set_style_border_width(btn_home, 2, 0);
     lv_obj_set_style_border_color(btn_home, COLOR_TEXT_GRAY, 0);
     lv_obj_t *lbl_home = lv_label_create(btn_home);
-    lv_label_set_text(lbl_home, "HOME");
+    lv_label_set_text(lbl_home, tr(STR_BTN_HOME));
     lv_obj_set_style_text_font(lbl_home, FONT_FOOTER, 0);
     lv_obj_set_style_text_color(lbl_home, lv_color_black(), 0);
     lv_obj_set_style_text_opa(lbl_home, LV_OPA_COVER, 0);
@@ -222,68 +268,52 @@ static void splash_timer_cb(lv_timer_t *timer)
 
 void gui_set_page(GuiPage p)
 {
-    // Clean up previous page if needed
-    if (active_page == PAGE_SERVO) {
-        page_servo_on_hide();  // Stop sweep gracefully
-        page_servo_destroy();  // Clean up timer
+    if (p >= PAGE_COUNT) return;
+
+    // Clean up previous page using registry
+    if (active_page < PAGE_COUNT) {
+        const PageEntry& prev = PAGE_REGISTRY[active_page];
+        if (prev.stop) prev.stop();       // Graceful stop first
+        if (prev.destroy) prev.destroy(); // Then cleanup
     }
 
     active_page = p;
+    const PageEntry& curr = PAGE_REGISTRY[p];
 
-    // Clear header subtitle by default
-    lv_label_set_text(header_subtitle, "");
-
-    lv_obj_clean(content);
-    switch (p) {
-        case PAGE_HOME:
-            lv_label_set_text(header_title, tr(STR_PAGE_HOME));
-            page_home_create(content);
-            break;
-        case PAGE_SERVO:
-            lv_label_set_text(header_title, tr(STR_PAGE_SERVO));
-            lv_label_set_text(header_subtitle, get_servo_protocol_name());  // Show protocol
-            page_servo_create(content);
-            break;
-        case PAGE_LIPO:
-            lv_label_set_text(header_title, tr(STR_PAGE_LIPO));
-            page_lipo_create(content);
-            break;
-        case PAGE_CG_SCALE:
-            lv_label_set_text(header_title, tr(STR_PAGE_CG_SCALE));
-            page_cg_scale_create(content);
-            break;
-        case PAGE_DEFLECTION:
-            lv_label_set_text(header_title, tr(STR_PAGE_DEFLECTION));
-            page_deflection_create(content);
-            break;
-        case PAGE_ANGLE:
-            lv_label_set_text(header_title, tr(STR_PAGE_ANGLE));
-            page_angle_create(content);
-            break;
-        case PAGE_SETTINGS:
-            lv_label_set_text(header_title, tr(STR_PAGE_SETTINGS));
-            page_settings_create(content);
-            break;
-        case PAGE_ABOUT:
-            lv_label_set_text(header_title, tr(STR_PAGE_ABOUT));
-            page_about_create(content);
-            break;
-        default:
-            break;
+    // Set header title and optional subtitle
+    lv_label_set_text(header_title, tr(curr.title_id));
+    if (curr.subtitle) {
+        lv_label_set_text(header_subtitle, curr.subtitle());
+    } else {
+        lv_label_set_text(header_subtitle, "");
     }
+
+    // Clean content and reset its layout state
+    lv_obj_clean(content);
+    lv_obj_set_style_pad_all(content, 0, 0);
+    lv_obj_set_style_pad_row(content, 0, 0);
+    lv_obj_set_style_pad_column(content, 0, 0);
+    lv_obj_set_flex_flow(content, LV_FLEX_FLOW_COLUMN);  // Default, pages can override
+    lv_obj_set_flex_align(content, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
+    lv_obj_set_scrollbar_mode(content, LV_SCROLLBAR_MODE_OFF);
+    lv_obj_clear_flag(content, LV_OBJ_FLAG_SCROLLABLE);
+    lv_obj_scroll_to(content, 0, 0, LV_ANIM_OFF);  // Reset scroll position
+
+    // Create new page
+    curr.create(content);
 }
 
 static void btn_home_event_cb(lv_event_t *e)
 {
     LV_UNUSED(e);
-    if (active_page == PAGE_SERVO && page_servo_is_running()) return;  // Block while servo running
+    if (gui_page_is_busy()) return;  // Block while page is busy
     gui_set_page(PAGE_HOME);
 }
 
 static void btn_prev_event_cb(lv_event_t *e)
 {
     LV_UNUSED(e);
-    if (active_page == PAGE_SERVO && page_servo_is_running()) return;  // Block while servo running
+    if (gui_page_is_busy()) return;  // Block while page is busy
     // Navigate: HOME -> SETTINGS -> DATA -> HOME (skip splash)
     int next_page = (int)active_page - 1;
     if (next_page < PAGE_HOME) {
@@ -295,7 +325,7 @@ static void btn_prev_event_cb(lv_event_t *e)
 static void btn_next_event_cb(lv_event_t *e)
 {
     LV_UNUSED(e);
-    if (active_page == PAGE_SERVO && page_servo_is_running()) return;  // Block while servo running
+    if (gui_page_is_busy()) return;  // Block while page is busy
     // Navigate: HOME -> DATA -> SETTINGS -> HOME (skip splash)
     int next_page = (int)active_page + 1;
     if (next_page >= PAGE_COUNT) {
@@ -307,7 +337,7 @@ static void btn_next_event_cb(lv_event_t *e)
 static void btn_settings_event_cb(lv_event_t *e)
 {
     LV_UNUSED(e);
-    if (active_page == PAGE_SERVO && page_servo_is_running()) return;  // Block while servo running
+    if (gui_page_is_busy()) return;  // Block while page is busy
     gui_set_page(PAGE_SETTINGS);
 }
 

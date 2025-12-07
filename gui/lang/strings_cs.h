@@ -70,5 +70,16 @@ static const char* strings_cs[STR_COUNT] = {
     "Spustit",
     "Zastavit",
     "Rychlost",
-    "µs"
+    "µs",
+
+    // Background color options
+    "Světle šedá",
+    "Bílá",
+    "Světle modrá",
+    "Světle zelená",
+    "Krémová",
+
+    // Frequency options
+    "50 Hz",
+    "333 Hz"
 };

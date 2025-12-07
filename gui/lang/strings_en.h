@@ -70,5 +70,16 @@ static const char* strings_en[STR_COUNT] = {
     "Start",
     "Stop",
     "Speed",
-    "µs"
+    "µs",
+
+    // Background color options
+    "Light Gray",
+    "White",
+    "Light Blue",
+    "Light Green",
+    "Cream",
+
+    // Frequency options
+    "50 Hz",
+    "333 Hz"
 };

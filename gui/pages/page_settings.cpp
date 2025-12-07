@@ -7,16 +7,9 @@
 #include "gui/lang.h"
 #include "gui/version.h"
 #include <cstdio>
+#include <cstring>
 
-// Background color options (must match BgColorPreset enum order)
-static const char* BG_COLOR_OPTIONS =
-    "Light Gray\n"
-    "White\n"
-    "Light Blue\n"
-    "Light Green\n"
-    "Cream";
-
-// Language options (must match Language enum order)
+// Language options (must match Language enum order) - kept in native language
 static const char* LANGUAGE_OPTIONS =
     "English\n"
     "Deutsch\n"
@@ -26,7 +19,7 @@ static const char* LANGUAGE_OPTIONS =
     "Nederlands\n"
     "Čeština";
 
-// Servo protocol options (must match ServoProtocol enum order)
+// Servo protocol options (must match ServoProtocol enum order) - industry terms, not translated
 static const char* SERVO_PROTOCOL_OPTIONS =
     "Standard\n"
     "Extended\n"
@@ -35,10 +28,20 @@ static const char* SERVO_PROTOCOL_OPTIONS =
     "Digital Fast\n"
     "Custom";
 
-// Servo frequency options
-static const char* SERVO_FREQ_OPTIONS =
-    "50 Hz\n"
-    "333 Hz";
+// Helper to build translated dropdown options at runtime
+static char bg_color_options[128];
+static char freq_options[64];
+
+static void build_translated_options() {
+    // Background colors
+    snprintf(bg_color_options, sizeof(bg_color_options), "%s\n%s\n%s\n%s\n%s",
+        tr(STR_BG_LIGHT_GRAY), tr(STR_BG_WHITE), tr(STR_BG_LIGHT_BLUE),
+        tr(STR_BG_LIGHT_GREEN), tr(STR_BG_CREAM));
+
+    // Frequency options
+    snprintf(freq_options, sizeof(freq_options), "%s\n%s",
+        tr(STR_FREQ_50HZ), tr(STR_FREQ_333HZ));
+}
 
 // UI elements we need to update when protocol changes
 static lv_obj_t* lbl_pwm_min = nullptr;
@@ -75,14 +78,12 @@ static void on_language_change(lv_event_t* e) {
     uint16_t sel = lv_dropdown_get_selected(dd);
     g_settings.language = (uint8_t)sel;
     lang_set((Language)sel);
-    settings_save();
-    gui_set_page(PAGE_SETTINGS);  // Refresh to show new language
+    gui_set_page(PAGE_SETTINGS);  // Refresh to show new language (triggers destroy->save)
 }
 
 static void on_brightness_change(lv_event_t* e) {
     lv_obj_t* sl = lv_event_get_target_obj(e);
     g_settings.brightness = (uint8_t)lv_slider_get_value(sl);
-    settings_save();
     // TODO: Apply brightness to display
 }
 
@@ -91,7 +92,6 @@ static void on_bg_color_change(lv_event_t* e) {
     uint16_t sel = lv_dropdown_get_selected(dd);
     g_settings.bg_color = (uint8_t)sel;
     gui_set_bg_color((BgColorPreset)sel);
-    settings_save();
 }
 
 // Servo callbacks
@@ -105,7 +105,6 @@ static void on_servo_protocol_change(lv_event_t* e) {
     } else {
         g_settings.servo_protocol = SERVO_CUSTOM;
     }
-    settings_save();
 }
 
 static void on_servo_frequency_change(lv_event_t* e) {
@@ -116,8 +115,6 @@ static void on_servo_frequency_change(lv_event_t* e) {
     // Switch to custom if values don't match a preset
     g_settings.servo_protocol = SERVO_CUSTOM;
     if (dd_protocol) lv_dropdown_set_selected(dd_protocol, SERVO_CUSTOM);
-
-    settings_save();
 }
 
 static void on_servo_pwm_min_change(lv_event_t* e) {
@@ -131,8 +128,6 @@ static void on_servo_pwm_min_change(lv_event_t* e) {
 
     g_settings.servo_protocol = SERVO_CUSTOM;
     if (dd_protocol) lv_dropdown_set_selected(dd_protocol, SERVO_CUSTOM);
-
-    settings_save();
 }
 
 static void on_servo_pwm_center_change(lv_event_t* e) {
@@ -145,8 +140,6 @@ static void on_servo_pwm_center_change(lv_event_t* e) {
 
     g_settings.servo_protocol = SERVO_CUSTOM;
     if (dd_protocol) lv_dropdown_set_selected(dd_protocol, SERVO_CUSTOM);
-
-    settings_save();
 }
 
 static void on_servo_pwm_max_change(lv_event_t* e) {
@@ -159,11 +152,12 @@ static void on_servo_pwm_max_change(lv_event_t* e) {
 
     g_settings.servo_protocol = SERVO_CUSTOM;
     if (dd_protocol) lv_dropdown_set_selected(dd_protocol, SERVO_CUSTOM);
-
-    settings_save();
 }
 
 void page_settings_create(lv_obj_t* parent) {
+    // Build translated option strings
+    build_translated_options();
+
     SettingsBuilder sb(parent);
 
     // Language section
@@ -175,7 +169,7 @@ void page_settings_create(lv_obj_t* parent) {
     // Display section
     sb.begin_section(tr(STR_SETTINGS_DISPLAY));
     sb.slider(tr(STR_SETTINGS_BRIGHTNESS), 10, 100, g_settings.brightness, on_brightness_change);
-    sb.dropdown(tr(STR_SETTINGS_BACKGROUND), BG_COLOR_OPTIONS, gui_get_bg_color(), on_bg_color_change);
+    sb.dropdown(tr(STR_SETTINGS_BACKGROUND), bg_color_options, gui_get_bg_color(), on_bg_color_change);
     sb.end_section();
 
     // Servo section
@@ -186,7 +180,7 @@ void page_settings_create(lv_obj_t* parent) {
                               g_settings.servo_protocol, on_servo_protocol_change);
 
     // Frequency dropdown
-    dd_frequency = sb.dropdown(tr(STR_SETTINGS_FREQUENCY), SERVO_FREQ_OPTIONS,
+    dd_frequency = sb.dropdown(tr(STR_SETTINGS_FREQUENCY), freq_options,
                                g_settings.servo_frequency == 333 ? 1 : 0, on_servo_frequency_change);
 
     // PWM value sliders (500-2500 range, step 10)
@@ -206,4 +200,16 @@ void page_settings_create(lv_obj_t* parent) {
     sb.info(tr(STR_SETTINGS_FIRMWARE), APP_VERSION);
     sb.info("LVGL", LVGL_VERSION_STRING);
     sb.end_section();
+}
+
+void page_settings_destroy() {
+    // Save settings once on page exit (deferred auto-save)
+    settings_save();
+
+    // Reset static pointers to avoid use-after-free
+    lbl_pwm_min = nullptr;
+    lbl_pwm_center = nullptr;
+    lbl_pwm_max = nullptr;
+    dd_frequency = nullptr;
+    dd_protocol = nullptr;
 }

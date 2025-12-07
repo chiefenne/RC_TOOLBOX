@@ -84,6 +84,17 @@ enum StringId {
     STR_SERVO_SPEED,
     STR_SERVO_US,
 
+    // Background color options
+    STR_BG_LIGHT_GRAY,
+    STR_BG_WHITE,
+    STR_BG_LIGHT_BLUE,
+    STR_BG_LIGHT_GREEN,
+    STR_BG_CREAM,
+
+    // Frequency options
+    STR_FREQ_50HZ,
+    STR_FREQ_333HZ,
+
     STR_COUNT
 };
 
