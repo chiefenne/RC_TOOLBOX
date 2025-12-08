@@ -10,9 +10,12 @@ RC TOOLBOX is a suite of software tools tailored for RC enthusiasts. Designed to
 ## Features
 
 ### Main Modules
-- **Servo Tester** – Test and calibrate servos with manual PWM control or auto-sweep mode
+- **Servo Tester** – Test and calibrate up to 6 servos simultaneously
+  - Sidebar with individual servo selection (toggle single or long-press for all)
+  - Manual PWM control or auto-sweep mode
   - Protocol presets: Standard, Extended, Sanwa, Futaba, Digital Fast
   - Customizable PWM range (min/center/max) and frequency (50Hz / 333Hz)
+  - Hardware PWM output on GPIO pins 6, 15, 16, 17, 18, 21
 - **Lipo Checker** – Monitor LiPo battery cell voltages for safe charging and storage
 - **Battery information** readout and store via NFC tags
 - **CG Scale** – Measure center of gravity for precise aircraft balancing
@@ -55,7 +58,7 @@ The toolbox includes the following modules:
 
 | Module | Description |
 |--------|-------------|
-| **Servo Tester** | Test and calibrate servos with manual PWM control or auto-sweep |
+| **Servo Tester** | Test and calibrate up to 6 servos with manual PWM or auto-sweep |
 | **Lipo Checker** | Monitor LiPo battery cell voltages |
 | **CG Scale** | Measure center of gravity for aircraft balancing |
 | **Flap Deflection** | Measure control surface deflection angles |
