@@ -72,7 +72,6 @@ A custom PCB has been designed for software development to minimize cable clutte
 
 <p align="center">
   <img src="assets/Custom_PCB_01.png" width="280">
-  <img src="assets/Custom_PCB_02.png" width="330"><br>
   <img src="assets/Custom_PCB_03.png" width="350">
   <em>Custom development PCB for ESP32-S3 DevKitC-1 and ILI9341 2.4" TFT touch display</em>
 </p>
