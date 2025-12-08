@@ -1,7 +1,7 @@
 {
     "version": 1,
     "language": 0,
-    "bg_color": 1,
+    "bg_color": 0,
     "brightness": 80,
     "servo_protocol": 0,
     "servo_pwm_min": 1000,
