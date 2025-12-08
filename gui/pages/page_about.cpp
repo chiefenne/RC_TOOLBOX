@@ -19,7 +19,7 @@ void page_about_create(lv_obj_t* parent) {
     lv_obj_set_flex_flow(top_row, LV_FLEX_FLOW_ROW);
     lv_obj_set_flex_align(top_row, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
     lv_obj_set_style_pad_column(top_row, 16, 0);  // Gap between logo and text box
-    lv_obj_set_style_pad_bottom(top_row, 6, 0);   // Gap after top row
+    lv_obj_set_style_pad_bottom(top_row, 12, 0);   // Gap after top row
 
     // Logo: scale=180 → 70%, size = 150*180/256=105, 140*180/256=98
     lv_obj_t* logo = lv_image_create(top_row);
@@ -60,7 +60,9 @@ void page_about_create(lv_obj_t* parent) {
 
     // GitHub link (in flex column)
     lv_obj_t* github = lv_label_create(parent);
-    lv_label_set_text(github, APP_GITHUB_URL);
+    char github_text[128];
+    snprintf(github_text, sizeof(github_text), "Source code: %s", APP_GITHUB_URL);
+    lv_label_set_text(github, github_text);
     lv_obj_set_style_text_font(github, &arial_12, 0);
     lv_obj_set_style_text_color(github, lv_color_hex(GUI_COLOR_MONO[1]), 0);
     lv_obj_set_style_pad_bottom(github, 4, 0);  // Gap after GitHub
