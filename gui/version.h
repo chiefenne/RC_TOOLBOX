@@ -1,9 +1,14 @@
-// gui/version.h - Central version information
+// gui/version.h - Central version and app information
 
 #pragma once
 
-// Application version
-#define APP_VERSION "0.2"
+// Application info (not translated)
+#define APP_TITLE "RC TOOLBOX"
+#define APP_VERSION "0.3"
+
+// Author and project info (not translated)
+#define APP_AUTHOR_NAME "Dipl.-Ing. Andreas Ennemoser"
+#define APP_GITHUB_URL "github.com/chiefenne/RC_TOOLBOX"
 
 // LVGL version - build string from major.minor.patch
 #include "lvgl.h"
