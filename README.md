@@ -78,6 +78,8 @@ The toolbox includes the following modules:
 A custom PCB has been designed for software development to minimize cable clutter and provide a clean, reliable test platform. The PCB ODB++ files are available for download from [AISLER PCB Project Page](https://aisler.net/p/NGHJDVLN). The schematics can be found in the [assets folder](assets/ESP32_DevkitC-1_TFT_Touch_Display_ILI9341.pdf). Note that this PCB is also used for developing a wireless CNC controller, which explains the naming conventions on the schematic.
 > **Note:** The PCB is an early prototype and has not yet been fully validated. Electrical performance, power requirements, and potential design issues have not been thoroughly analyzed. Use with caution until comprehensive testing is completed.
 
+> **Known Issue:** The silkscreen labels for the LED power jumper (display backlight at 100%) are swapped—3.3V and 5V are reversed. To use the backlight correctly, place the jumper in the opposite position from what the silkscreen indicates.
+
 ## Credits
 
 This project was inspired by following resources:
