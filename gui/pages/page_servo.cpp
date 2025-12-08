@@ -1,4 +1,4 @@
-// gui/pages/page_servo.cpp - Servo tester page
+// gui/pages/page_servo.cpp - Servo tester page (multi-servo support)
 
 #include "lvgl.h"
 #include "gui/page_base.h"
@@ -6,11 +6,15 @@
 #include "gui/color_palette.h"
 #include "gui/lang.h"
 #include "gui/config/settings.h"
+#include "servo_driver.h"
 #include <algorithm>
 #include <cstdio>
 
 // Configuration constants
 namespace {
+    // Number of servos
+    constexpr int NUM_SERVOS = 6;
+
     // PWM values now come from settings - these are just for step size
     constexpr int PWM_STEP    = 10;
 
@@ -19,6 +23,8 @@ namespace {
 
     // UI dimensions
     constexpr lv_coord_t BTN_SM = 65, BTN_MD = 90, BTN_H = 30, ROW_H = 35;
+    constexpr lv_coord_t SIDEBAR_W = 42;  // Width of servo selection sidebar
+    constexpr lv_coord_t SERVO_BTN_H = 22; // Height of servo toggle buttons
 
     // Colors
     const lv_color_t COL_ACTIVE   = lv_color_hex(GUI_COLOR_TRIAD[1]);
@@ -26,6 +32,7 @@ namespace {
     const lv_color_t COL_STOP     = lv_color_hex(0xCC3333);
     const lv_color_t COL_PRIMARY  = lv_color_hex(GUI_COLOR_MONO[0]);
     const lv_color_t COL_TEXT     = lv_color_hex(GUI_COLOR_SHADES[7]);
+    const lv_color_t COL_SERVO_ON = lv_color_hex(GUI_COLOR_MONO[1]);  // Blue when selected
 
     // Helper macros to get PWM values from settings
     #define PWM_MIN    ((int)g_settings.servo_pwm_min)
@@ -41,6 +48,10 @@ struct ServoState {
     int direction = 1;
     lv_timer_t* timer = nullptr;
 
+    // Servo selection (bitmask: bit 0 = servo 1, etc.)
+    uint8_t selected = 0x01;  // Default: servo 1 selected
+    lv_obj_t* btn_servo[NUM_SERVOS] = {};
+
     // UI elements we need to update
     lv_obj_t* lbl_pwm = nullptr;
     lv_obj_t* slider = nullptr;
@@ -51,8 +62,24 @@ struct ServoState {
     lv_obj_t* row_start = nullptr;
     lv_obj_t* row_manual = nullptr;
 
-    void reset() { pwm = PWM_CENTER; auto_mode = true; running = false; direction = 1; }
+    void reset() { pwm = PWM_CENTER; auto_mode = true; running = false; direction = 1; selected = 0x01; }
     void clamp() { pwm = (pwm < PWM_MIN) ? PWM_MIN : (pwm > PWM_MAX) ? PWM_MAX : pwm; }
+
+    bool is_servo_selected(int idx) const { return (selected & (1 << idx)) != 0; }
+    void toggle_servo(int idx) { selected ^= (1 << idx); }
+    void select_all() { selected = (1 << NUM_SERVOS) - 1; }  // All bits set
+    void deselect_all() { selected = 0; }
+    bool all_selected() const { return selected == ((1 << NUM_SERVOS) - 1); }
+    bool any_selected() const { return selected != 0; }
+
+    void update_servo_buttons() {
+        for (int i = 0; i < NUM_SERVOS; i++) {
+            if (btn_servo[i]) {
+                lv_obj_set_style_bg_color(btn_servo[i],
+                    is_servo_selected(i) ? COL_SERVO_ON : COL_INACTIVE, 0);
+            }
+        }
+    }
 
     void update_display() {
         char buf[8];
@@ -62,6 +89,8 @@ struct ServoState {
         int range = PWM_MAX - PWM_MIN;
         int slider_val = (range > 0) ? ((pwm - PWM_MIN) * 100 / range) : 50;
         lv_slider_set_value(slider, slider_val, LV_ANIM_ON);
+        // Output PWM to selected servos
+        servo_set_pulse_mask(selected, static_cast<uint16_t>(pwm));
     }
 
     void update_ui() {
@@ -127,6 +156,32 @@ static void on_timer(lv_timer_t* t) {
     S.update_display();
 }
 
+// Servo selection callbacks
+static void on_servo_toggle(lv_event_t* e) {
+    int idx = reinterpret_cast<intptr_t>(lv_event_get_user_data(e));
+    S.toggle_servo(idx);
+    S.update_servo_buttons();
+    // Enable/disable PWM output for this servo
+    bool enabled = S.is_servo_selected(idx);
+    servo_enable(static_cast<uint8_t>(idx), enabled);
+    if (enabled) {
+        servo_set_pulse(static_cast<uint8_t>(idx), static_cast<uint16_t>(S.pwm));
+    }
+}
+
+// Long-press on any servo button toggles ALL
+static void on_servo_long_press(lv_event_t*) {
+    if (S.all_selected()) {
+        S.deselect_all();
+        servo_disable_all();
+    } else {
+        S.select_all();
+        servo_enable_mask(S.selected, true);
+        servo_set_pulse_mask(S.selected, static_cast<uint16_t>(S.pwm));
+    }
+    S.update_servo_buttons();
+}
+
 static void on_auto(lv_event_t*) {
     if (S.running) return;
     S.auto_mode = true;
@@ -172,19 +227,59 @@ void page_servo_create(lv_obj_t* parent) {
     S.timer = lv_timer_create(on_timer, SWEEP_INTERVAL_MS, nullptr);
     lv_timer_pause(S.timer);
 
-    // Layout
-    lv_obj_set_flex_flow(parent, LV_FLEX_FLOW_COLUMN);
-    lv_obj_set_flex_align(parent, LV_FLEX_ALIGN_SPACE_EVENLY, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+    // Main layout: horizontal row with sidebar + content
+    lv_obj_set_flex_flow(parent, LV_FLEX_FLOW_ROW);
+    lv_obj_set_flex_align(parent, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
     lv_obj_set_scrollbar_mode(parent, LV_SCROLLBAR_MODE_OFF);
     lv_obj_clear_flag(parent, LV_OBJ_FLAG_SCROLLABLE);
+    lv_obj_set_style_pad_all(parent, 0, 0);
+
+    // === SIDEBAR: Servo selection ===
+    lv_obj_t* sidebar = lv_obj_create(parent);
+    lv_obj_remove_style_all(sidebar);
+    lv_obj_set_size(sidebar, SIDEBAR_W, LV_PCT(100));
+    lv_obj_set_flex_flow(sidebar, LV_FLEX_FLOW_COLUMN);
+    lv_obj_set_flex_align(sidebar, LV_FLEX_ALIGN_SPACE_EVENLY, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+    lv_obj_set_style_pad_all(sidebar, 4, 0);
+    lv_obj_set_style_pad_row(sidebar, 2, 0);
+    lv_obj_set_style_bg_color(sidebar, lv_color_hex(GUI_COLOR_GRAYS[9]), 0);
+    lv_obj_set_style_bg_opa(sidebar, LV_OPA_COVER, 0);
+    lv_obj_clear_flag(sidebar, LV_OBJ_FLAG_SCROLLABLE);
+
+    // Servo toggle buttons (1-6)
+    // Short tap = toggle single servo, Long press = toggle ALL
+    for (int i = 0; i < NUM_SERVOS; i++) {
+        S.btn_servo[i] = lv_button_create(sidebar);
+        lv_obj_set_size(S.btn_servo[i], SIDEBAR_W - 8, SERVO_BTN_H);
+        lv_obj_set_style_bg_color(S.btn_servo[i], i == 0 ? COL_SERVO_ON : COL_INACTIVE, 0);
+        lv_obj_set_style_radius(S.btn_servo[i], 4, 0);
+        lv_obj_t* lbl = lv_label_create(S.btn_servo[i]);
+        lv_label_set_text_fmt(lbl, "%d", i + 1);
+        lv_obj_set_style_text_font(lbl, &arial_14, 0);
+        lv_obj_center(lbl);
+        // Short click = toggle this servo
+        lv_obj_add_event_cb(S.btn_servo[i], on_servo_toggle, LV_EVENT_SHORT_CLICKED, (void*)(intptr_t)i);
+        // Long press = toggle ALL servos
+        lv_obj_add_event_cb(S.btn_servo[i], on_servo_long_press, LV_EVENT_LONG_PRESSED, nullptr);
+    }
+
+    // === CONTENT: Controls ===
+    lv_obj_t* content = lv_obj_create(parent);
+    lv_obj_remove_style_all(content);
+    lv_obj_set_flex_grow(content, 1);
+    lv_obj_set_height(content, LV_PCT(100));
+    lv_obj_set_flex_flow(content, LV_FLEX_FLOW_COLUMN);
+    lv_obj_set_flex_align(content, LV_FLEX_ALIGN_SPACE_EVENLY, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+    lv_obj_set_scrollbar_mode(content, LV_SCROLLBAR_MODE_OFF);
+    lv_obj_clear_flag(content, LV_OBJ_FLAG_SCROLLABLE);
 
     // Mode row
-    lv_obj_t* row_mode = make_row(parent);
+    lv_obj_t* row_mode = make_row(content);
     S.btn_auto = make_btn(row_mode, tr(STR_SERVO_MODE_AUTO), BTN_MD, COL_ACTIVE, on_auto);
     S.btn_manual = make_btn(row_mode, tr(STR_SERVO_MODE_MANUAL), BTN_MD, COL_INACTIVE, on_manual);
 
     // PWM display row
-    lv_obj_t* row_pwm = make_row(parent, 90, 30);
+    lv_obj_t* row_pwm = make_row(content, 90, 30);
     lv_obj_set_style_pad_column(row_pwm, 5, 0);
     lv_obj_t* lbl_title = lv_label_create(row_pwm);
     lv_label_set_text_fmt(lbl_title, "%s (%s):", tr(STR_SERVO_PWM_LABEL), tr(STR_SERVO_US));
@@ -196,11 +291,11 @@ void page_servo_create(lv_obj_t* parent) {
     lv_obj_set_style_text_color(S.lbl_pwm, COL_PRIMARY, 0);
 
     // Slider
-    lv_obj_t* row_slider = lv_obj_create(parent);
-    lv_obj_set_size(row_slider, LV_PCT(80), ROW_H);
+    lv_obj_t* row_slider = lv_obj_create(content);
+    lv_obj_set_size(row_slider, LV_PCT(85), ROW_H);
     lv_obj_set_style_bg_opa(row_slider, LV_OPA_TRANSP, 0);
     lv_obj_set_style_border_width(row_slider, 0, 0);
-    lv_obj_set_style_pad_hor(row_slider, 18, 0);
+    lv_obj_set_style_pad_hor(row_slider, 10, 0);
     lv_obj_set_style_pad_ver(row_slider, 0, 0);
     lv_obj_set_flex_flow(row_slider, LV_FLEX_FLOW_COLUMN);
     lv_obj_set_flex_align(row_slider, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
@@ -216,7 +311,7 @@ void page_servo_create(lv_obj_t* parent) {
     lv_obj_add_event_cb(S.slider, on_slider, LV_EVENT_VALUE_CHANGED, nullptr);
 
     // Start/Stop row (auto mode)
-    S.row_start = make_row(parent);
+    S.row_start = make_row(content);
     lv_obj_set_style_pad_column(S.row_start, 0, 0);
     S.btn_start = lv_button_create(S.row_start);
     lv_obj_set_size(S.btn_start, BTN_MD, BTN_H);
@@ -228,7 +323,7 @@ void page_servo_create(lv_obj_t* parent) {
     lv_obj_add_event_cb(S.btn_start, on_start_stop, LV_EVENT_CLICKED, nullptr);
 
     // Manual preset row (hidden initially)
-    S.row_manual = make_row(parent);
+    S.row_manual = make_row(content);
     lv_obj_add_flag(S.row_manual, LV_OBJ_FLAG_HIDDEN);
     make_btn(S.row_manual, "Min", BTN_SM, COL_PRIMARY, on_preset, (void*)(intptr_t)PWM_MIN);
     make_btn(S.row_manual, "Center", BTN_MD, COL_PRIMARY, on_preset, (void*)(intptr_t)PWM_CENTER);
@@ -236,10 +331,16 @@ void page_servo_create(lv_obj_t* parent) {
 
     S.update_display();
     S.update_ui();
+    S.update_servo_buttons();
+
+    // Enable initially selected servo(s) and set pulse
+    servo_enable_mask(S.selected, true);
+    servo_set_pulse_mask(S.selected, static_cast<uint16_t>(S.pwm));
 }
 
 void page_servo_destroy() {
     S.running = false;
+    servo_disable_all();  // Stop all servo outputs
     if (S.timer) { lv_timer_delete(S.timer); S.timer = nullptr; }
     S = ServoState{};  // Reset all pointers
 }
@@ -251,6 +352,7 @@ void page_servo_on_hide() {
         if (S.timer) lv_timer_pause(S.timer);
         S.update_ui();
     }
+    servo_disable_all();  // Stop all servo outputs when hiding
 }
 
 bool page_servo_is_running() { return S.running && S.auto_mode; }

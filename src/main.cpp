@@ -6,6 +6,7 @@
 #include <lvgl.h>
 #include <Adafruit_NeoPixel.h>
 #include "gui/gui.h"
+#include "servo_driver.h"
 
 // TFT instance (configured via build_flags in platformio.ini)
 TFT_eSPI tft = TFT_eSPI();
@@ -181,7 +182,12 @@ void setup()
     Serial.flush();
     gui_init();
 
-    Serial.println("[4] GUI complete - RC TOOLBOX ready!");
+    // Initialize servo PWM driver
+    Serial.println("[5] Initializing servo driver...");
+    Serial.flush();
+    servo_driver_init();
+
+    Serial.println("[5] Servo driver complete - RC TOOLBOX ready!");
     Serial.flush();
 }
 

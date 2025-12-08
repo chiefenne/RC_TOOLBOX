@@ -8,7 +8,7 @@ EXECUTABLE="$OUTPUT_DIR/lvgl_simulator_macOS"
 # Create the binaries folder if it doesn't exist
 mkdir -p "$OUTPUT_DIR"
 
-INCLUDES="-I. -Ilvgl -Igui -Igui/pages -Igui/fonts -Igui/images"
+INCLUDES="-I. -Ilvgl -Igui -Igui/pages -Igui/fonts -Igui/images -Iinclude"
 
 # Pre-compile LVGL font .c files with plain clang (no C++ mangling)
 FONT_OBJS=()
@@ -28,7 +28,8 @@ done
 
 # Build the simulator
 clang++ simulator/main.cpp simulator/sim_state.cpp simulator/input_sim.cpp \
-    gui/*.cpp gui/config/*.cpp gui/pages/*.cpp "${FONT_OBJS[@]}" "${IMAGE_OBJS[@]}" \
+    gui/*.cpp gui/config/*.cpp gui/pages/*.cpp src/servo_driver.cpp \
+    "${FONT_OBJS[@]}" "${IMAGE_OBJS[@]}" \
     $INCLUDES \
     -std=c++17 \
     lvgl/liblvgl.a -lSDL2 \
