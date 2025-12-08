@@ -5,8 +5,6 @@
 > **⚠️ Work in Progress**
 > This project is currently under active development. Features and documentation may change frequently.
 
-> **Note:** The implementation recently moved to C/C++ with LVGL.
-
 RC TOOLBOX is a suite of software tools tailored for RC enthusiasts. Designed to run on mainly on ESP32 based boards. It provides a versatile platform for enhancing your RC experience.
 
 ## Features
@@ -77,7 +75,8 @@ The toolbox includes the following modules:
     <em>Custom development PCB for ESP32-S3 DevKitC-1 and ILI9341 2.4" TFT touch display</em>
 </p>
 
-A custom PCB has been designed for software development to minimize cable clutter and provide a clean, reliable test platform. The PCB ODB++ files are available for download from [AISLER](https://aisler.net/p/NGHJDVLN). Please note that the PCB functionality has not yet been fully verified. The schematics can be found [here](assets/ESP32_DevkitC-1_TFT_Touch_Display_ILI9341.pdf). Note that this PCB is also used for developing a wireless CNC controller, which explains the naming conventions on the schematic.
+A custom PCB has been designed for software development to minimize cable clutter and provide a clean, reliable test platform. The PCB ODB++ files are available for download from [AISLER PCB Project Page](https://aisler.net/p/NGHJDVLN). The schematics can be found in the [assets folder](assets/ESP32_DevkitC-1_TFT_Touch_Display_ILI9341.pdf). Note that this PCB is also used for developing a wireless CNC controller, which explains the naming conventions on the schematic.
+> **Note:** The PCB is an early prototype and has not yet been fully validated. Electrical performance, power requirements, and potential design issues have not been thoroughly analyzed. Use with caution until comprehensive testing is completed.
 
 ## Credits
 
