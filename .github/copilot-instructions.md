@@ -61,35 +61,6 @@ PageColors::TEXT_PRIMARY  // Primary text
 2. Add case in `gui_set_page()` in `gui/gui.cpp`
 3. Call `gui_set_page(PAGE_XXX)` for navigation
 
-## Build Commands
-
-### Simulator (macOS)
-```bash
-./simulator/build_sim.sh        # Release build → binaries/lvgl_simulator_macOS
-./simulator/build_sim_debug.sh  # Debug build → binaries/lvgl_simulator_macOS_debug
-```
-Requires: SDL2 (`brew install sdl2`), pre-built `lvgl/liblvgl.a`
-
-VS Code tasks are also available: "Build LVGL Simulator (Release)" and "Build LVGL Simulator (Debug)".
-
-### Rebuilding LVGL Library (one-time or after LVGL updates)
-The simulator links against `lvgl/liblvgl.a`. To rebuild it:
-```bash
-cd lvgl
-mkdir -p build && cd build
-cmake .. -DCMAKE_BUILD_TYPE=Release -DLVGL_BUILD_STATIC=ON
-make -j8
-cd ..
-ln -sf build/lib/liblvgl.a liblvgl.a
-```
-The library uses `lvgl/lv_conf.h` for simulator settings. Keep this in sync with `include/lv_conf.h` (ESP32) when changing LVGL features. See [LVGL_Simulator](https://github.com/chiefenne/LVGL_Simulator) for the full template.
-
-### ESP32 (PlatformIO)
-```bash
-pio run                         # Build for esp32-s3-devkitc-1
-pio run -t upload              # Flash to device
-```
-
 ## Conventions
 
 ### Colors
