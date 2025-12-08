@@ -24,7 +24,7 @@ enum ServoProtocol {
 struct Settings {
     uint8_t version    = SETTINGS_VERSION;
     uint8_t language   = LANG_EN;
-    uint8_t bg_color   = BG_COLOR_LIGHT_GRAY;
+    uint8_t bg_color   = BG_COLOR_WHITE;
     uint8_t brightness = 80;
 
     // Servo settings

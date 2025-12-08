@@ -16,8 +16,8 @@ enum GuiPage {
 
 // Background color presets
 enum BgColorPreset {
-    BG_COLOR_LIGHT_GRAY = 0,  // Default - GUI_COLOR_GRAYS[8]
-    BG_COLOR_WHITE,
+    BG_COLOR_WHITE = 0,       // Default
+    BG_COLOR_LIGHT_GRAY,
     BG_COLOR_LIGHT_BLUE,
     BG_COLOR_LIGHT_GREEN,
     BG_COLOR_CREAM,

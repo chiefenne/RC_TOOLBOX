@@ -79,7 +79,7 @@ static lv_obj_t *splash_footer_right;
 
 static GuiPage active_page = PAGE_COUNT; // sentinel so first gui_set_page runs
 static bool splash_shown = false;
-static BgColorPreset active_bg_color = BG_COLOR_LIGHT_GRAY;
+static BgColorPreset active_bg_color = BG_COLOR_WHITE;
 
 // Check if current page is busy (blocks navigation)
 static bool gui_page_is_busy() {
@@ -172,8 +172,8 @@ void gui_init()
     create_splash_footer();
     page_splash_create(content);
 
-    // Timer to switch to home after 6 seconds (3s logo + 3s text)
-    lv_timer_create(splash_timer_cb, 6000, nullptr);
+    // Timer to switch to home after 3 seconds
+    lv_timer_create(splash_timer_cb, 3000, nullptr);
 }
 
 static void create_splash_footer()

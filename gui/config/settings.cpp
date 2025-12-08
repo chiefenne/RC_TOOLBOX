@@ -107,7 +107,7 @@ void settings_load() {
 
     // Validate loaded values are within range
     if (g_settings.language >= LANG_COUNT) g_settings.language = LANG_EN;
-    if (g_settings.bg_color >= BG_COLOR_COUNT) g_settings.bg_color = BG_COLOR_LIGHT_GRAY;
+    if (g_settings.bg_color >= BG_COLOR_COUNT) g_settings.bg_color = BG_COLOR_WHITE;
     if (g_settings.brightness < 10 || g_settings.brightness > 100) g_settings.brightness = 80;
     if (g_settings.servo_protocol >= SERVO_PROTOCOL_COUNT) g_settings.servo_protocol = SERVO_STANDARD;
     if (g_settings.servo_pwm_min < 500 || g_settings.servo_pwm_min > 1500) g_settings.servo_pwm_min = 1000;
