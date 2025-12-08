@@ -34,9 +34,6 @@ static const char* strings_de[STR_COUNT] = {
 
     // About page
     "Autor:",
-    "Dipl.-Ing. Andreas Ennemoser",
-    "Quellcode:",
-    "github.com/chiefenne/RC_TOOLBOX",
     "Version:",
 
     // Settings

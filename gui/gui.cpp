@@ -3,6 +3,7 @@
 #include "gui/fonts.h"
 #include "gui/color_palette.h"
 #include "gui/lang.h"
+#include "gui/version.h"
 #include "gui/config/settings.h"
 #include "style_utils.h"
 #include "gui/pages/page_splash.h"
@@ -134,7 +135,7 @@ void gui_init()
     lv_obj_set_style_radius(header, 0, 0); // Square corners
 
     header_title = lv_label_create(header);
-    lv_label_set_text(header_title, "RC TOOLBOX");
+    lv_label_set_text(header_title, APP_TITLE);
     lv_obj_set_style_text_color(header_title, lv_color_white(), 0);
     lv_obj_set_style_text_opa(header_title, LV_OPA_COVER, 0);
     lv_obj_set_style_text_font(header_title, FONT_HEADER, 0);

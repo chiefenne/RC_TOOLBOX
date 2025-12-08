@@ -46,9 +46,6 @@ enum StringId {
 
     // About page
     STR_ABOUT_AUTHOR,
-    STR_ABOUT_AUTHOR_NAME,
-    STR_ABOUT_GITHUB,
-    STR_ABOUT_GITHUB_URL,
     STR_ABOUT_VERSION,
 
     // Settings
