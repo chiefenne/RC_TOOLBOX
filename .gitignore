@@ -5,3 +5,4 @@ lvgl
 binaries
 .pio
 .github
+*.dSYM
