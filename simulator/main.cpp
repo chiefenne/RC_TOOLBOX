@@ -17,10 +17,6 @@ constexpr int VRES = 240;
 static SDL_Texture*  tex  = nullptr;
 static SDL_Renderer* ren  = nullptr;
 
-// Keyboard state for arrow keys
-static uint32_t last_key = 0;
-static lv_indev_state_t key_state = LV_INDEV_STATE_RELEASED;
-
 static void flush_cb(lv_display_t* disp, const lv_area_t* area, uint8_t* data) {
     const int w = lv_area_get_width(area);
     const int h = lv_area_get_height(area);
@@ -35,7 +31,9 @@ static void flush_cb(lv_display_t* disp, const lv_area_t* area, uint8_t* data) {
     SDL_RenderCopy(ren, tex, nullptr, nullptr);
     SDL_RenderPresent(ren);
     lv_display_flush_ready(disp);
-}extern "C" void gui_sim_init();   // defined in sim_state.cpp
+}
+
+extern "C" void gui_sim_init();   // defined in sim_state.cpp
 
 int main(int argc, char** argv) {
     int w = (argc >= 3) ? atoi(argv[1]) : HRES;
@@ -63,17 +61,19 @@ int main(int argc, char** argv) {
     lv_display_set_flush_cb(disp, flush_cb);
     lv_display_set_render_mode(disp, LV_DISPLAY_RENDER_MODE_FULL);
 
-    // Mouse = touch
-    lv_indev_t* indev = lv_indev_create();
-    lv_indev_set_type(indev, LV_INDEV_TYPE_POINTER);
-    lv_indev_set_read_cb(indev, [](lv_indev_t*, lv_indev_data_t* d) {
+    // Mouse = touch (primary input)
+    lv_indev_t* mouse_indev = lv_indev_create();
+    lv_indev_set_type(mouse_indev, LV_INDEV_TYPE_POINTER);
+    lv_indev_set_read_cb(mouse_indev, [](lv_indev_t*, lv_indev_data_t* d) {
         int x, y; Uint32 b = SDL_GetMouseState(&x, &y);
         d->point.x = x; d->point.y = y;
         d->state = (b & SDL_BUTTON_LMASK) ? LV_INDEV_STATE_PRESSED : LV_INDEV_STATE_RELEASED;
     });
 
+    // Initialize encoder input system (creates LVGL encoder indev)
+    input_init();
+
     gui_sim_init();   // ← starts your real GUI
-    input_init();     // Initialize input system
 
     Uint32 last = SDL_GetTicks();
     while (true) {
@@ -84,13 +84,8 @@ int main(int argc, char** argv) {
         SDL_Event e;
         while (SDL_PollEvent(&e)) {
             if (e.type == SDL_QUIT) return 0;
-            // Handle keyboard input
+            // Handle keyboard input → feeds encoder events
             input_handle_sdl_event(e);
-        }
-        // Process any pending input events
-        InputEvent ev = input_poll();
-        if (ev != INPUT_NONE) {
-            input_process(ev);
         }
         SDL_Delay(5);
     }

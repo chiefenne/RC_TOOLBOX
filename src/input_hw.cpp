@@ -1,98 +1,143 @@
-// src/input_hw.cpp - ESP32 hardware input handling (encoder + tactile buttons)
-// TODO: Implement actual hardware reading with GPIO interrupts/polling
+// src/input_hw.cpp - ESP32 hardware input handling (EC11 rotary encoder)
+// Uses interrupts for responsive encoder reading with button gesture detection
 
 #include "gui/input.h"
 
 #if defined(ESP_PLATFORM) || defined(ARDUINO)
 
 #include <Arduino.h>
+#include "pins.h"
 
-// GPIO pin definitions - adjust to your hardware
-// #define ENC_PIN_A    GPIO_NUM_xx
-// #define ENC_PIN_B    GPIO_NUM_xx
-// #define ENC_PIN_SW   GPIO_NUM_xx
-// #define BTN_HOME_PIN GPIO_NUM_xx
-// #define BTN_ACTION_PIN GPIO_NUM_xx
+// =============================================================================
+// Encoder State (interrupt-safe)
+// =============================================================================
+static volatile int32_t encoder_pos = 0;
+static int32_t last_encoder_pos = 0;
 
-// Global encoder delta (accessed by gui/input.cpp)
-int g_encoder_delta = 0;
+// Button state machine
+static volatile uint32_t btn_press_time = 0;
+static volatile uint32_t btn_release_time = 0;
+static volatile bool btn_pressed = false;
+static volatile int click_count = 0;
 
-// Pending event
-static InputEvent pending_event = INPUT_NONE;
+// Timing constants (ms)
+static constexpr uint32_t DEBOUNCE_MS     = 5;
+static constexpr uint32_t LONG_PRESS_MS   = 800;
+static constexpr uint32_t DOUBLE_CLICK_MS = 300;
 
-// Encoder state
-static volatile int encoder_pos = 0;
-static int last_encoder_pos = 0;
+// Last encoder state for quadrature decoding
+static volatile uint8_t last_enc_state = 0;
 
-// Button debounce
-static uint32_t last_btn_time = 0;
-static const uint32_t DEBOUNCE_MS = 50;
+// =============================================================================
+// Interrupt Service Routines
+// =============================================================================
 
-// Long press detection
-static uint32_t enc_press_start = 0;
-static bool enc_pressed = false;
-static const uint32_t LONG_PRESS_MS = 800;
+// Quadrature encoder ISR - called on CLK (A) pin change
+static void IRAM_ATTR encoder_isr() {
+    uint8_t clk = digitalRead(PIN_ENC_CLK);
+    uint8_t dt  = digitalRead(PIN_ENC_DT);
 
-void input_init() {
-    g_encoder_delta = 0;
-    pending_event = INPUT_NONE;
+    // Build 2-bit state and combine with previous state
+    uint8_t state = (clk << 1) | dt;
+    uint8_t combined = (last_enc_state << 2) | state;
+    last_enc_state = state;
 
-    // TODO: Configure GPIO pins
-    // pinMode(ENC_PIN_A, INPUT_PULLUP);
-    // pinMode(ENC_PIN_B, INPUT_PULLUP);
-    // pinMode(ENC_PIN_SW, INPUT_PULLUP);
-    // pinMode(BTN_HOME_PIN, INPUT_PULLUP);
-    // pinMode(BTN_ACTION_PIN, INPUT_PULLUP);
-
-    // TODO: Attach encoder interrupt
-    // attachInterrupt(digitalPinToInterrupt(ENC_PIN_A), encoder_isr, CHANGE);
+    // Decode rotation direction using state transition table
+    // Valid CW transitions:  0b0001, 0b0111, 0b1110, 0b1000
+    // Valid CCW transitions: 0b0010, 0b1011, 0b1101, 0b0100
+    switch (combined) {
+        case 0b0001: case 0b0111: case 0b1110: case 0b1000:
+            encoder_pos++;
+            break;
+        case 0b0010: case 0b1011: case 0b1101: case 0b0100:
+            encoder_pos--;
+            break;
+    }
 }
 
-// TODO: Encoder interrupt service routine
-// void IRAM_ATTR encoder_isr() {
-//     // Read encoder state and update encoder_pos
-// }
+// Button ISR - called on SW pin change
+static void IRAM_ATTR button_isr() {
+    uint32_t now = millis();
+    bool pressed = (digitalRead(PIN_ENC_SW) == LOW);
 
-InputEvent input_poll() {
-    // Check for pending event first
-    if (pending_event != INPUT_NONE) {
-        InputEvent ev = pending_event;
-        pending_event = INPUT_NONE;
-        return ev;
+    if (pressed && !btn_pressed) {
+        // Button just pressed
+        if (now - btn_release_time > DEBOUNCE_MS) {
+            btn_pressed = true;
+            btn_press_time = now;
+        }
+    } else if (!pressed && btn_pressed) {
+        // Button just released
+        btn_pressed = false;
+        btn_release_time = now;
+
+        uint32_t press_duration = now - btn_press_time;
+        if (press_duration < LONG_PRESS_MS) {
+            // Short press - could be first click of double-click
+            click_count++;
+        }
     }
+}
 
-    // Check encoder rotation
-    int pos = encoder_pos;
+// =============================================================================
+// Platform-specific functions (called by gui/input.cpp)
+// =============================================================================
+
+void input_hw_init() {
+    // Configure encoder pins with internal pull-ups
+    pinMode(PIN_ENC_CLK, INPUT_PULLUP);
+    pinMode(PIN_ENC_DT, INPUT_PULLUP);
+    pinMode(PIN_ENC_SW, INPUT_PULLUP);
+
+    // Read initial encoder state
+    last_enc_state = (digitalRead(PIN_ENC_CLK) << 1) | digitalRead(PIN_ENC_DT);
+
+    // Attach interrupts
+    attachInterrupt(digitalPinToInterrupt(PIN_ENC_CLK), encoder_isr, CHANGE);
+    attachInterrupt(digitalPinToInterrupt(PIN_ENC_DT), encoder_isr, CHANGE);
+    attachInterrupt(digitalPinToInterrupt(PIN_ENC_SW), button_isr, CHANGE);
+
+    encoder_pos = 0;
+    last_encoder_pos = 0;
+    click_count = 0;
+}
+
+void input_hw_poll() {
+    // Check for encoder rotation
+    int32_t pos = encoder_pos;
     if (pos != last_encoder_pos) {
         int delta = pos - last_encoder_pos;
         last_encoder_pos = pos;
-        g_encoder_delta = delta * 10;  // Scale to PWM units
-        return (delta > 0) ? INPUT_ENC_CW : INPUT_ENC_CCW;
+
+        // Feed rotation to LVGL encoder system
+        input_feed_encoder(delta);
     }
 
-    // TODO: Check encoder button (with long press detection)
-    // if (!digitalRead(ENC_PIN_SW)) {
-    //     if (!enc_pressed) {
-    //         enc_pressed = true;
-    //         enc_press_start = millis();
-    //     } else if (millis() - enc_press_start > LONG_PRESS_MS) {
-    //         enc_pressed = false;
-    //         return INPUT_ENC_LONG_PRESS;
-    //     }
-    // } else if (enc_pressed) {
-    //     enc_pressed = false;
-    //     if (millis() - enc_press_start < LONG_PRESS_MS) {
-    //         return INPUT_ENC_PRESS;
-    //     }
-    // }
+    // Check for long press (while button still held)
+    if (btn_pressed) {
+        uint32_t now = millis();
+        if (now - btn_press_time > LONG_PRESS_MS) {
+            // Long press detected - reset to avoid repeat
+            btn_press_time = now;
+            input_feed_button(INPUT_ENC_LONG_PRESS);
+        }
+    }
 
-    // TODO: Check tactile buttons (with debounce)
-    // if (!digitalRead(BTN_HOME_PIN) && millis() - last_btn_time > DEBOUNCE_MS) {
-    //     last_btn_time = millis();
-    //     return INPUT_BTN_HOME;
-    // }
-
-    return INPUT_NONE;
+    // Check for click gestures (after release, with timeout for double-click)
+    if (click_count > 0 && !btn_pressed) {
+        uint32_t now = millis();
+        if (now - btn_release_time > DOUBLE_CLICK_MS) {
+            // Timeout - process accumulated clicks
+            InputEvent ev = INPUT_NONE;
+            if (click_count >= 2) {
+                ev = INPUT_ENC_DOUBLE_CLICK;
+            } else {
+                ev = INPUT_ENC_PRESS;
+            }
+            click_count = 0;
+            input_feed_button(ev);
+        }
+    }
 }
 
 #endif // ESP_PLATFORM || ARDUINO

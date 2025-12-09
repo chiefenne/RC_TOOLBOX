@@ -6,6 +6,7 @@
 #include <lvgl.h>
 #include <Adafruit_NeoPixel.h>
 #include "gui/gui.h"
+#include "gui/input.h"
 #include "servo_driver.h"
 
 // TFT instance (configured via build_flags in platformio.ini)
@@ -195,6 +196,7 @@ void loop()
 {
     lv_tick_inc(5);
     lv_timer_handler();
+    input_poll();             // Poll encoder hardware
     neopixel_ready_update();  // Ready indicator (green or blue/orange)
     delay(5);
 }

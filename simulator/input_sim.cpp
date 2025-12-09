@@ -1,62 +1,90 @@
-// simulator/input_sim.cpp - Simulator input handling (keyboard → input events)
+// simulator/input_sim.cpp - Simulator input handling (keyboard → encoder events)
+// Maps keyboard to LVGL encoder input device
 
 #include "gui/input.h"
 #include <SDL2/SDL.h>
 
-// Global encoder delta (accessed by gui/input.cpp)
-int g_encoder_delta = 0;
+// =============================================================================
+// Keyboard State
+// =============================================================================
+static bool shift_held = false;
+static uint32_t last_press_time = 0;
+static int click_count = 0;
+static constexpr uint32_t DOUBLE_CLICK_MS = 300;
 
-// Pending event queue (simple single-event buffer)
-static InputEvent pending_event = INPUT_NONE;
+// =============================================================================
+// SDL Event Handler (called from simulator/main.cpp)
+// =============================================================================
 
-void input_init() {
-    // Nothing special needed for simulator
-    g_encoder_delta = 0;
-    pending_event = INPUT_NONE;
-}
-
-// Called from main loop to translate SDL events to InputEvents
 void input_handle_sdl_event(const SDL_Event& e) {
-    if (e.type == SDL_KEYDOWN) {
+    if (e.type == SDL_KEYDOWN && !e.key.repeat) {
+        uint32_t now = SDL_GetTicks();
+
         switch (e.key.keysym.sym) {
             // Encoder rotation simulation
             case SDLK_LEFT:
             case SDLK_DOWN:
-                g_encoder_delta -= 10;
-                pending_event = INPUT_ENC_CCW;
+                // Shift = faster rotation
+                input_feed_encoder(shift_held ? -5 : -1);
                 break;
+
             case SDLK_RIGHT:
             case SDLK_UP:
-                g_encoder_delta += 10;
-                pending_event = INPUT_ENC_CW;
+                input_feed_encoder(shift_held ? 5 : 1);
                 break;
 
-            // Encoder press
+            // Encoder button simulation
             case SDLK_RETURN:
             case SDLK_KP_ENTER:
-                pending_event = INPUT_ENC_PRESS;
+                // Detect double-click
+                if (now - last_press_time < DOUBLE_CLICK_MS) {
+                    click_count++;
+                    if (click_count >= 2) {
+                        input_feed_button(INPUT_ENC_DOUBLE_CLICK);
+                        click_count = 0;
+                    }
+                } else {
+                    click_count = 1;
+                    input_feed_button(INPUT_ENC_PRESS);
+                }
+                last_press_time = now;
                 break;
 
-            // Button shortcuts
-            case SDLK_h:
-                pending_event = INPUT_BTN_HOME;
+            // Long press simulation (hold L key)
+            case SDLK_l:
+                input_feed_button(INPUT_ENC_LONG_PRESS);
                 break;
+
+            // Escape = double-click (exit edit mode)
             case SDLK_ESCAPE:
-            case SDLK_BACKSPACE:
-                pending_event = INPUT_BTN_BACK;
+                input_feed_button(INPUT_ENC_DOUBLE_CLICK);
                 break;
-            case SDLK_SPACE:
-                pending_event = INPUT_BTN_ACTION;
+
+            // Shift modifier
+            case SDLK_LSHIFT:
+            case SDLK_RSHIFT:
+                shift_held = true;
                 break;
 
             default:
                 break;
         }
     }
+    else if (e.type == SDL_KEYUP) {
+        switch (e.key.keysym.sym) {
+            case SDLK_LSHIFT:
+            case SDLK_RSHIFT:
+                shift_held = false;
+                break;
+            default:
+                break;
+        }
+    }
 }
 
-InputEvent input_poll() {
-    InputEvent ev = pending_event;
-    pending_event = INPUT_NONE;
-    return ev;
-}
+// =============================================================================
+// Platform stubs (input_init and input_poll handled by gui/input.cpp)
+// =============================================================================
+
+// Simulator doesn't need separate init - gui/input.cpp handles LVGL setup
+// input_poll() is also in gui/input.cpp (returns INPUT_NONE, LVGL handles events)

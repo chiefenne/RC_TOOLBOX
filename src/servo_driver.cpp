@@ -29,8 +29,7 @@ void servo_driver_init() {
             .duty_resolution = static_cast<ledc_timer_bit_t>(SERVO_PWM_RESOLUTION),
             .timer_num = LEDC_TIMER_0,
             .freq_hz = SERVO_PWM_FREQ_HZ,
-            .clk_cfg = LEDC_AUTO_CLK,
-            .deconfigure = false
+            .clk_cfg = LEDC_AUTO_CLK
         };
         if (i == 0) { // Only configure timer once
             ledc_timer_config(&timer_conf);

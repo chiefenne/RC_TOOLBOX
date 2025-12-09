@@ -52,6 +52,13 @@ constexpr int PIN_ADC[] = {1, 2, 3};  // ADC1 channels
 constexpr float ADC_VOLTAGE_DIVIDER = 2.0f;
 
 // =============================================================================
+// Rotary Encoder (EC11 with push button)
+// =============================================================================
+constexpr int PIN_ENC_CLK = 35;  // Encoder output A (CLK)
+constexpr int PIN_ENC_DT  = 36;  // Encoder output B (DT)
+constexpr int PIN_ENC_SW  = 37;  // Encoder push button (active LOW)
+
+// =============================================================================
 // I2C Bus (for future I2C expander, sensors, etc.)
 // =============================================================================
 constexpr int PIN_I2C_SDA = 47;
@@ -80,10 +87,13 @@ constexpr int PIN_I2C_SCL = 48;  // Note: Shared with NeoPixel on DevKitC-1!
 //  17       - Servo 4
 //  18       - Servo 5
 //  21       - Servo 6
+//  35       - Encoder CLK (A)
+//  36       - Encoder DT (B)
+//  37       - Encoder SW (button)
 //  47       - I2C SDA (future)
 //  48       - NeoPixel / I2C SCL (conflict, choose one)
 //
 // Available GPIOs:
 //   1, 2, 3 - ADC inputs (battery voltage)
-//  35, 36, 37, 38, 39, 40, 41, 42 - General purpose
+//  38, 39, 40, 41, 42 - General purpose
 //  45, 46  - Available (strapping pins, use with care)
