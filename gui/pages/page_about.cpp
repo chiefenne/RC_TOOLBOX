@@ -4,9 +4,30 @@
 #include "gui/lang.h"
 #include "gui/version.h"
 #include "gui/images/images.h"
+#include "gui/input.h"
+#include "gui/gui.h"
 #include <cstdio>
 
+// =============================================================================
+// Focus Order Configuration
+// =============================================================================
+enum FocusOrder {
+    FO_BTN_HOME     = 0,
+    FO_BTN_PREV     = 1,
+    FO_BTN_NEXT     = 2,
+    FO_BTN_SETTINGS = 3,
+};
+
+// Focus group builder for this page
+static FocusOrderBuilder focus_builder;
+
 void page_about_create(lv_obj_t* parent) {
+    // Initialize focus builder
+    focus_builder.init();
+
+    // Record this page in navigation history
+    input_push_page(PAGE_ABOUT);
+
     // Use flex layout for vertical centering
     lv_obj_set_flex_flow(parent, LV_FLEX_FLOW_COLUMN);
     lv_obj_set_flex_align(parent, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
@@ -74,4 +95,17 @@ void page_about_create(lv_obj_t* parent) {
     lv_label_set_text(club_label, club_text);
     lv_obj_set_style_text_font(club_label, &arial_12, 0);
     lv_obj_set_style_text_color(club_label, lv_color_hex(GUI_COLOR_GRAYS[0]), 0);
+
+    // Add footer buttons to focus order
+    focus_builder.add(gui_get_btn_home(), FO_BTN_HOME);
+    focus_builder.add(gui_get_btn_prev(), FO_BTN_PREV);
+    focus_builder.add(gui_get_btn_next(), FO_BTN_NEXT);
+    focus_builder.add(gui_get_btn_settings(), FO_BTN_SETTINGS);
+
+    // Finalize focus builder
+    focus_builder.finalize();
+}
+
+void page_about_destroy() {
+    focus_builder.destroy();
 }

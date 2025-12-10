@@ -36,12 +36,15 @@ void input_handle_sdl_event(const SDL_Event& e) {
             // Encoder button simulation
             case SDLK_RETURN:
             case SDLK_KP_ENTER:
-                // Detect double-click
+                // Detect double/triple-click
                 if (now - last_press_time < DOUBLE_CLICK_MS) {
                     click_count++;
-                    if (click_count >= 2) {
-                        input_feed_button(INPUT_ENC_DOUBLE_CLICK);
+                    if (click_count >= 3) {
+                        input_feed_button(INPUT_ENC_TRIPLE_CLICK);
                         click_count = 0;
+                    } else if (click_count >= 2) {
+                        input_feed_button(INPUT_ENC_DOUBLE_CLICK);
+                        // Don't reset - allow triple-click to follow
                     }
                 } else {
                     click_count = 1;
@@ -53,6 +56,11 @@ void input_handle_sdl_event(const SDL_Event& e) {
             // Long press simulation (hold L key)
             case SDLK_l:
                 input_feed_button(INPUT_ENC_LONG_PRESS);
+                break;
+
+            // Triple-click simulation (T key)
+            case SDLK_t:
+                input_feed_button(INPUT_ENC_TRIPLE_CLICK);
                 break;
 
             // Escape = double-click (exit edit mode)

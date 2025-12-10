@@ -5,6 +5,7 @@
 #include "gui/lang.h"
 #include "gui/version.h"
 #include "gui/config/settings.h"
+#include "gui/input.h"
 #include "style_utils.h"
 #include "gui/pages/page_splash.h"
 #include "gui/pages/page_home.h"
@@ -44,21 +45,21 @@ static const char* get_servo_protocol_name() {
 // Page registry - must match GuiPage enum order
 static const PageEntry PAGE_REGISTRY[PAGE_COUNT] = {
     // PAGE_HOME
-    { STR_PAGE_HOME,       page_home_create,       nullptr,              nullptr,                 nullptr,           nullptr },
+    { STR_PAGE_HOME,       page_home_create,       page_home_destroy,       nullptr,                 nullptr,           nullptr },
     // PAGE_SERVO
-    { STR_PAGE_SERVO,      page_servo_create,      page_servo_destroy,   page_servo_is_running,   page_servo_stop,   get_servo_protocol_name },
+    { STR_PAGE_SERVO,      page_servo_create,      page_servo_destroy,      page_servo_is_running,   page_servo_stop,   get_servo_protocol_name },
     // PAGE_LIPO
-    { STR_PAGE_LIPO,       page_lipo_create,       nullptr,              nullptr,                 nullptr,           nullptr },
+    { STR_PAGE_LIPO,       page_lipo_create,       page_lipo_destroy,       nullptr,                 nullptr,           nullptr },
     // PAGE_CG_SCALE
-    { STR_PAGE_CG_SCALE,   page_cg_scale_create,   nullptr,              nullptr,                 nullptr,           nullptr },
+    { STR_PAGE_CG_SCALE,   page_cg_scale_create,   page_cg_scale_destroy,   nullptr,                 nullptr,           nullptr },
     // PAGE_DEFLECTION
-    { STR_PAGE_DEFLECTION, page_deflection_create, nullptr,              nullptr,                 nullptr,           nullptr },
+    { STR_PAGE_DEFLECTION, page_deflection_create, page_deflection_destroy, nullptr,                 nullptr,           nullptr },
     // PAGE_ANGLE
-    { STR_PAGE_ANGLE,      page_angle_create,      nullptr,              nullptr,                 nullptr,           nullptr },
+    { STR_PAGE_ANGLE,      page_angle_create,      page_angle_destroy,      nullptr,                 nullptr,           nullptr },
     // PAGE_SETTINGS
-    { STR_PAGE_SETTINGS,   page_settings_create,   page_settings_destroy, nullptr,                nullptr,           nullptr },
+    { STR_PAGE_SETTINGS,   page_settings_create,   page_settings_destroy,   nullptr,                nullptr,           nullptr },
     // PAGE_ABOUT
-    { STR_PAGE_ABOUT,      page_about_create,      nullptr,              nullptr,                 nullptr,           nullptr },
+    { STR_PAGE_ABOUT,      page_about_create,      page_about_destroy,      nullptr,                 nullptr,           nullptr },
 };
 
 // ============================================================================
@@ -358,4 +359,22 @@ BgColorPreset gui_get_bg_color()
 GuiPage gui_get_current_page()
 {
     return active_page;
+}
+
+// Footer button getters for focus management
+lv_obj_t* gui_get_btn_home() { return btn_home; }
+lv_obj_t* gui_get_btn_prev() { return btn_prev; }
+lv_obj_t* gui_get_btn_next() { return btn_next; }
+lv_obj_t* gui_get_btn_settings() { return btn_settings; }
+
+// Go back to previous page in history
+void gui_go_back()
+{
+    int prev = input_pop_page();
+    if (prev >= 0 && prev < PAGE_COUNT) {
+        gui_set_page((GuiPage)prev);
+    } else {
+        // No history, go to home
+        gui_set_page(PAGE_HOME);
+    }
 }

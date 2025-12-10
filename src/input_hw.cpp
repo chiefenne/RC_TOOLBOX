@@ -19,6 +19,7 @@ static volatile uint32_t btn_press_time = 0;
 static volatile uint32_t btn_release_time = 0;
 static volatile bool btn_pressed = false;
 static volatile int click_count = 0;
+static volatile bool long_press_fired = false;  // Suppress click after long press
 
 // Timing constants (ms)
 static constexpr uint32_t DEBOUNCE_MS     = 5;
@@ -92,17 +93,89 @@ void input_hw_init() {
     // Read initial encoder state
     last_enc_state = (digitalRead(PIN_ENC_CLK) << 1) | digitalRead(PIN_ENC_DT);
 
-    // Attach interrupts
-    attachInterrupt(digitalPinToInterrupt(PIN_ENC_CLK), encoder_isr, CHANGE);
-    attachInterrupt(digitalPinToInterrupt(PIN_ENC_DT), encoder_isr, CHANGE);
-    attachInterrupt(digitalPinToInterrupt(PIN_ENC_SW), button_isr, CHANGE);
+    // NOTE: Using polling instead of interrupts - more reliable on ESP32-S3 GPIO 35/36
+    // attachInterrupt(digitalPinToInterrupt(PIN_ENC_CLK), encoder_isr, CHANGE);
+    // attachInterrupt(digitalPinToInterrupt(PIN_ENC_DT), encoder_isr, CHANGE);
+    // attachInterrupt(digitalPinToInterrupt(PIN_ENC_SW), button_isr, CHANGE);
 
     encoder_pos = 0;
     last_encoder_pos = 0;
     click_count = 0;
+    btn_pressed = false;
+}
+
+// Poll encoder state (called from input_hw_poll)
+// EC11 encoders typically generate 4 state changes per detent
+// We only count on specific transitions to get 1 count per detent
+static void poll_encoder() {
+    static uint32_t last_change_time = 0;
+    uint8_t clk = digitalRead(PIN_ENC_CLK);
+    uint8_t dt  = digitalRead(PIN_ENC_DT);
+
+    // Build 2-bit state and combine with previous state
+    uint8_t state = (clk << 1) | dt;
+
+    if (state != last_enc_state) {
+        // Debounce: ignore changes within 2ms
+        uint32_t now = millis();
+        if (now - last_change_time < 2) {
+            return;
+        }
+        last_change_time = now;
+
+        uint8_t combined = (last_enc_state << 2) | state;
+        last_enc_state = state;
+
+        // Only count on specific transitions (1 count per detent)
+        // CW: when transitioning to state 11 (both HIGH) from state 01
+        // CCW: when transitioning to state 11 (both HIGH) from state 10
+        switch (combined) {
+            case 0b0111:  // 01 -> 11 = CW detent
+                encoder_pos++;
+                break;
+            case 0b1011:  // 10 -> 11 = CCW detent
+                encoder_pos--;
+                break;
+        }
+    }
+}
+
+// Poll button state (called from input_hw_poll)
+static void poll_button() {
+    uint32_t now = millis();
+    bool pressed = (digitalRead(PIN_ENC_SW) == LOW);
+
+    if (pressed && !btn_pressed) {
+        // Button just pressed - debounce
+        static uint32_t last_press = 0;
+        if (now - last_press > DEBOUNCE_MS) {
+            btn_pressed = true;
+            btn_press_time = now;
+            long_press_fired = false;  // Reset on new press
+            last_press = now;
+        }
+    } else if (!pressed && btn_pressed) {
+        // Button just released
+        btn_pressed = false;
+        btn_release_time = now;
+
+        // Only count as click if long press wasn't already fired
+        if (!long_press_fired) {
+            uint32_t press_duration = now - btn_press_time;
+            if (press_duration < LONG_PRESS_MS) {
+                // Short press - could be first click of double-click
+                click_count++;
+            }
+        }
+        long_press_fired = false;  // Reset for next press
+    }
 }
 
 void input_hw_poll() {
+    // Poll encoder and button (instead of using interrupts)
+    poll_encoder();
+    poll_button();
+
     // Check for encoder rotation
     int32_t pos = encoder_pos;
     if (pos != last_encoder_pos) {
@@ -116,9 +189,9 @@ void input_hw_poll() {
     // Check for long press (while button still held)
     if (btn_pressed) {
         uint32_t now = millis();
-        if (now - btn_press_time > LONG_PRESS_MS) {
-            // Long press detected - reset to avoid repeat
-            btn_press_time = now;
+        if (now - btn_press_time > LONG_PRESS_MS && !long_press_fired) {
+            // Long press detected - set flag to prevent click on release
+            long_press_fired = true;
             input_feed_button(INPUT_ENC_LONG_PRESS);
         }
     }
@@ -129,7 +202,9 @@ void input_hw_poll() {
         if (now - btn_release_time > DOUBLE_CLICK_MS) {
             // Timeout - process accumulated clicks
             InputEvent ev = INPUT_NONE;
-            if (click_count >= 2) {
+            if (click_count >= 3) {
+                ev = INPUT_ENC_TRIPLE_CLICK;
+            } else if (click_count >= 2) {
                 ev = INPUT_ENC_DOUBLE_CLICK;
             } else {
                 ev = INPUT_ENC_PRESS;

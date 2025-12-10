@@ -22,14 +22,19 @@ static void flush_cb(lv_display_t* disp, const lv_area_t* area, uint8_t* data) {
     const int h = lv_area_get_height(area);
     SDL_Rect r{area->x1, area->y1, w, h};
 
-    // With LV_DISPLAY_RENDER_MODE_FULL, we always get the full screen,
-    // so we can use the data pointer directly
+    // With LV_DISPLAY_RENDER_MODE_PARTIAL, we get only the changed area
+    // Use the data pointer directly (contains only the dirty region)
     lv_draw_buf_t* draw_buf = lv_display_get_buf_active(disp);
     const int stride = draw_buf->header.stride;
 
-    SDL_UpdateTexture(tex, &r, draw_buf->data, stride);
-    SDL_RenderCopy(ren, tex, nullptr, nullptr);
-    SDL_RenderPresent(ren);
+    // Update only the dirty rectangle in the texture
+    SDL_UpdateTexture(tex, &r, data, stride);
+
+    // Only present when this is the last flush call for the frame
+    if (lv_display_flush_is_last(disp)) {
+        SDL_RenderCopy(ren, tex, nullptr, nullptr);
+        SDL_RenderPresent(ren);
+    }
     lv_display_flush_ready(disp);
 }
 
@@ -48,10 +53,14 @@ int main(int argc, char** argv) {
         SDL_TEXTUREACCESS_STREAMING, w, h);
 
     lv_display_t* disp = lv_display_create(w, h);
+
+    // Use partial rendering mode for efficient updates (only dirty areas are redrawn)
+    // Buffer size: 1/10 of screen is recommended minimum for partial mode
     static lv_draw_buf_t draw_buf;
     static std::vector<lv_color_t> draw_buf_mem;
-    draw_buf_mem.resize(static_cast<size_t>(w) * h);
-    lv_result_t buf_res = lv_draw_buf_init(&draw_buf, w, h, LV_COLOR_FORMAT_NATIVE,
+    const size_t buf_lines = h / 10;  // 1/10 of screen height
+    draw_buf_mem.resize(static_cast<size_t>(w) * buf_lines);
+    lv_result_t buf_res = lv_draw_buf_init(&draw_buf, w, buf_lines, LV_COLOR_FORMAT_NATIVE,
                                            LV_STRIDE_AUTO, draw_buf_mem.data(),
                                            draw_buf_mem.size() * sizeof(lv_color_t));
     if(buf_res != LV_RESULT_OK) {
@@ -59,7 +68,8 @@ int main(int argc, char** argv) {
     }
     lv_display_set_draw_buffers(disp, &draw_buf, nullptr);
     lv_display_set_flush_cb(disp, flush_cb);
-    lv_display_set_render_mode(disp, LV_DISPLAY_RENDER_MODE_FULL);
+    // PARTIAL mode: only invalidated (dirty) areas are redrawn - much more efficient!
+    lv_display_set_render_mode(disp, LV_DISPLAY_RENDER_MODE_PARTIAL);
 
     // Mouse = touch (primary input)
     lv_indev_t* mouse_indev = lv_indev_create();

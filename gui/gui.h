@@ -29,3 +29,12 @@ void gui_set_page(GuiPage page);
 GuiPage gui_get_current_page();
 void gui_set_bg_color(BgColorPreset preset);
 BgColorPreset gui_get_bg_color();
+
+// Footer button access for focus management
+lv_obj_t* gui_get_btn_home();
+lv_obj_t* gui_get_btn_prev();
+lv_obj_t* gui_get_btn_next();
+lv_obj_t* gui_get_btn_settings();
+
+// Navigation
+void gui_go_back();  // Go to previous page in history

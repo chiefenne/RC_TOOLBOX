@@ -6,8 +6,31 @@
 #include "gui/config/settings.h"
 #include "gui/lang.h"
 #include "gui/version.h"
+#include "gui/input.h"
 #include <cstdio>
 #include <cstring>
+
+// =============================================================================
+// Focus Order Configuration
+// =============================================================================
+// Define focus order here - change these numbers to reorder navigation
+enum FocusOrder {
+    FO_LANGUAGE     = 0,
+    FO_BRIGHTNESS   = 1,
+    FO_BACKGROUND   = 2,
+    FO_PROTOCOL     = 3,
+    FO_FREQUENCY    = 4,
+    FO_PWM_MIN      = 5,
+    FO_PWM_CENTER   = 6,
+    FO_PWM_MAX      = 7,
+    FO_BTN_HOME     = 8,
+    FO_BTN_PREV     = 9,
+    FO_BTN_NEXT     = 10,
+    FO_BTN_SETTINGS = 11,
+};
+
+// Focus group builder for this page
+static FocusOrderBuilder focus_builder;
 
 // Language options (must match Language enum order) - kept in native language
 static const char* LANGUAGE_OPTIONS =
@@ -155,6 +178,12 @@ static void on_servo_pwm_max_change(lv_event_t* e) {
 }
 
 void page_settings_create(lv_obj_t* parent) {
+    // Initialize focus builder
+    focus_builder.init();
+
+    // Record this page in navigation history
+    input_push_page(PAGE_SETTINGS);
+
     // Build translated option strings
     build_translated_options();
 
@@ -162,14 +191,17 @@ void page_settings_create(lv_obj_t* parent) {
 
     // Language section
     sb.begin_section(tr(STR_SETTINGS_LANGUAGE));
-    sb.dropdown(tr(STR_SETTINGS_LANGUAGE), LANGUAGE_OPTIONS,
+    lv_obj_t* dd_lang = sb.dropdown(tr(STR_SETTINGS_LANGUAGE), LANGUAGE_OPTIONS,
                 lang_get(), on_language_change);
+    focus_builder.add(dd_lang, FO_LANGUAGE);
     sb.end_section();
 
     // Display section
     sb.begin_section(tr(STR_SETTINGS_DISPLAY));
-    sb.slider(tr(STR_SETTINGS_BRIGHTNESS), 10, 100, g_settings.brightness, on_brightness_change);
-    sb.dropdown(tr(STR_SETTINGS_BACKGROUND), bg_color_options, gui_get_bg_color(), on_bg_color_change);
+    lv_obj_t* sl_brightness = sb.slider(tr(STR_SETTINGS_BRIGHTNESS), 10, 100, g_settings.brightness, on_brightness_change);
+    focus_builder.add(sl_brightness, FO_BRIGHTNESS);
+    lv_obj_t* dd_bg = sb.dropdown(tr(STR_SETTINGS_BACKGROUND), bg_color_options, gui_get_bg_color(), on_bg_color_change);
+    focus_builder.add(dd_bg, FO_BACKGROUND);
     sb.end_section();
 
     // Servo section
@@ -178,20 +210,25 @@ void page_settings_create(lv_obj_t* parent) {
     // Protocol dropdown
     dd_protocol = sb.dropdown(tr(STR_SETTINGS_PROTOCOL), SERVO_PROTOCOL_OPTIONS,
                               g_settings.servo_protocol, on_servo_protocol_change);
+    focus_builder.add(dd_protocol, FO_PROTOCOL);
 
     // Frequency dropdown
     dd_frequency = sb.dropdown(tr(STR_SETTINGS_FREQUENCY), freq_options,
                                g_settings.servo_frequency == 333 ? 1 : 0, on_servo_frequency_change);
+    focus_builder.add(dd_frequency, FO_FREQUENCY);
 
     // PWM value sliders (500-2500 range, step 10)
     lv_obj_t* sl_min = sb.slider(tr(STR_SETTINGS_PWM_MIN), 500, 1500, g_settings.servo_pwm_min, on_servo_pwm_min_change);
     lbl_pwm_min = lv_obj_get_child(lv_obj_get_parent(sl_min), 1);  // Value label
+    focus_builder.add(sl_min, FO_PWM_MIN);
 
     lv_obj_t* sl_center = sb.slider(tr(STR_SETTINGS_PWM_CENTER), 1000, 2000, g_settings.servo_pwm_center, on_servo_pwm_center_change);
     lbl_pwm_center = lv_obj_get_child(lv_obj_get_parent(sl_center), 1);
+    focus_builder.add(sl_center, FO_PWM_CENTER);
 
     lv_obj_t* sl_max = sb.slider(tr(STR_SETTINGS_PWM_MAX), 1500, 2500, g_settings.servo_pwm_max, on_servo_pwm_max_change);
     lbl_pwm_max = lv_obj_get_child(lv_obj_get_parent(sl_max), 1);
+    focus_builder.add(sl_max, FO_PWM_MAX);
 
     sb.end_section();
 
@@ -200,11 +237,23 @@ void page_settings_create(lv_obj_t* parent) {
     sb.info(tr(STR_SETTINGS_FIRMWARE), APP_VERSION);
     sb.info("LVGL", LVGL_VERSION_STRING);
     sb.end_section();
+
+    // Add footer buttons to focus order
+    focus_builder.add(gui_get_btn_home(), FO_BTN_HOME);
+    focus_builder.add(gui_get_btn_prev(), FO_BTN_PREV);
+    focus_builder.add(gui_get_btn_next(), FO_BTN_NEXT);
+    focus_builder.add(gui_get_btn_settings(), FO_BTN_SETTINGS);
+
+    // Finalize focus builder
+    focus_builder.finalize();
 }
 
 void page_settings_destroy() {
     // Save settings once on page exit (deferred auto-save)
     settings_save();
+
+    // Destroy focus builder
+    focus_builder.destroy();
 
     // Reset static pointers to avoid use-after-free
     lbl_pwm_min = nullptr;

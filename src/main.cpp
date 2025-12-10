@@ -15,8 +15,11 @@ TFT_eSPI tft = TFT_eSPI();
 // NeoPixel RGB LED (built-in on ESP32-S3-DevKitC-1)
 Adafruit_NeoPixel pixel(NEOPIXEL_COUNT, NEOPIXEL_PIN, NEO_GRB + NEO_KHZ800);
 
-// LVGL draw buffer
-static lv_color_t buf1[SCREEN_WIDTH * 10];
+// LVGL draw buffers - larger buffer = fewer SPI transactions = smoother rendering
+// Double buffering: LVGL renders to buf2 while buf1 is being transmitted via SPI
+// 40 lines = good balance between memory usage and performance
+static lv_color_t buf1[SCREEN_WIDTH * 40];
+static lv_color_t buf2[SCREEN_WIDTH * 40];
 static lv_display_t *display;
 static lv_indev_t *touch_indev;
 
@@ -167,13 +170,19 @@ void setup()
     // Create display (LVGL 9.x API)
     display = lv_display_create(SCREEN_WIDTH, SCREEN_HEIGHT);
     lv_display_set_flush_cb(display, my_disp_flush);
-    lv_display_set_buffers(display, buf1, NULL, sizeof(buf1), LV_DISPLAY_RENDER_MODE_PARTIAL);
+    lv_display_set_buffers(display, buf1, buf2, sizeof(buf1), LV_DISPLAY_RENDER_MODE_PARTIAL);
     lv_display_set_default(display);
+
+    // Set refresh period to 20ms (default is 33ms) for smoother updates
+    lv_timer_set_period(lv_display_get_refr_timer(display), 20);
 
     // Create touch input device
     touch_indev = lv_indev_create();
     lv_indev_set_type(touch_indev, LV_INDEV_TYPE_POINTER);
     lv_indev_set_read_cb(touch_indev, my_touch_read);
+
+    // Initialize encoder input device (EC11 rotary encoder)
+    input_init();
 
     Serial.println("[3] LVGL complete");
     Serial.flush();

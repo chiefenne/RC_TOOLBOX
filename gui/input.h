@@ -19,9 +19,66 @@ enum InputEvent {
     INPUT_ENC_PRESS,        // Short press (<500ms)
     INPUT_ENC_LONG_PRESS,   // Long press (>800ms)
     INPUT_ENC_DOUBLE_CLICK, // Double click (<300ms between clicks)
+    INPUT_ENC_TRIPLE_CLICK, // Triple click (<300ms between clicks)
 
     INPUT_COUNT
 };
+
+// =============================================================================
+// Focus Order Helper
+// =============================================================================
+// Maximum widgets per page that can be in focus order
+constexpr int MAX_FOCUS_WIDGETS = 20;
+
+// Focus color (green) - use this in pages for consistent styling
+constexpr uint32_t FOCUS_COLOR_HEX = 0x00AA00;
+
+// Callback type for long-press handler
+typedef void (*long_press_cb_t)();
+
+// Helper struct to build focus groups with specific order
+struct FocusOrderBuilder {
+    lv_group_t* group;
+    lv_obj_t* widgets[MAX_FOCUS_WIDGETS];
+    int count;
+    int current_focus;  // Current focus index in our order
+    long_press_cb_t on_long_press;  // Optional long-press callback
+
+    // Initialize with a new group
+    void init();
+
+    // Add widget at specific position (0-based index in focus order)
+    // Returns the widget for chaining
+    lv_obj_t* add(lv_obj_t* widget, int order_index);
+
+    // Finalize: add all widgets to group in order, apply focus style
+    void finalize();
+
+    // Navigate to next/previous widget in our defined order
+    void focus_next();
+    void focus_prev();
+
+    // Focus a specific index
+    void focus_index(int idx);
+
+    // Get currently focused widget
+    lv_obj_t* get_focused_widget();
+
+    // Get current focus index
+    int get_focus_index() const { return current_focus; }
+
+    // Set long-press callback for this page
+    void set_long_press_cb(long_press_cb_t cb);
+
+    // Apply focus style to a widget (green outline)
+    static void apply_focus_style(lv_obj_t* widget);
+
+    // Cleanup
+    void destroy();
+};
+
+// Get the active focus builder (for encoder callback to use)
+FocusOrderBuilder* input_get_active_focus_builder();
 
 // =============================================================================
 // Encoder Input System
@@ -59,6 +116,22 @@ void input_set_group(lv_group_t* group);
 
 // Add styling for focused widgets (call once during GUI init)
 void input_add_focus_style();
+
+// =============================================================================
+// Navigation History (for back/home gestures)
+// =============================================================================
+
+// Record page navigation (call when entering a new page)
+void input_push_page(int page_id);
+
+// Get previous page (-1 if none)
+int input_get_previous_page();
+
+// Pop current page from history and return previous page (-1 if none)
+int input_pop_page();
+
+// Clear navigation history
+void input_clear_history();
 
 // =============================================================================
 // Platform-specific functions (implemented in input_hw.cpp / input_sim.cpp)

@@ -3,6 +3,7 @@
 
 #include "gui/input.h"
 #include "gui/color_palette.h"
+#include "gui/gui.h"
 
 // =============================================================================
 // Encoder State (fed by platform-specific code)
@@ -13,57 +14,76 @@ static uint32_t last_rotation_time = 0;
 static int rotation_count = 0;         // Rotations in time window
 
 // =============================================================================
+// Navigation History
+// =============================================================================
+static constexpr int NAV_HISTORY_SIZE = 8;
+static int nav_history[NAV_HISTORY_SIZE] = {-1};
+static int nav_history_idx = 0;
+
+// =============================================================================
 // LVGL Encoder Input Device
 // =============================================================================
 static lv_indev_t* encoder_indev = nullptr;
 static lv_group_t* default_group = nullptr;
 
-// Focus style (blue outline)
+// Active focus builder (set by FocusOrderBuilder::finalize)
+static FocusOrderBuilder* active_focus_builder = nullptr;
+
+// Focus style - not used, each widget gets its own style
 static lv_style_t style_focus;
 static bool style_initialized = false;
 
-// LVGL encoder read callback
+// Get active focus builder
+FocusOrderBuilder* input_get_active_focus_builder() {
+    return active_focus_builder;
+}
+
+// LVGL encoder read callback - only used for minimal LVGL integration
+// We handle everything ourselves
 static void encoder_read_cb(lv_indev_t* indev, lv_indev_data_t* data) {
     (void)indev;
 
-    // Rotation → enc_diff
-    data->enc_diff = static_cast<int16_t>(encoder_diff);
-    encoder_diff = 0;
+    // Never pass rotation to LVGL - we manage focus completely ourselves
+    data->enc_diff = 0;
 
-    // Button state
-    static lv_indev_state_t btn_state = LV_INDEV_STATE_RELEASED;
+    // Don't let LVGL handle buttons either - we do it ourselves
+    data->state = LV_INDEV_STATE_RELEASED;
+    data->key = 0;
+}
 
-    switch (pending_gesture) {
+// Handle button press - send click event directly to focused widget
+static void handle_button_press(InputEvent gesture) {
+    switch (gesture) {
         case INPUT_ENC_PRESS:
-            // Short press → ENTER (select/activate)
-            data->key = LV_KEY_ENTER;
-            btn_state = LV_INDEV_STATE_PRESSED;
-            pending_gesture = INPUT_NONE;
+            // Short press - click the focused widget
+            if (active_focus_builder) {
+                lv_obj_t* focused = active_focus_builder->get_focused_widget();
+                if (focused) {
+                    lv_obj_send_event(focused, LV_EVENT_CLICKED, nullptr);
+                }
+            }
             break;
 
         case INPUT_ENC_LONG_PRESS:
-            // Long press → also acts as ENTER but pages can check
-            data->key = LV_KEY_ENTER;
-            btn_state = LV_INDEV_STATE_PRESSED;
-            pending_gesture = INPUT_NONE;
+            // Long press - call page-specific callback if set
+            if (active_focus_builder && active_focus_builder->on_long_press) {
+                active_focus_builder->on_long_press();
+            }
             break;
 
         case INPUT_ENC_DOUBLE_CLICK:
-            // Double click → ESC (exit edit mode / go back)
-            data->key = LV_KEY_ESC;
-            btn_state = LV_INDEV_STATE_PRESSED;
-            pending_gesture = INPUT_NONE;
+            // Double click - go back one level
+            gui_go_back();
+            break;
+
+        case INPUT_ENC_TRIPLE_CLICK:
+            // Triple click - go to home page
+            gui_set_page(PAGE_HOME);
             break;
 
         default:
-            // Release after one cycle
-            if (btn_state == LV_INDEV_STATE_PRESSED) {
-                btn_state = LV_INDEV_STATE_RELEASED;
-            }
             break;
     }
-
-    data->state = btn_state;
 }
 
 // =============================================================================
@@ -79,7 +99,7 @@ void input_init() {
     pending_gesture = INPUT_NONE;
     rotation_count = 0;
 
-    // Create LVGL encoder input device
+    // Create LVGL encoder input device - only for button press handling
     encoder_indev = lv_indev_create();
     lv_indev_set_type(encoder_indev, LV_INDEV_TYPE_ENCODER);
     lv_indev_set_read_cb(encoder_indev, encoder_read_cb);
@@ -100,8 +120,8 @@ void input_add_focus_style() {
     style_initialized = true;
 
     lv_style_init(&style_focus);
-    lv_style_set_outline_color(&style_focus, lv_color_hex(GUI_COLOR_MONO[1]));  // Blue
-    lv_style_set_outline_width(&style_focus, 2);
+    lv_style_set_outline_color(&style_focus, lv_color_hex(0x00AA00));  // Green
+    lv_style_set_outline_width(&style_focus, 3);
     lv_style_set_outline_pad(&style_focus, 2);
     lv_style_set_outline_opa(&style_focus, LV_OPA_COVER);
 }
@@ -130,7 +150,19 @@ void input_set_group(lv_group_t* group) {
 // =============================================================================
 
 void input_feed_encoder(int delta) {
-    encoder_diff += delta;
+    // Handle rotation using our custom focus order IMMEDIATELY
+    // Note: Direction is inverted to match natural encoder feel
+    if (active_focus_builder) {
+        if (delta > 0) {
+            for (int i = 0; i < delta; i++) {
+                active_focus_builder->focus_prev();
+            }
+        } else if (delta < 0) {
+            for (int i = 0; i < -delta; i++) {
+                active_focus_builder->focus_next();
+            }
+        }
+    }
 
     // Track rotation speed
     uint32_t now = lv_tick_get();
@@ -144,7 +176,8 @@ void input_feed_encoder(int delta) {
 
 void input_feed_button(InputEvent gesture) {
     if (gesture != INPUT_NONE) {
-        pending_gesture = gesture;
+        // Handle button press directly - don't go through LVGL
+        handle_button_press(gesture);
     }
 }
 
@@ -168,4 +201,182 @@ InputEvent input_poll() {
     // Poll platform-specific hardware (ESP32 encoder interrupts, etc.)
     input_hw_poll();
     return INPUT_NONE;
+}
+
+// =============================================================================
+// Navigation History
+// =============================================================================
+
+void input_push_page(int page_id) {
+    // Don't push duplicates
+    if (nav_history_idx > 0 && nav_history[nav_history_idx - 1] == page_id) {
+        return;
+    }
+    if (nav_history_idx < NAV_HISTORY_SIZE) {
+        nav_history[nav_history_idx++] = page_id;
+    } else {
+        // Shift history and add new entry
+        for (int i = 0; i < NAV_HISTORY_SIZE - 1; i++) {
+            nav_history[i] = nav_history[i + 1];
+        }
+        nav_history[NAV_HISTORY_SIZE - 1] = page_id;
+    }
+}
+
+int input_get_previous_page() {
+    // Return second-to-last page (current is last)
+    if (nav_history_idx >= 2) {
+        return nav_history[nav_history_idx - 2];
+    }
+    return -1;
+}
+
+int input_pop_page() {
+    // Remove current page from history and return previous page
+    if (nav_history_idx >= 2) {
+        nav_history_idx--;  // Remove current page
+        return nav_history[nav_history_idx - 1];  // Return previous page
+    }
+    return -1;  // No previous page
+}
+
+void input_clear_history() {
+    nav_history_idx = 0;
+    for (int i = 0; i < NAV_HISTORY_SIZE; i++) {
+        nav_history[i] = -1;
+    }
+}
+
+// =============================================================================
+// FocusOrderBuilder Implementation
+// =============================================================================
+
+void FocusOrderBuilder::init() {
+    group = lv_group_create();
+    count = 0;
+    current_focus = 0;
+    on_long_press = nullptr;
+    for (int i = 0; i < MAX_FOCUS_WIDGETS; i++) {
+        widgets[i] = nullptr;
+    }
+}
+
+void FocusOrderBuilder::set_long_press_cb(long_press_cb_t cb) {
+    on_long_press = cb;
+}
+
+lv_obj_t* FocusOrderBuilder::add(lv_obj_t* widget, int order_index) {
+    if (order_index >= 0 && order_index < MAX_FOCUS_WIDGETS) {
+        widgets[order_index] = widget;
+        if (order_index >= count) {
+            count = order_index + 1;
+        }
+        // Apply focus style immediately
+        apply_focus_style(widget);
+    }
+    return widget;
+}
+
+void FocusOrderBuilder::finalize() {
+    // We manage focus completely ourselves - don't use LVGL groups for navigation
+    // The group is still created but not used for focus management
+
+    // Register this as the active focus builder for encoder navigation
+    active_focus_builder = this;
+
+    // Set focus to first widget in our defined order
+    current_focus = 0;
+    focus_index(0);
+}
+
+void FocusOrderBuilder::focus_next() {
+    // Clear focus state from current widget
+    if (current_focus >= 0 && current_focus < count && widgets[current_focus] != nullptr) {
+        lv_obj_clear_state(widgets[current_focus], LV_STATE_FOCUSED);
+    }
+
+    // Find next valid widget (skip nulls and hidden)
+    int start = current_focus;
+    do {
+        current_focus++;
+        if (current_focus >= count) {
+            current_focus = 0;  // Wrap around
+        }
+        // Check if widget exists and is not hidden
+        if (widgets[current_focus] != nullptr &&
+            !lv_obj_has_flag(widgets[current_focus], LV_OBJ_FLAG_HIDDEN)) {
+            // Set focus state directly on the widget - completely bypass LVGL groups
+            lv_obj_add_state(widgets[current_focus], LV_STATE_FOCUSED);
+            return;
+        }
+    } while (current_focus != start);  // Prevent infinite loop
+}
+
+void FocusOrderBuilder::focus_prev() {
+    // Clear focus state from current widget
+    if (current_focus >= 0 && current_focus < count && widgets[current_focus] != nullptr) {
+        lv_obj_clear_state(widgets[current_focus], LV_STATE_FOCUSED);
+    }
+
+    // Find previous valid widget (skip nulls and hidden)
+    int start = current_focus;
+    do {
+        current_focus--;
+        if (current_focus < 0) {
+            current_focus = count - 1;  // Wrap around
+        }
+        // Check if widget exists and is not hidden
+        if (widgets[current_focus] != nullptr &&
+            !lv_obj_has_flag(widgets[current_focus], LV_OBJ_FLAG_HIDDEN)) {
+            // Set focus state directly on the widget - completely bypass LVGL groups
+            lv_obj_add_state(widgets[current_focus], LV_STATE_FOCUSED);
+            return;
+        }
+    } while (current_focus != start);  // Prevent infinite loop
+}
+
+void FocusOrderBuilder::focus_index(int idx) {
+    // Clear focus state from current widget
+    if (current_focus >= 0 && current_focus < count && widgets[current_focus] != nullptr) {
+        lv_obj_clear_state(widgets[current_focus], LV_STATE_FOCUSED);
+    }
+
+    if (idx >= 0 && idx < count && widgets[idx] != nullptr) {
+        current_focus = idx;
+        // Set focus state directly on the widget - completely bypass LVGL groups
+        lv_obj_add_state(widgets[idx], LV_STATE_FOCUSED);
+    }
+}
+
+lv_obj_t* FocusOrderBuilder::get_focused_widget() {
+    if (current_focus >= 0 && current_focus < count) {
+        return widgets[current_focus];
+    }
+    return nullptr;
+}
+
+void FocusOrderBuilder::apply_focus_style(lv_obj_t* widget) {
+    // Green outline when focused
+    lv_obj_set_style_outline_color(widget, lv_color_hex(FOCUS_COLOR_HEX), LV_STATE_FOCUSED);
+    lv_obj_set_style_outline_width(widget, 3, LV_STATE_FOCUSED);
+    lv_obj_set_style_outline_pad(widget, 2, LV_STATE_FOCUSED);
+    lv_obj_set_style_outline_opa(widget, LV_OPA_COVER, LV_STATE_FOCUSED);
+}
+
+void FocusOrderBuilder::destroy() {
+    // Clear focus from current widget before destroying
+    if (current_focus >= 0 && current_focus < count && widgets[current_focus] != nullptr) {
+        lv_obj_clear_state(widgets[current_focus], LV_STATE_FOCUSED);
+    }
+
+    // Clear active builder if it's us
+    if (active_focus_builder == this) {
+        active_focus_builder = nullptr;
+    }
+    if (group) {
+        lv_group_delete(group);
+        group = nullptr;
+    }
+    count = 0;
+    current_focus = 0;
 }

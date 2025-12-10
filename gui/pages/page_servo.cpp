@@ -6,9 +6,40 @@
 #include "gui/color_palette.h"
 #include "gui/lang.h"
 #include "gui/config/settings.h"
+#include "gui/input.h"
+#include "gui/gui.h"
 #include "servo_driver.h"
 #include <algorithm>
 #include <cstdio>
+#include <cstring>  // for strcmp
+
+// =============================================================================
+// Focus Order Configuration
+// =============================================================================
+// Define focus order here - change these numbers to reorder navigation
+// Servo buttons 1-6, then mode buttons, slider, start, presets, footer
+enum FocusOrder {
+    FO_SERVO_1    = 0,
+    FO_SERVO_2    = 1,
+    FO_SERVO_3    = 2,
+    FO_SERVO_4    = 3,
+    FO_SERVO_5    = 4,
+    FO_SERVO_6    = 5,
+    FO_AUTO       = 6,
+    FO_MANUAL     = 7,
+    FO_SLIDER     = 8,
+    FO_START      = 9,
+    FO_MIN        = 10,
+    FO_CENTER     = 11,
+    FO_MAX        = 12,
+    FO_BTN_HOME   = 13,
+    FO_BTN_PREV   = 14,
+    FO_BTN_NEXT   = 15,
+    FO_BTN_SETTINGS = 16,
+};
+
+// Focus group builder for this page
+static FocusOrderBuilder focus_builder;
 
 // Configuration constants
 namespace {
@@ -61,6 +92,10 @@ struct ServoState {
     lv_obj_t* lbl_start = nullptr;
     lv_obj_t* row_start = nullptr;
     lv_obj_t* row_manual = nullptr;
+    // Preset buttons (need individual tracking for focus management)
+    lv_obj_t* btn_min = nullptr;
+    lv_obj_t* btn_center = nullptr;
+    lv_obj_t* btn_max = nullptr;
 
     void reset() { pwm = PWM_CENTER; auto_mode = true; running = false; direction = 1; selected = 0x01; }
     void clamp() { pwm = (pwm < PWM_MIN) ? PWM_MIN : (pwm > PWM_MAX) ? PWM_MAX : pwm; }
@@ -82,13 +117,33 @@ struct ServoState {
     }
 
     void update_display() {
-        char buf[8];
-        snprintf(buf, sizeof(buf), "%d", pwm);
-        lv_label_set_text(lbl_pwm, buf);
-        // Scale slider to 0-100 range based on current PWM range
+        // === OPTIMIZATION: Only update widgets if value actually changed ===
+        // This prevents unnecessary LVGL invalidations and reduces flicker.
+        // Key: Use lv_label_set_text_static when possible, and always use LV_ANIM_OFF
+        // during continuous updates to prevent animation queue buildup.
+
+        // 1. Update label only if text changed (avoid redundant invalidation)
+        static char pwm_buf[8];  // Static to persist for lv_label_set_text_static
+        char new_buf[8];
+        snprintf(new_buf, sizeof(new_buf), "%d", pwm);
+        const char* current_text = lv_label_get_text(lbl_pwm);
+        if (strcmp(current_text, new_buf) != 0) {
+            // Copy to static buffer and use set_text_static to avoid internal allocation
+            strcpy(pwm_buf, new_buf);
+            lv_label_set_text_static(lbl_pwm, pwm_buf);
+        }
+
+        // 2. Scale slider to 0-100 range based on current PWM range
         int range = PWM_MAX - PWM_MIN;
         int slider_val = (range > 0) ? ((pwm - PWM_MIN) * 100 / range) : 50;
-        lv_slider_set_value(slider, slider_val, LV_ANIM_ON);
+
+        // 3. Update slider only if value changed
+        //    ALWAYS use LV_ANIM_OFF during sweep - animations cause multiple redraws
+        int current_slider_val = lv_slider_get_value(slider);
+        if (current_slider_val != slider_val) {
+            lv_slider_set_value(slider, slider_val, LV_ANIM_OFF);
+        }
+
         // Output PWM to selected servos
         servo_set_pulse_mask(selected, static_cast<uint16_t>(pwm));
     }
@@ -107,15 +162,26 @@ struct ServoState {
             lv_obj_clear_state(btn_manual, LV_STATE_DISABLED);
         }
 
-        // Bottom row visibility
+        // Bottom row visibility + individual button visibility for focus navigation
+        // LVGL focus navigation checks the widget's own HIDDEN flag, not parent's
         if (auto_mode) {
             lv_obj_clear_flag(row_start, LV_OBJ_FLAG_HIDDEN);
+            lv_obj_clear_flag(btn_start, LV_OBJ_FLAG_HIDDEN);  // Show start button for focus
             lv_obj_add_flag(row_manual, LV_OBJ_FLAG_HIDDEN);
+            // Hide preset buttons so focus skips them
+            if (btn_min) lv_obj_add_flag(btn_min, LV_OBJ_FLAG_HIDDEN);
+            if (btn_center) lv_obj_add_flag(btn_center, LV_OBJ_FLAG_HIDDEN);
+            if (btn_max) lv_obj_add_flag(btn_max, LV_OBJ_FLAG_HIDDEN);
             lv_label_set_text(lbl_start, running ? tr(STR_SERVO_STOP) : tr(STR_SERVO_START));
             lv_obj_set_style_bg_color(btn_start, running ? COL_STOP : COL_ACTIVE, 0);
         } else {
             lv_obj_add_flag(row_start, LV_OBJ_FLAG_HIDDEN);
+            lv_obj_add_flag(btn_start, LV_OBJ_FLAG_HIDDEN);  // Hide start button for focus
             lv_obj_clear_flag(row_manual, LV_OBJ_FLAG_HIDDEN);
+            // Show preset buttons so focus includes them
+            if (btn_min) lv_obj_clear_flag(btn_min, LV_OBJ_FLAG_HIDDEN);
+            if (btn_center) lv_obj_clear_flag(btn_center, LV_OBJ_FLAG_HIDDEN);
+            if (btn_max) lv_obj_clear_flag(btn_max, LV_OBJ_FLAG_HIDDEN);
         }
     }
 };
@@ -126,24 +192,37 @@ static ServoState S;
 static lv_obj_t* make_row(lv_obj_t* p, int w_pct = 90, int h = ROW_H) {
     lv_obj_t* r = lv_obj_create(p);
     lv_obj_set_size(r, LV_PCT(w_pct), h);
-    lv_obj_set_style_bg_opa(r, LV_OPA_TRANSP, 0);
+    // Opaque background with parent color prevents redraw propagation
+    lv_obj_set_style_bg_color(r, lv_color_hex(GUI_COLOR_BG[0]), 0);
+    lv_obj_set_style_bg_opa(r, LV_OPA_COVER, 0);
     lv_obj_set_style_border_width(r, 0, 0);
     lv_obj_set_style_pad_all(r, 0, 0);
     lv_obj_set_flex_flow(r, LV_FLEX_FLOW_ROW);
     lv_obj_set_flex_align(r, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
     lv_obj_set_style_pad_column(r, 10, 0);
+    // Prevent scroll and event bubbling invalidations
+    lv_obj_clear_flag(r, LV_OBJ_FLAG_SCROLLABLE);
+    lv_obj_add_flag(r, LV_OBJ_FLAG_EVENT_BUBBLE);  // Events don't trigger parent redraw
     return r;
 }
 
-static lv_obj_t* make_btn(lv_obj_t* p, const char* txt, int w, lv_color_t col, lv_event_cb_t cb, void* data = &S) {
+// Create button with focus order (use -1 to skip focus group)
+static lv_obj_t* make_btn(lv_obj_t* p, const char* txt, int w, lv_color_t col, lv_event_cb_t cb, int focus_order, void* data = &S) {
     lv_obj_t* b = lv_button_create(p);
     lv_obj_set_size(b, w, BTN_H);
     lv_obj_set_style_bg_color(b, col, 0);
+
     lv_obj_t* l = lv_label_create(b);
     lv_label_set_text(l, txt);
     lv_obj_set_style_text_font(l, FONT_BUTTON_MD, 0);
     lv_obj_center(l);
     if (cb) lv_obj_add_event_cb(b, cb, LV_EVENT_CLICKED, data);
+
+    // Add to focus builder at specified order position
+    if (focus_order >= 0) {
+        focus_builder.add(b, focus_order);
+    }
+
     return b;
 }
 
@@ -169,17 +248,21 @@ static void on_servo_toggle(lv_event_t* e) {
     }
 }
 
-// Long-press on any servo button toggles ALL
-static void on_servo_long_press(lv_event_t*) {
-    if (S.all_selected()) {
-        S.deselect_all();
-        servo_disable_all();
-    } else {
-        S.select_all();
-        servo_enable_mask(S.selected, true);
-        servo_set_pulse_mask(S.selected, static_cast<uint16_t>(S.pwm));
+// Long-press callback: toggle all servos on/off (only if focus is on servo buttons)
+static void on_long_press_toggle_all() {
+    // Only act if focus is on one of the servo buttons (FO_SERVO_1 to FO_SERVO_6)
+    int focus_idx = focus_builder.get_focus_index();
+    if (focus_idx >= FO_SERVO_1 && focus_idx <= FO_SERVO_6) {
+        if (S.all_selected()) {
+            S.deselect_all();
+            servo_disable_all();
+        } else {
+            S.select_all();
+            servo_enable_mask(S.selected, true);
+            servo_set_pulse_mask(S.selected, static_cast<uint16_t>(S.pwm));
+        }
+        S.update_servo_buttons();
     }
-    S.update_servo_buttons();
 }
 
 static void on_auto(lv_event_t*) {
@@ -213,14 +296,23 @@ static void on_slider(lv_event_t* e) {
     int slider_val = lv_slider_get_value(lv_event_get_target_obj(e));
     int range = PWM_MAX - PWM_MIN;
     S.pwm = PWM_MIN + (slider_val * range / 100);
-    char buf[8];
-    snprintf(buf, sizeof(buf), "%d", S.pwm);
-    lv_label_set_text(S.lbl_pwm, buf);
+    // Update label only (slider already has correct value from user interaction)
+    static char pwm_buf[8];
+    snprintf(pwm_buf, sizeof(pwm_buf), "%d", S.pwm);
+    lv_label_set_text_static(S.lbl_pwm, pwm_buf);
+    // Output PWM to selected servos
+    servo_set_pulse_mask(S.selected, static_cast<uint16_t>(S.pwm));
 }
 
 // Public API
 void page_servo_create(lv_obj_t* parent) {
     S.reset();
+
+    // Initialize focus builder for this page
+    focus_builder.init();
+
+    // Register triple-click callback for select/deselect all servos
+    focus_builder.set_long_press_cb(on_long_press_toggle_all);
 
     // Timer
     if (S.timer) lv_timer_delete(S.timer);
@@ -247,20 +339,22 @@ void page_servo_create(lv_obj_t* parent) {
     lv_obj_clear_flag(sidebar, LV_OBJ_FLAG_SCROLLABLE);
 
     // Servo toggle buttons (1-6)
-    // Short tap = toggle single servo, Long press = toggle ALL
+    // Short tap/click = toggle single servo, Long press = toggle ALL (via focus_builder callback)
     for (int i = 0; i < NUM_SERVOS; i++) {
         S.btn_servo[i] = lv_button_create(sidebar);
         lv_obj_set_size(S.btn_servo[i], SIDEBAR_W - 8, SERVO_BTN_H);
         lv_obj_set_style_bg_color(S.btn_servo[i], i == 0 ? COL_SERVO_ON : COL_INACTIVE, 0);
         lv_obj_set_style_radius(S.btn_servo[i], 4, 0);
+
         lv_obj_t* lbl = lv_label_create(S.btn_servo[i]);
         lv_label_set_text_fmt(lbl, "%d", i + 1);
         lv_obj_set_style_text_font(lbl, &arial_14, 0);
         lv_obj_center(lbl);
-        // Short click = toggle this servo
-        lv_obj_add_event_cb(S.btn_servo[i], on_servo_toggle, LV_EVENT_SHORT_CLICKED, (void*)(intptr_t)i);
-        // Long press = toggle ALL servos
-        lv_obj_add_event_cb(S.btn_servo[i], on_servo_long_press, LV_EVENT_LONG_PRESSED, nullptr);
+        // Short click = toggle this servo (handle both CLICKED for encoder and SHORT_CLICKED for touch)
+        lv_obj_add_event_cb(S.btn_servo[i], on_servo_toggle, LV_EVENT_CLICKED, (void*)(intptr_t)i);
+
+        // Add to focus builder (FO_SERVO_1 + i)
+        focus_builder.add(S.btn_servo[i], FO_SERVO_1 + i);
     }
 
     // === CONTENT: Controls ===
@@ -269,14 +363,21 @@ void page_servo_create(lv_obj_t* parent) {
     lv_obj_set_flex_grow(content, 1);
     lv_obj_set_height(content, LV_PCT(100));
     lv_obj_set_flex_flow(content, LV_FLEX_FLOW_COLUMN);
-    lv_obj_set_flex_align(content, LV_FLEX_ALIGN_SPACE_EVENLY, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+    // Use START alignment instead of SPACE_EVENLY to prevent layout recalculation
+    // when child widgets update their content
+    lv_obj_set_flex_align(content, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+    lv_obj_set_style_pad_top(content, 8, 0);
+    lv_obj_set_style_pad_row(content, 8, 0);
     lv_obj_set_scrollbar_mode(content, LV_SCROLLBAR_MODE_OFF);
     lv_obj_clear_flag(content, LV_OBJ_FLAG_SCROLLABLE);
+    // IMPORTANT: Opaque background prevents parent redraw when children update
+    lv_obj_set_style_bg_color(content, lv_color_hex(GUI_COLOR_BG[0]), 0);
+    lv_obj_set_style_bg_opa(content, LV_OPA_COVER, 0);
 
     // Mode row
     lv_obj_t* row_mode = make_row(content);
-    S.btn_auto = make_btn(row_mode, tr(STR_SERVO_MODE_AUTO), BTN_MD, COL_ACTIVE, on_auto);
-    S.btn_manual = make_btn(row_mode, tr(STR_SERVO_MODE_MANUAL), BTN_MD, COL_INACTIVE, on_manual);
+    S.btn_auto = make_btn(row_mode, tr(STR_SERVO_MODE_AUTO), BTN_MD, COL_ACTIVE, on_auto, FO_AUTO);
+    S.btn_manual = make_btn(row_mode, tr(STR_SERVO_MODE_MANUAL), BTN_MD, COL_INACTIVE, on_manual, FO_MANUAL);
 
     // PWM display row
     lv_obj_t* row_pwm = make_row(content, 90, 30);
@@ -286,6 +387,8 @@ void page_servo_create(lv_obj_t* parent) {
     lv_obj_set_style_text_font(lbl_title, FONT_BUTTON_MD, 0);
     lv_obj_set_style_text_color(lbl_title, COL_TEXT, 0);
     S.lbl_pwm = lv_label_create(row_pwm);
+    // Use fixed-width text to prevent label size changes causing row reflow
+    lv_obj_set_style_min_width(S.lbl_pwm, 50, 0);  // Enough for "2500"
     lv_label_set_text(S.lbl_pwm, "1500");
     lv_obj_set_style_text_font(S.lbl_pwm, FONT_MONO_BOLD_LG, 0);
     lv_obj_set_style_text_color(S.lbl_pwm, COL_PRIMARY, 0);
@@ -293,7 +396,8 @@ void page_servo_create(lv_obj_t* parent) {
     // Slider
     lv_obj_t* row_slider = lv_obj_create(content);
     lv_obj_set_size(row_slider, LV_PCT(85), ROW_H);
-    lv_obj_set_style_bg_opa(row_slider, LV_OPA_TRANSP, 0);
+    lv_obj_set_style_bg_color(row_slider, lv_color_hex(GUI_COLOR_BG[0]), 0);
+    lv_obj_set_style_bg_opa(row_slider, LV_OPA_COVER, 0);
     lv_obj_set_style_border_width(row_slider, 0, 0);
     lv_obj_set_style_pad_hor(row_slider, 10, 0);
     lv_obj_set_style_pad_ver(row_slider, 0, 0);
@@ -308,7 +412,11 @@ void page_servo_create(lv_obj_t* parent) {
     lv_obj_set_style_bg_color(S.slider, lv_color_hex(GUI_COLOR_GRAYS[7]), 0);
     lv_obj_set_style_bg_color(S.slider, lv_color_hex(GUI_COLOR_MONO[1]), LV_PART_INDICATOR);
     lv_obj_set_style_bg_color(S.slider, COL_PRIMARY, LV_PART_KNOB);
+    // Reduce knob padding to minimize invalidated area during movement
+    lv_obj_set_style_pad_all(S.slider, 2, LV_PART_KNOB);
     lv_obj_add_event_cb(S.slider, on_slider, LV_EVENT_VALUE_CHANGED, nullptr);
+    // Add slider to focus builder
+    focus_builder.add(S.slider, FO_SLIDER);
 
     // Start/Stop row (auto mode)
     S.row_start = make_row(content);
@@ -321,13 +429,19 @@ void page_servo_create(lv_obj_t* parent) {
     lv_obj_set_style_text_font(S.lbl_start, FONT_BUTTON_MD, 0);
     lv_obj_center(S.lbl_start);
     lv_obj_add_event_cb(S.btn_start, on_start_stop, LV_EVENT_CLICKED, nullptr);
+    // Add start button to focus builder
+    focus_builder.add(S.btn_start, FO_START);
 
     // Manual preset row (hidden initially)
     S.row_manual = make_row(content);
     lv_obj_add_flag(S.row_manual, LV_OBJ_FLAG_HIDDEN);
-    make_btn(S.row_manual, "Min", BTN_SM, COL_PRIMARY, on_preset, (void*)(intptr_t)PWM_MIN);
-    make_btn(S.row_manual, "Center", BTN_MD, COL_PRIMARY, on_preset, (void*)(intptr_t)PWM_CENTER);
-    make_btn(S.row_manual, "Max", BTN_SM, COL_PRIMARY, on_preset, (void*)(intptr_t)PWM_MAX);
+    S.btn_min = make_btn(S.row_manual, "Min", BTN_SM, COL_PRIMARY, on_preset, FO_MIN, (void*)(intptr_t)PWM_MIN);
+    S.btn_center = make_btn(S.row_manual, "Center", BTN_MD, COL_PRIMARY, on_preset, FO_CENTER, (void*)(intptr_t)PWM_CENTER);
+    S.btn_max = make_btn(S.row_manual, "Max", BTN_SM, COL_PRIMARY, on_preset, FO_MAX, (void*)(intptr_t)PWM_MAX);
+    // Hide preset buttons initially (auto mode is default) so focus navigation skips them
+    lv_obj_add_flag(S.btn_min, LV_OBJ_FLAG_HIDDEN);
+    lv_obj_add_flag(S.btn_center, LV_OBJ_FLAG_HIDDEN);
+    lv_obj_add_flag(S.btn_max, LV_OBJ_FLAG_HIDDEN);
 
     S.update_display();
     S.update_ui();
@@ -336,12 +450,22 @@ void page_servo_create(lv_obj_t* parent) {
     // Enable initially selected servo(s) and set pulse
     servo_enable_mask(S.selected, true);
     servo_set_pulse_mask(S.selected, static_cast<uint16_t>(S.pwm));
+
+    // Add footer buttons to focus order
+    focus_builder.add(gui_get_btn_home(), FO_BTN_HOME);
+    focus_builder.add(gui_get_btn_prev(), FO_BTN_PREV);
+    focus_builder.add(gui_get_btn_next(), FO_BTN_NEXT);
+    focus_builder.add(gui_get_btn_settings(), FO_BTN_SETTINGS);
+
+    // Finalize focus builder - adds widgets to group in order and activates it
+    focus_builder.finalize();
 }
 
 void page_servo_destroy() {
     S.running = false;
     servo_disable_all();  // Stop all servo outputs
     if (S.timer) { lv_timer_delete(S.timer); S.timer = nullptr; }
+    focus_builder.destroy();
     S = ServoState{};  // Reset all pointers
 }
 
