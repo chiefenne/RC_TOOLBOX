@@ -105,39 +105,75 @@ void input_hw_init() {
 }
 
 // Poll encoder state (called from input_hw_poll)
-// EC11 encoders typically generate 4 state changes per detent
-// We only count on specific transitions to get 1 count per detent
+// EC11 encoder: mechanical with 20 detents per revolution, 4 state changes per detent
+// Uses a robust state machine that only counts complete detent cycles
 static void poll_encoder() {
-    static uint32_t last_change_time = 0;
+    static int8_t enc_delta = 0;           // Accumulated partial steps
+    static uint8_t last_stable_state = 0;  // Last confirmed stable state
+    static uint32_t state_start_time = 0;  // When current state was entered
+    static constexpr uint32_t STABLE_TIME_MS = 1;  // State must be stable for 1ms
+
     uint8_t clk = digitalRead(PIN_ENC_CLK);
     uint8_t dt  = digitalRead(PIN_ENC_DT);
-
-    // Build 2-bit state and combine with previous state
     uint8_t state = (clk << 1) | dt;
+    uint32_t now = millis();
 
-    if (state != last_enc_state) {
-        // Debounce: ignore changes within 2ms
-        uint32_t now = millis();
-        if (now - last_change_time < 2) {
-            return;
-        }
-        last_change_time = now;
+    // Only process if state changed
+    if (state == last_enc_state) {
+        return;
+    }
 
-        uint8_t combined = (last_enc_state << 2) | state;
+    // State changed - check if previous state was stable long enough
+    if (now - state_start_time < STABLE_TIME_MS) {
+        // Previous state wasn't stable - this is likely bounce, ignore
+        // But update the state tracking
         last_enc_state = state;
+        state_start_time = now;
+        return;
+    }
 
-        // Only count on specific transitions (1 count per detent)
-        // CW: when transitioning to state 11 (both HIGH) from state 01
-        // CCW: when transitioning to state 11 (both HIGH) from state 10
-        switch (combined) {
-            case 0b0111:  // 01 -> 11 = CW detent
-                encoder_pos++;
-                break;
-            case 0b1011:  // 10 -> 11 = CCW detent
-                encoder_pos--;
-                break;
+    // Previous state was stable, now we have a valid transition
+    uint8_t combined = (last_enc_state << 2) | state;
+
+    // Full quadrature state machine - accumulate steps
+    // EC11 goes through sequence: 11 -> 01 -> 00 -> 10 -> 11 (CW)
+    //                         or: 11 -> 10 -> 00 -> 01 -> 11 (CCW)
+    switch (combined) {
+        // CW transitions
+        case 0b1101:  // 11 -> 01
+        case 0b0100:  // 01 -> 00
+        case 0b0010:  // 00 -> 10
+        case 0b1011:  // 10 -> 11
+            enc_delta++;
+            break;
+        // CCW transitions
+        case 0b1110:  // 11 -> 10
+        case 0b1000:  // 10 -> 00
+        case 0b0001:  // 00 -> 01
+        case 0b0111:  // 01 -> 11
+            enc_delta--;
+            break;
+    }
+
+    // Count one step per complete detent (4 transitions = 1 detent)
+    // We trigger when returning to state 11 (both pins HIGH at detent)
+    if (state == 0b11) {
+        if (enc_delta >= 2) {
+            encoder_pos++;
+            enc_delta = 0;
+        } else if (enc_delta <= -2) {
+            encoder_pos--;
+            enc_delta = 0;
+        }
+        // Reset partial counts if we're back at detent without enough movement
+        // This handles cases where user moves slightly and returns
+        if (enc_delta > -2 && enc_delta < 2) {
+            enc_delta = 0;
         }
     }
+
+    last_enc_state = state;
+    state_start_time = now;
 }
 
 // Poll button state (called from input_hw_poll)

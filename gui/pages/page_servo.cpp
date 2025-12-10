@@ -17,25 +17,20 @@
 // Focus Order Configuration
 // =============================================================================
 // Define focus order here - change these numbers to reorder navigation
-// Servo buttons 1-6, then mode buttons, slider, start, presets, footer
+// Servo buttons are NOT in focus order - use touch only for servo selection
+// Focus order: Mode buttons, slider, start/presets, footer
 enum FocusOrder {
-    FO_SERVO_1    = 0,
-    FO_SERVO_2    = 1,
-    FO_SERVO_3    = 2,
-    FO_SERVO_4    = 3,
-    FO_SERVO_5    = 4,
-    FO_SERVO_6    = 5,
-    FO_AUTO       = 6,
-    FO_MANUAL     = 7,
-    FO_SLIDER     = 8,
-    FO_START      = 9,
-    FO_MIN        = 10,
-    FO_CENTER     = 11,
-    FO_MAX        = 12,
-    FO_BTN_HOME   = 13,
-    FO_BTN_PREV   = 14,
-    FO_BTN_NEXT   = 15,
-    FO_BTN_SETTINGS = 16,
+    FO_AUTO       = 0,
+    FO_MANUAL     = 1,
+    FO_SLIDER     = 2,
+    FO_START      = 3,
+    FO_MIN        = 4,
+    FO_CENTER     = 5,
+    FO_MAX        = 6,
+    FO_BTN_HOME   = 7,
+    FO_BTN_PREV   = 8,
+    FO_BTN_NEXT   = 9,
+    FO_BTN_SETTINGS = 10,
 };
 
 // Focus group builder for this page
@@ -182,6 +177,8 @@ struct ServoState {
             if (btn_min) lv_obj_clear_flag(btn_min, LV_OBJ_FLAG_HIDDEN);
             if (btn_center) lv_obj_clear_flag(btn_center, LV_OBJ_FLAG_HIDDEN);
             if (btn_max) lv_obj_clear_flag(btn_max, LV_OBJ_FLAG_HIDDEN);
+            // In manual mode, encoder rotation directly controls PWM (via on_encoder_rotation callback)
+            // No focus navigation happens - all rotation is intercepted for PWM adjustment
         }
     }
 };
@@ -248,21 +245,42 @@ static void on_servo_toggle(lv_event_t* e) {
     }
 }
 
-// Long-press callback: toggle all servos on/off (only if focus is on servo buttons)
+// Long-press callback: toggle all servos on/off (works from anywhere on the page)
 static void on_long_press_toggle_all() {
-    // Only act if focus is on one of the servo buttons (FO_SERVO_1 to FO_SERVO_6)
-    int focus_idx = focus_builder.get_focus_index();
-    if (focus_idx >= FO_SERVO_1 && focus_idx <= FO_SERVO_6) {
-        if (S.all_selected()) {
-            S.deselect_all();
-            servo_disable_all();
-        } else {
-            S.select_all();
-            servo_enable_mask(S.selected, true);
-            servo_set_pulse_mask(S.selected, static_cast<uint16_t>(S.pwm));
-        }
-        S.update_servo_buttons();
+    // Toggle all servos - useful shortcut accessible from any focus position
+    if (S.all_selected()) {
+        S.deselect_all();
+        servo_disable_all();
+    } else {
+        S.select_all();
+        servo_enable_mask(S.selected, true);
+        servo_set_pulse_mask(S.selected, static_cast<uint16_t>(S.pwm));
     }
+    S.update_servo_buttons();
+}
+
+// Encoder rotation callback: in manual mode, directly adjust PWM with acceleration
+static bool on_encoder_rotation(int delta) {
+    // In manual mode, encoder rotation adjusts the slider value directly
+    if (!S.auto_mode && !S.running) {
+        // Get rotation speed for acceleration
+        int speed = input_get_rotation_speed();
+        int step = PWM_STEP;
+
+        // Acceleration: faster rotation = bigger steps
+        if (speed > 5) {
+            step = PWM_STEP * 5;  // Fast: 50µs steps
+        } else if (speed > 2) {
+            step = PWM_STEP * 2;  // Medium: 20µs steps
+        }
+
+        // CW rotation = increase PWM (slider moves right)
+        S.pwm += delta * step;
+        S.clamp();
+        S.update_display();
+        return true;  // We handled the rotation
+    }
+    return false;  // Let default focus navigation handle it
 }
 
 static void on_auto(lv_event_t*) {
@@ -308,11 +326,17 @@ static void on_slider(lv_event_t* e) {
 void page_servo_create(lv_obj_t* parent) {
     S.reset();
 
+    // Register this page in navigation history
+    input_push_page(PAGE_SERVO);
+
     // Initialize focus builder for this page
     focus_builder.init();
 
-    // Register triple-click callback for select/deselect all servos
+    // Register long-press callback for select/deselect all servos
     focus_builder.set_long_press_cb(on_long_press_toggle_all);
+
+    // Register encoder rotation callback for direct PWM control in manual mode
+    focus_builder.set_encoder_rotation_cb(on_encoder_rotation);
 
     // Timer
     if (S.timer) lv_timer_delete(S.timer);
@@ -339,7 +363,8 @@ void page_servo_create(lv_obj_t* parent) {
     lv_obj_clear_flag(sidebar, LV_OBJ_FLAG_SCROLLABLE);
 
     // Servo toggle buttons (1-6)
-    // Short tap/click = toggle single servo, Long press = toggle ALL (via focus_builder callback)
+    // Touch only - not in encoder focus group to keep navigation simple
+    // Long press anywhere = toggle ALL servos
     for (int i = 0; i < NUM_SERVOS; i++) {
         S.btn_servo[i] = lv_button_create(sidebar);
         lv_obj_set_size(S.btn_servo[i], SIDEBAR_W - 8, SERVO_BTN_H);
@@ -350,11 +375,9 @@ void page_servo_create(lv_obj_t* parent) {
         lv_label_set_text_fmt(lbl, "%d", i + 1);
         lv_obj_set_style_text_font(lbl, &arial_14, 0);
         lv_obj_center(lbl);
-        // Short click = toggle this servo (handle both CLICKED for encoder and SHORT_CLICKED for touch)
+        // Touch click = toggle this servo
         lv_obj_add_event_cb(S.btn_servo[i], on_servo_toggle, LV_EVENT_CLICKED, (void*)(intptr_t)i);
-
-        // Add to focus builder (FO_SERVO_1 + i)
-        focus_builder.add(S.btn_servo[i], FO_SERVO_1 + i);
+        // NOTE: Servo buttons are NOT added to focus group - use touch only
     }
 
     // === CONTENT: Controls ===

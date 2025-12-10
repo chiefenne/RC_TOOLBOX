@@ -36,6 +36,10 @@ constexpr uint32_t FOCUS_COLOR_HEX = 0x00AA00;
 // Callback type for long-press handler
 typedef void (*long_press_cb_t)();
 
+// Callback type for encoder rotation handler
+// Return true if the rotation was handled, false to use default focus navigation
+typedef bool (*encoder_rotation_cb_t)(int delta);
+
 // Helper struct to build focus groups with specific order
 struct FocusOrderBuilder {
     lv_group_t* group;
@@ -43,6 +47,7 @@ struct FocusOrderBuilder {
     int count;
     int current_focus;  // Current focus index in our order
     long_press_cb_t on_long_press;  // Optional long-press callback
+    encoder_rotation_cb_t on_encoder_rotation;  // Optional rotation handler (return true if handled)
 
     // Initialize with a new group
     void init();
@@ -69,6 +74,9 @@ struct FocusOrderBuilder {
 
     // Set long-press callback for this page
     void set_long_press_cb(long_press_cb_t cb);
+
+    // Set encoder rotation callback (return true from callback if handled)
+    void set_encoder_rotation_cb(encoder_rotation_cb_t cb);
 
     // Apply focus style to a widget (green outline)
     static void apply_focus_style(lv_obj_t* widget);

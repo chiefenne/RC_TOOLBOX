@@ -150,6 +150,21 @@ void input_set_group(lv_group_t* group) {
 // =============================================================================
 
 void input_feed_encoder(int delta) {
+    // First, check if the page wants to handle encoder rotation itself
+    if (active_focus_builder && active_focus_builder->on_encoder_rotation) {
+        if (active_focus_builder->on_encoder_rotation(delta)) {
+            // Page handled the rotation, update speed tracking and return
+            uint32_t now = lv_tick_get();
+            if (now - last_rotation_time < 100) {
+                rotation_count++;
+            } else {
+                rotation_count = 1;
+            }
+            last_rotation_time = now;
+            return;
+        }
+    }
+
     // Handle rotation using our custom focus order IMMEDIATELY
     // Note: Direction is inverted to match natural encoder feel
     if (active_focus_builder) {
@@ -256,6 +271,7 @@ void FocusOrderBuilder::init() {
     count = 0;
     current_focus = 0;
     on_long_press = nullptr;
+    on_encoder_rotation = nullptr;
     for (int i = 0; i < MAX_FOCUS_WIDGETS; i++) {
         widgets[i] = nullptr;
     }
@@ -263,6 +279,10 @@ void FocusOrderBuilder::init() {
 
 void FocusOrderBuilder::set_long_press_cb(long_press_cb_t cb) {
     on_long_press = cb;
+}
+
+void FocusOrderBuilder::set_encoder_rotation_cb(encoder_rotation_cb_t cb) {
+    on_encoder_rotation = cb;
 }
 
 lv_obj_t* FocusOrderBuilder::add(lv_obj_t* widget, int order_index) {
