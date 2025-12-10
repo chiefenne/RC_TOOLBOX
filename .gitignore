@@ -2,7 +2,6 @@
 00_Diverses
 lvgl
 .vscode
-binaries
 .pio
 .github
 *.dSYM
