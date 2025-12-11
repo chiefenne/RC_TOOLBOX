@@ -7,7 +7,7 @@
 
 // Servo PWM parameters
 constexpr int SERVO_PWM_FREQ_HZ = 50;          // 50 Hz = 20ms period
-constexpr int SERVO_PWM_RESOLUTION = 16;       // 16-bit resolution for precise timing
+constexpr int SERVO_PWM_RESOLUTION = 14;       // 14-bit resolution (max achievable at 50Hz)
 constexpr int SERVO_PULSE_MIN_US = 500;        // Minimum pulse width (microseconds)
 constexpr int SERVO_PULSE_MAX_US = 2500;       // Maximum pulse width (microseconds)
 constexpr int SERVO_PULSE_CENTER_US = 1500;    // Center position (microseconds)

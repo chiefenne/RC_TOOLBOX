@@ -13,8 +13,8 @@ static uint16_t servo_pulse_us[NUM_SERVO_PINS] = {0};
 static bool servo_enabled[NUM_SERVO_PINS] = {false};
 
 // Convert microseconds to LEDC duty cycle value
-// At 50Hz with 16-bit resolution: 65536 counts = 20000µs
-// duty = pulse_us * 65536 / 20000
+// At 50Hz with 14-bit resolution: 16384 counts = 20000µs
+// duty = pulse_us * 16384 / 20000
 static uint32_t pulse_to_duty(uint16_t pulse_us) {
     constexpr uint32_t period_us = 1000000 / SERVO_PWM_FREQ_HZ; // 20000µs at 50Hz
     constexpr uint32_t max_duty = (1 << SERVO_PWM_RESOLUTION) - 1; // 65535
