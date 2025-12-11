@@ -58,7 +58,17 @@ RC TOOLBOX is a suite of software tools tailored for RC enthusiasts. Designed to
 - ⬜ Cell count detection
 - ⬜ Per-cell voltage display
 - ⬜ Low voltage warning
+
+### Cellinator - battery tagging
 - ⬜ NFC tags per battery
+- ⬜ Store and update battery meta data
+  - Purchase/installation date
+  - Cell type/count
+  - Nominal capacity
+  - Charge/discharge cycles
+  - Min/max cell voltages
+  - Internal cell resistance
+  - and more ...
 
 ### CG Scale
 - ✅ Basic page structure
