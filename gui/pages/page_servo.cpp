@@ -259,6 +259,18 @@ static void on_long_press_toggle_all() {
     S.update_servo_buttons();
 }
 
+// Double-click callback: in manual mode, switch back to auto mode instead of leaving page
+static bool on_double_click() {
+    // In manual mode, double-click switches back to auto mode
+    if (!S.auto_mode) {
+        S.auto_mode = true;
+        S.update_ui();
+        return true;  // Handled - don't go back
+    }
+    // In auto mode, let default behavior (go back) happen
+    return false;
+}
+
 // Encoder rotation callback: in manual mode, directly adjust PWM with acceleration
 static bool on_encoder_rotation(int delta) {
     // In manual mode, encoder rotation adjusts the slider value directly
@@ -274,7 +286,7 @@ static bool on_encoder_rotation(int delta) {
             step = PWM_STEP * 2;  // Medium: 20µs steps
         }
 
-        // CW rotation = increase PWM (slider moves right)
+        // CW rotation (delta > 0) = increase PWM (slider moves right)
         S.pwm += delta * step;
         S.clamp();
         S.update_display();
@@ -337,6 +349,9 @@ void page_servo_create(lv_obj_t* parent) {
 
     // Register encoder rotation callback for direct PWM control in manual mode
     focus_builder.set_encoder_rotation_cb(on_encoder_rotation);
+
+    // Register double-click callback: in manual mode, switch to auto instead of going back
+    focus_builder.set_double_click_cb(on_double_click);
 
     // Timer
     if (S.timer) lv_timer_delete(S.timer);

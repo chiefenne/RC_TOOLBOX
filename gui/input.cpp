@@ -14,6 +14,21 @@ static uint32_t last_rotation_time = 0;
 static int rotation_count = 0;         // Rotations in time window
 
 // =============================================================================
+// Navigation Focus Hint (preserve footer button focus across page transitions)
+// =============================================================================
+static NavFocusHint nav_focus_hint = NAV_FOCUS_NONE;
+
+void input_set_nav_focus_hint(NavFocusHint hint) {
+    nav_focus_hint = hint;
+}
+
+NavFocusHint input_get_nav_focus_hint() {
+    NavFocusHint hint = nav_focus_hint;
+    nav_focus_hint = NAV_FOCUS_NONE;  // Clear after reading
+    return hint;
+}
+
+// =============================================================================
 // Navigation History
 // =============================================================================
 static constexpr int NAV_HISTORY_SIZE = 8;
@@ -72,7 +87,12 @@ static void handle_button_press(InputEvent gesture) {
             break;
 
         case INPUT_ENC_DOUBLE_CLICK:
-            // Double click - go back one level
+            // Double click - let page handle it first, otherwise go back
+            if (active_focus_builder && active_focus_builder->on_double_click) {
+                if (active_focus_builder->on_double_click()) {
+                    break;  // Page handled it
+                }
+            }
             gui_go_back();
             break;
 
@@ -166,15 +186,15 @@ void input_feed_encoder(int delta) {
     }
 
     // Handle rotation using our custom focus order IMMEDIATELY
-    // Note: Direction is inverted to match natural encoder feel
+    // CW rotation (delta > 0) = move to next widget
     if (active_focus_builder) {
         if (delta > 0) {
             for (int i = 0; i < delta; i++) {
-                active_focus_builder->focus_prev();
+                active_focus_builder->focus_next();
             }
         } else if (delta < 0) {
             for (int i = 0; i < -delta; i++) {
-                active_focus_builder->focus_next();
+                active_focus_builder->focus_prev();
             }
         }
     }
@@ -272,6 +292,7 @@ void FocusOrderBuilder::init() {
     current_focus = 0;
     on_long_press = nullptr;
     on_encoder_rotation = nullptr;
+    on_double_click = nullptr;
     for (int i = 0; i < MAX_FOCUS_WIDGETS; i++) {
         widgets[i] = nullptr;
     }
@@ -283,6 +304,10 @@ void FocusOrderBuilder::set_long_press_cb(long_press_cb_t cb) {
 
 void FocusOrderBuilder::set_encoder_rotation_cb(encoder_rotation_cb_t cb) {
     on_encoder_rotation = cb;
+}
+
+void FocusOrderBuilder::set_double_click_cb(double_click_cb_t cb) {
+    on_double_click = cb;
 }
 
 lv_obj_t* FocusOrderBuilder::add(lv_obj_t* widget, int order_index) {
@@ -304,9 +329,35 @@ void FocusOrderBuilder::finalize() {
     // Register this as the active focus builder for encoder navigation
     active_focus_builder = this;
 
-    // Set focus to first widget in our defined order
-    current_focus = 0;
-    focus_index(0);
+    // Check if there's a navigation focus hint (from prev/next button press)
+    NavFocusHint hint = input_get_nav_focus_hint();
+    lv_obj_t* target_widget = nullptr;
+
+    if (hint == NAV_FOCUS_PREV) {
+        target_widget = gui_get_btn_prev();
+    } else if (hint == NAV_FOCUS_NEXT) {
+        target_widget = gui_get_btn_next();
+    }
+
+    // Try to focus the hinted widget, otherwise focus first widget
+    if (target_widget && focus_widget(target_widget)) {
+        // Successfully focused the navigation button
+    } else {
+        // Default: focus first widget
+        current_focus = 0;
+        focus_index(0);
+    }
+}
+
+bool FocusOrderBuilder::focus_widget(lv_obj_t* widget) {
+    // Find the widget in our list and focus it
+    for (int i = 0; i < count; i++) {
+        if (widgets[i] == widget) {
+            focus_index(i);
+            return true;
+        }
+    }
+    return false;
 }
 
 void FocusOrderBuilder::focus_next() {

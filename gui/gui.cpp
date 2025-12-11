@@ -316,6 +316,8 @@ static void btn_prev_event_cb(lv_event_t *e)
 {
     LV_UNUSED(e);
     if (gui_page_is_busy()) return;  // Block while page is busy
+    // Set focus hint so next page focuses on prev button
+    input_set_nav_focus_hint(NAV_FOCUS_PREV);
     // Navigate: HOME -> SETTINGS -> DATA -> HOME (skip splash)
     int next_page = (int)active_page - 1;
     if (next_page < PAGE_HOME) {
@@ -328,6 +330,8 @@ static void btn_next_event_cb(lv_event_t *e)
 {
     LV_UNUSED(e);
     if (gui_page_is_busy()) return;  // Block while page is busy
+    // Set focus hint so next page focuses on next button
+    input_set_nav_focus_hint(NAV_FOCUS_NEXT);
     // Navigate: HOME -> DATA -> SETTINGS -> HOME (skip splash)
     int next_page = (int)active_page + 1;
     if (next_page >= PAGE_COUNT) {

@@ -40,6 +40,10 @@ typedef void (*long_press_cb_t)();
 // Return true if the rotation was handled, false to use default focus navigation
 typedef bool (*encoder_rotation_cb_t)(int delta);
 
+// Callback type for double-click handler
+// Return true if handled (don't go back), false to use default go-back behavior
+typedef bool (*double_click_cb_t)();
+
 // Helper struct to build focus groups with specific order
 struct FocusOrderBuilder {
     lv_group_t* group;
@@ -48,6 +52,7 @@ struct FocusOrderBuilder {
     int current_focus;  // Current focus index in our order
     long_press_cb_t on_long_press;  // Optional long-press callback
     encoder_rotation_cb_t on_encoder_rotation;  // Optional rotation handler (return true if handled)
+    double_click_cb_t on_double_click;  // Optional double-click handler (return true if handled)
 
     // Initialize with a new group
     void init();
@@ -66,6 +71,10 @@ struct FocusOrderBuilder {
     // Focus a specific index
     void focus_index(int idx);
 
+    // Focus a specific widget (finds its index and focuses it)
+    // Returns true if widget was found and focused
+    bool focus_widget(lv_obj_t* widget);
+
     // Get currently focused widget
     lv_obj_t* get_focused_widget();
 
@@ -78,6 +87,9 @@ struct FocusOrderBuilder {
     // Set encoder rotation callback (return true from callback if handled)
     void set_encoder_rotation_cb(encoder_rotation_cb_t cb);
 
+    // Set double-click callback (return true from callback if handled, else go back)
+    void set_double_click_cb(double_click_cb_t cb);
+
     // Apply focus style to a widget (green outline)
     static void apply_focus_style(lv_obj_t* widget);
 
@@ -87,6 +99,21 @@ struct FocusOrderBuilder {
 
 // Get the active focus builder (for encoder callback to use)
 FocusOrderBuilder* input_get_active_focus_builder();
+
+// =============================================================================
+// Navigation Focus Hint (to preserve focus on footer buttons across pages)
+// =============================================================================
+enum NavFocusHint {
+    NAV_FOCUS_NONE = 0,   // Default - focus first widget
+    NAV_FOCUS_PREV,       // Focus prev button (left arrow)
+    NAV_FOCUS_NEXT,       // Focus next button (right arrow)
+};
+
+// Set hint before page transition (called by footer button callbacks)
+void input_set_nav_focus_hint(NavFocusHint hint);
+
+// Get and clear hint (called by FocusOrderBuilder::finalize)
+NavFocusHint input_get_nav_focus_hint();
 
 // =============================================================================
 // Encoder Input System
