@@ -33,6 +33,57 @@ RC TOOLBOX is a suite of software tools tailored for RC enthusiasts. Designed to
 - **Customizable UI** – Multiple background color themes (Light Gray, White, Light Blue, Light Green, Cream)
 - **Cross-platform development** – macOS simulator for rapid GUI development without hardware
 
+## Roadmap
+
+### Core Infrastructure
+- [x] LVGL 9.4 GUI framework with macOS simulator
+- [x] ESP32-S3 hardware integration (TFT, touch, encoder)
+- [x] Persistent settings (JSON on SPIFFS)
+- [x] Multi-language support (7 languages)
+- [x] Custom focus navigation with FocusOrderBuilder
+- [ ] SD card support for logging/export
+
+### Servo Tester
+- [x] Basic PWM output on 6 channels (GPIO 6, 15, 16, 17, 18, 21)
+- [x] Manual mode with encoder control
+- [x] Auto-sweep mode
+- [x] Multi-servo selection (individual toggle, long-press for all)
+- [ ] Protocol presets (Standard, Extended, Sanwa, Futaba, Digital Fast)
+- [ ] Save/load servo profiles
+- [ ] Sweep speed adjustment
+
+### Lipo Checker
+- [x] Basic page structure
+- [ ] ADC voltage reading
+- [ ] Cell count detection
+- [ ] Per-cell voltage display
+- [ ] Low voltage warning
+- [ ] NFC tags per battery
+
+### CG Scale
+- [x] Basic page structure
+- [ ] Load cell integration (HX711)
+- [ ] Calibration routine
+- [ ] CG calculation algorithm
+
+### Flap Deflection
+- [x] Basic page structure
+- [ ] IMU integration (MPU6050/ICM20948)
+- [ ] Angle measurement
+- [ ] Reference point calibration
+
+### Angle of Incidence
+- [x] Basic page structure
+- [ ] IMU angle readout
+- [ ] Zero-point calibration
+- [ ] Relative angle display
+
+### Hardware
+- [x] Custom development PCB v1
+- [ ] Production PCB design
+- [ ] 3D printed enclosure
+- [ ] Battery/power management
+
 ## GUI
 
 The application features a graphical user interface (GUI) built with [LVGL](https://lvgl.io/) for displaying information and controlling the software. The GUI is optimized for **ILI9341 TFT touch displays** (320x240 resolution).
