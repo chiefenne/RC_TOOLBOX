@@ -4,7 +4,7 @@
 
 // Application info (not translated)
 #define APP_TITLE "RC TOOLBOX"
-#define APP_VERSION "0.3"
+#define APP_VERSION "0.4"
 
 // Author and project info (not translated)
 #define APP_AUTHOR_NAME "Dipl.-Ing. Andreas Ennemoser"
