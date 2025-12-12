@@ -16,6 +16,10 @@ RC TOOLBOX is a suite of software tools tailored for RC enthusiasts. Designed to
   - Protocol presets: Standard, Extended, Sanwa, Futaba, Digital Fast
   - Customizable PWM range (min/center/max) and frequency (50Hz / 333Hz)
   - Hardware PWM output on GPIO pins 6, 15, 16, 17, 18, 21
+- **Servo Signal Analyzer** – Read and analyze incoming servo/RC signals
+  - Measure PWM frequency and pulse width (µs)
+  - Track min/max pulse values over time
+  - Useful for receiver output testing and servo signal debugging
 - **Lipo Checker** – Monitor LiPo battery cell voltages for safe charging and storage
 - **Battery information** readout and store via NFC tags
 - **CG Scale** – Measure center of gravity for precise aircraft balancing
@@ -51,6 +55,14 @@ RC TOOLBOX is a suite of software tools tailored for RC enthusiasts. Designed to
 - ⬜ Protocol presets (Standard, Extended, Sanwa, Futaba, Digital Fast)
 - ⬜ Save/load servo profiles
 - ⬜ Sweep speed adjustment
+
+### Servo Signal Analyzer
+- ⬜ Basic page structure
+- ⬜ PWM input capture (pulse width measurement)
+- ⬜ Frequency detection
+- ⬜ Live pulse width display (µs)
+- ⬜ Min/max tracking with reset
+- ⬜ Signal quality indicator
 
 ### Lipo Checker
 - ✅ Basic page structure
