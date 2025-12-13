@@ -173,8 +173,8 @@ void gui_init()
     create_splash_footer();
     page_splash_create(content);
 
-    // Timer to switch to home after 3 seconds
-    lv_timer_create(splash_timer_cb, 3000, nullptr);
+    // Timer to switch to home after 2 seconds
+    lv_timer_create(splash_timer_cb, 2000, nullptr);
 }
 
 static void create_splash_footer()

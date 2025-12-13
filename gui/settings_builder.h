@@ -26,7 +26,8 @@ public:
     explicit SettingsBuilder(lv_obj_t* parent);
 
     // Begin a collapsible section (all following items go into this section)
-    void begin_section(const char* title, bool start_expanded = false);
+    // Returns the header object so it can be added to focus navigation
+    lv_obj_t* begin_section(const char* title, bool start_expanded = false);
 
     // End the current section
     void end_section();
@@ -46,6 +47,9 @@ public:
     // Action button (opens subpage, keyboard, etc.)
     lv_obj_t* action(const char* label, const char* value_text,
                      lv_event_cb_t on_click, void* user_data = nullptr);
+
+    // Centered button (for reset/action buttons)
+    lv_obj_t* button(const char* label, lv_event_cb_t on_click, void* user_data = nullptr);
 
     // Read-only info label
     void info(const char* label, const char* value);

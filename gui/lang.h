@@ -63,6 +63,9 @@ enum StringId {
     STR_SETTINGS_PWM_CENTER,
     STR_SETTINGS_PWM_MAX,
     STR_SETTINGS_FREQUENCY,
+    STR_SETTINGS_SERVO_STEP,      // "Step Servo X"
+    STR_SETTINGS_SERVO_RESET,     // "Reset Servos"
+    STR_SETTINGS_SERVO_STEP_US,   // "X µs" format
 
     // Page content placeholders
     STR_SERVO_CONTENT,

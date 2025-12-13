@@ -51,6 +51,9 @@ static const char* strings_en[STR_COUNT] = {
     "PWM Center",
     "PWM Max",
     "Frequency",
+    "Step Servo",
+    "Reset Servos",
+    "µs",
 
     // Page content placeholders
     "Servo Tester",

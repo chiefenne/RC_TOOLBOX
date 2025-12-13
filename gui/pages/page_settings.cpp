@@ -15,18 +15,29 @@
 // =============================================================================
 // Define focus order here - change these numbers to reorder navigation
 enum FocusOrder {
-    FO_LANGUAGE     = 0,
-    FO_BRIGHTNESS   = 1,
-    FO_BACKGROUND   = 2,
-    FO_PROTOCOL     = 3,
-    FO_FREQUENCY    = 4,
-    FO_PWM_MIN      = 5,
-    FO_PWM_CENTER   = 6,
-    FO_PWM_MAX      = 7,
-    FO_BTN_HOME     = 8,
-    FO_BTN_PREV     = 9,
-    FO_BTN_NEXT     = 10,
-    FO_BTN_SETTINGS = 11,
+    FO_SEC_LANGUAGE = 0,   // Section headers
+    FO_LANGUAGE     = 1,
+    FO_SEC_DISPLAY  = 2,
+    FO_BRIGHTNESS   = 3,
+    FO_BACKGROUND   = 4,
+    FO_SEC_SERVO    = 5,
+    FO_PROTOCOL     = 6,
+    FO_FREQUENCY    = 7,
+    FO_PWM_MIN      = 8,
+    FO_PWM_CENTER   = 9,
+    FO_PWM_MAX      = 10,
+    FO_SERVO_STEP_1 = 11,
+    FO_SERVO_STEP_2 = 12,
+    FO_SERVO_STEP_3 = 13,
+    FO_SERVO_STEP_4 = 14,
+    FO_SERVO_STEP_5 = 15,
+    FO_SERVO_STEP_6 = 16,
+    FO_SERVO_RESET  = 17,
+    FO_SEC_SYSTEM   = 18,
+    FO_BTN_HOME     = 19,
+    FO_BTN_PREV     = 20,
+    FO_BTN_NEXT     = 21,
+    FO_BTN_SETTINGS = 22,
 };
 
 // Focus group builder for this page
@@ -73,21 +84,25 @@ static lv_obj_t* lbl_pwm_max = nullptr;
 static lv_obj_t* dd_frequency = nullptr;
 static lv_obj_t* dd_protocol = nullptr;
 
+// Per-servo step labels
+static lv_obj_t* lbl_servo_step[NUM_SERVOS] = {};
+static lv_obj_t* sl_servo_step[NUM_SERVOS] = {};
+
 // Helper to update PWM value labels
 static void update_servo_value_labels() {
     if (lbl_pwm_min) {
         char buf[16];
-        snprintf(buf, sizeof(buf), "%d µs", g_settings.servo_pwm_min);
+        snprintf(buf, sizeof(buf), "%4d µs", g_settings.servo_pwm_min);
         lv_label_set_text(lbl_pwm_min, buf);
     }
     if (lbl_pwm_center) {
         char buf[16];
-        snprintf(buf, sizeof(buf), "%d µs", g_settings.servo_pwm_center);
+        snprintf(buf, sizeof(buf), "%4d µs", g_settings.servo_pwm_center);
         lv_label_set_text(lbl_pwm_center, buf);
     }
     if (lbl_pwm_max) {
         char buf[16];
-        snprintf(buf, sizeof(buf), "%d µs", g_settings.servo_pwm_max);
+        snprintf(buf, sizeof(buf), "%4d µs", g_settings.servo_pwm_max);
         lv_label_set_text(lbl_pwm_max, buf);
     }
     if (dd_frequency) {
@@ -146,7 +161,7 @@ static void on_servo_pwm_min_change(lv_event_t* e) {
 
     // Update label and switch to custom
     char buf[16];
-    snprintf(buf, sizeof(buf), "%d µs", g_settings.servo_pwm_min);
+    snprintf(buf, sizeof(buf), "%4d µs", g_settings.servo_pwm_min);
     if (lbl_pwm_min) lv_label_set_text(lbl_pwm_min, buf);
 
     g_settings.servo_protocol = SERVO_CUSTOM;
@@ -158,7 +173,7 @@ static void on_servo_pwm_center_change(lv_event_t* e) {
     g_settings.servo_pwm_center = (uint16_t)lv_slider_get_value(sl);
 
     char buf[16];
-    snprintf(buf, sizeof(buf), "%d µs", g_settings.servo_pwm_center);
+    snprintf(buf, sizeof(buf), "%4d µs", g_settings.servo_pwm_center);
     if (lbl_pwm_center) lv_label_set_text(lbl_pwm_center, buf);
 
     g_settings.servo_protocol = SERVO_CUSTOM;
@@ -170,11 +185,44 @@ static void on_servo_pwm_max_change(lv_event_t* e) {
     g_settings.servo_pwm_max = (uint16_t)lv_slider_get_value(sl);
 
     char buf[16];
-    snprintf(buf, sizeof(buf), "%d µs", g_settings.servo_pwm_max);
+    snprintf(buf, sizeof(buf), "%4d µs", g_settings.servo_pwm_max);
     if (lbl_pwm_max) lv_label_set_text(lbl_pwm_max, buf);
 
     g_settings.servo_protocol = SERVO_CUSTOM;
     if (dd_protocol) lv_dropdown_set_selected(dd_protocol, SERVO_CUSTOM);
+}
+
+// Per-servo PWM step callbacks
+static void on_servo_step_change(lv_event_t* e) {
+    int idx = reinterpret_cast<intptr_t>(lv_event_get_user_data(e));
+    if (idx < 0 || idx >= NUM_SERVOS) return;
+
+    lv_obj_t* sl = lv_event_get_target_obj(e);
+    g_settings.servo_pwm_step[idx] = (uint8_t)lv_slider_get_value(sl);
+
+    if (lbl_servo_step[idx]) {
+        char buf[16];
+        snprintf(buf, sizeof(buf), "%4d µs", g_settings.servo_pwm_step[idx]);
+        lv_label_set_text(lbl_servo_step[idx], buf);
+    }
+}
+
+static void on_servo_reset(lv_event_t* e) {
+    (void)e;
+    // Reset all servo PWM steps to default
+    servo_reset_pwm_steps();
+
+    // Update all step slider UI
+    for (int i = 0; i < NUM_SERVOS; i++) {
+        if (sl_servo_step[i]) {
+            lv_slider_set_value(sl_servo_step[i], DEFAULT_PWM_STEP, LV_ANIM_OFF);
+        }
+        if (lbl_servo_step[i]) {
+            char buf[16];
+            snprintf(buf, sizeof(buf), "%4d µs", DEFAULT_PWM_STEP);
+            lv_label_set_text(lbl_servo_step[i], buf);
+        }
+    }
 }
 
 void page_settings_create(lv_obj_t* parent) {
@@ -190,14 +238,16 @@ void page_settings_create(lv_obj_t* parent) {
     SettingsBuilder sb(parent);
 
     // Language section
-    sb.begin_section(tr(STR_SETTINGS_LANGUAGE));
+    lv_obj_t* sec_lang = sb.begin_section(tr(STR_SETTINGS_LANGUAGE));
+    focus_builder.add(sec_lang, FO_SEC_LANGUAGE);
     lv_obj_t* dd_lang = sb.dropdown(tr(STR_SETTINGS_LANGUAGE), LANGUAGE_OPTIONS,
                 lang_get(), on_language_change);
     focus_builder.add(dd_lang, FO_LANGUAGE);
     sb.end_section();
 
     // Display section
-    sb.begin_section(tr(STR_SETTINGS_DISPLAY));
+    lv_obj_t* sec_display = sb.begin_section(tr(STR_SETTINGS_DISPLAY));
+    focus_builder.add(sec_display, FO_SEC_DISPLAY);
     lv_obj_t* sl_brightness = sb.slider(tr(STR_SETTINGS_BRIGHTNESS), 10, 100, g_settings.brightness, on_brightness_change);
     focus_builder.add(sl_brightness, FO_BRIGHTNESS);
     lv_obj_t* dd_bg = sb.dropdown(tr(STR_SETTINGS_BACKGROUND), bg_color_options, gui_get_bg_color(), on_bg_color_change);
@@ -205,7 +255,8 @@ void page_settings_create(lv_obj_t* parent) {
     sb.end_section();
 
     // Servo section
-    sb.begin_section(tr(STR_SETTINGS_SERVO));
+    lv_obj_t* sec_servo = sb.begin_section(tr(STR_SETTINGS_SERVO));
+    focus_builder.add(sec_servo, FO_SEC_SERVO);
 
     // Protocol dropdown
     dd_protocol = sb.dropdown(tr(STR_SETTINGS_PROTOCOL), SERVO_PROTOCOL_OPTIONS,
@@ -218,22 +269,49 @@ void page_settings_create(lv_obj_t* parent) {
     focus_builder.add(dd_frequency, FO_FREQUENCY);
 
     // PWM value sliders (500-2500 range, step 10)
+    char pwm_buf[16];
+
     lv_obj_t* sl_min = sb.slider(tr(STR_SETTINGS_PWM_MIN), 500, 1500, g_settings.servo_pwm_min, on_servo_pwm_min_change);
     lbl_pwm_min = lv_obj_get_child(lv_obj_get_parent(sl_min), 1);  // Value label
+    snprintf(pwm_buf, sizeof(pwm_buf), "%4d µs", g_settings.servo_pwm_min);
+    lv_label_set_text(lbl_pwm_min, pwm_buf);
     focus_builder.add(sl_min, FO_PWM_MIN);
 
     lv_obj_t* sl_center = sb.slider(tr(STR_SETTINGS_PWM_CENTER), 1000, 2000, g_settings.servo_pwm_center, on_servo_pwm_center_change);
     lbl_pwm_center = lv_obj_get_child(lv_obj_get_parent(sl_center), 1);
+    snprintf(pwm_buf, sizeof(pwm_buf), "%4d µs", g_settings.servo_pwm_center);
+    lv_label_set_text(lbl_pwm_center, pwm_buf);
     focus_builder.add(sl_center, FO_PWM_CENTER);
 
     lv_obj_t* sl_max = sb.slider(tr(STR_SETTINGS_PWM_MAX), 1500, 2500, g_settings.servo_pwm_max, on_servo_pwm_max_change);
     lbl_pwm_max = lv_obj_get_child(lv_obj_get_parent(sl_max), 1);
+    snprintf(pwm_buf, sizeof(pwm_buf), "%4d µs", g_settings.servo_pwm_max);
+    lv_label_set_text(lbl_pwm_max, pwm_buf);
     focus_builder.add(sl_max, FO_PWM_MAX);
+
+    // Per-servo PWM step sliders (1-100 µs range)
+    char step_label[32];
+    char step_value[16];
+    for (int i = 0; i < NUM_SERVOS; i++) {
+        snprintf(step_label, sizeof(step_label), "%s %d", tr(STR_SETTINGS_SERVO_STEP), i + 1);
+        sl_servo_step[i] = sb.slider(step_label, 1, 100, g_settings.servo_pwm_step[i],
+                                      on_servo_step_change, (void*)(intptr_t)i);
+        lbl_servo_step[i] = lv_obj_get_child(lv_obj_get_parent(sl_servo_step[i]), 1);
+        // Initialize label with unit
+        snprintf(step_value, sizeof(step_value), "%4d µs", g_settings.servo_pwm_step[i]);
+        lv_label_set_text(lbl_servo_step[i], step_value);
+        focus_builder.add(sl_servo_step[i], FO_SERVO_STEP_1 + i);
+    }
+
+    // Reset servos button
+    lv_obj_t* btn_reset = sb.button(tr(STR_SETTINGS_SERVO_RESET), on_servo_reset);
+    focus_builder.add(btn_reset, FO_SERVO_RESET);
 
     sb.end_section();
 
     // System section
-    sb.begin_section(tr(STR_SETTINGS_SYSTEM));
+    lv_obj_t* sec_system = sb.begin_section(tr(STR_SETTINGS_SYSTEM));
+    focus_builder.add(sec_system, FO_SEC_SYSTEM);
     sb.info(tr(STR_SETTINGS_FIRMWARE), APP_VERSION);
     sb.info("LVGL", LVGL_VERSION_STRING);
     sb.end_section();
@@ -261,4 +339,10 @@ void page_settings_destroy() {
     lbl_pwm_max = nullptr;
     dd_frequency = nullptr;
     dd_protocol = nullptr;
+
+    // Reset per-servo step pointers
+    for (int i = 0; i < NUM_SERVOS; i++) {
+        lbl_servo_step[i] = nullptr;
+        sl_servo_step[i] = nullptr;
+    }
 }

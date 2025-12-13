@@ -7,7 +7,13 @@
 #include "gui/lang.h"
 
 // Settings version - increment when adding/changing settings structure
-#define SETTINGS_VERSION 2
+#define SETTINGS_VERSION 3
+
+// Number of servos supported
+#define NUM_SERVOS 6
+
+// Default PWM step size (µs per tick)
+#define DEFAULT_PWM_STEP 10
 
 // Servo protocol presets
 enum ServoProtocol {
@@ -33,7 +39,14 @@ struct Settings {
     uint16_t servo_pwm_center = 1500;
     uint16_t servo_pwm_max    = 2000;
     uint16_t servo_frequency  = 50;   // Hz
+
+    // Per-servo PWM step size (µs per tick in auto-sweep)
+    uint8_t servo_pwm_step[NUM_SERVOS] = {DEFAULT_PWM_STEP, DEFAULT_PWM_STEP, DEFAULT_PWM_STEP,
+                                          DEFAULT_PWM_STEP, DEFAULT_PWM_STEP, DEFAULT_PWM_STEP};
 };
+
+// Reset all servo PWM steps to default
+void servo_reset_pwm_steps();
 
 // Apply servo preset values (updates min/center/max/frequency based on protocol)
 void servo_apply_preset(ServoProtocol protocol);

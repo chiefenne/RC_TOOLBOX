@@ -48,8 +48,8 @@ void SettingsBuilder::on_header_click(lv_event_t* e) {
     }
 }
 
-void SettingsBuilder::begin_section(const char* title, bool start_expanded) {
-    if (section_count_ >= SETTINGS_MAX_SECTIONS) return;
+lv_obj_t* SettingsBuilder::begin_section(const char* title, bool start_expanded) {
+    if (section_count_ >= SETTINGS_MAX_SECTIONS) return nullptr;
 
     // Create clickable header
     lv_obj_t* header = lv_obj_create(cont_);
@@ -101,6 +101,8 @@ void SettingsBuilder::begin_section(const char* title, bool start_expanded) {
     // Set as current container for rows
     section_cont_ = content;
     section_count_++;
+
+    return header;  // Return header for focus navigation
 }
 
 void SettingsBuilder::end_section() {
@@ -162,7 +164,7 @@ lv_obj_t* SettingsBuilder::slider(const char* label, int min, int max, int value
 
     // Container for slider + value label
     lv_obj_t* ctrl_cont = lv_obj_create(row);
-    lv_obj_set_size(ctrl_cont, SETTINGS_CTRL_W + 30, LV_SIZE_CONTENT);
+    lv_obj_set_size(ctrl_cont, SETTINGS_CTRL_W + 50, LV_SIZE_CONTENT);
     lv_obj_set_style_bg_opa(ctrl_cont, LV_OPA_TRANSP, 0);
     lv_obj_set_style_border_width(ctrl_cont, 0, 0);
     lv_obj_set_style_pad_all(ctrl_cont, 0, 0);
@@ -172,19 +174,31 @@ lv_obj_t* SettingsBuilder::slider(const char* label, int min, int max, int value
     lv_obj_clear_flag(ctrl_cont, LV_OBJ_FLAG_SCROLLABLE);
 
     lv_obj_t* sl = lv_slider_create(ctrl_cont);
-    lv_obj_set_width(sl, SETTINGS_CTRL_W - 20);
+    lv_obj_set_width(sl, SETTINGS_CTRL_W - 30);
     lv_slider_set_range(sl, min, max);
     lv_slider_set_value(sl, value, LV_ANIM_OFF);
+
+    // Make slider track thinner and knob smaller to fit in row
+    lv_obj_set_style_height(sl, 6, LV_PART_MAIN);           // Thin track (6px)
+    lv_obj_set_style_radius(sl, 3, LV_PART_MAIN);           // Rounded track
+    lv_obj_set_style_radius(sl, 3, LV_PART_INDICATOR);      // Rounded indicator
+    // Knob: set explicit size (12x12) and round
+    lv_obj_set_style_height(sl, 12, LV_PART_KNOB);
+    lv_obj_set_style_width(sl, 12, LV_PART_KNOB);
+    lv_obj_set_style_radius(sl, 6, LV_PART_KNOB);           // Circular knob
+    lv_obj_set_style_pad_all(sl, 0, LV_PART_KNOB);          // No extra padding
+
     lv_obj_set_style_bg_color(sl, COL_CTRL_BG, LV_PART_MAIN);
     lv_obj_set_style_bg_color(sl, COL_ACTIVE, LV_PART_INDICATOR);
     lv_obj_set_style_bg_color(sl, COL_ACTIVE, LV_PART_KNOB);
 
-    // Value label
+    // Value label - wide enough for "XXXX µs" format (monospace bold for stable width)
     lv_obj_t* val_lbl = lv_label_create(ctrl_cont);
-    lv_label_set_text_fmt(val_lbl, "%d", value);
-    lv_obj_set_style_text_font(val_lbl, FONT_DEFAULT, 0);
+    lv_label_set_text_fmt(val_lbl, "%4d", value);
+    lv_obj_set_style_text_font(val_lbl, FONT_MONO_BOLD_SM, 0);
     lv_obj_set_style_text_color(val_lbl, COL_TEXT, 0);
-    lv_obj_set_style_min_width(val_lbl, 25, 0);
+    lv_obj_set_style_min_width(val_lbl, 50, 0);  // Wide enough for "XXXX µs"
+    lv_obj_set_style_text_align(val_lbl, LV_TEXT_ALIGN_RIGHT, 0);
 
     // Update value label on change
     lv_obj_add_event_cb(sl, [](lv_event_t* e) {
@@ -192,7 +206,7 @@ lv_obj_t* SettingsBuilder::slider(const char* label, int min, int max, int value
         lv_obj_t* container = lv_obj_get_parent(slider);
         lv_obj_t* val_label = lv_obj_get_child(container, 1);
         if (val_label) {
-            lv_label_set_text_fmt(val_label, "%d", lv_slider_get_value(slider));
+            lv_label_set_text_fmt(val_label, "%4d", lv_slider_get_value(slider));
         }
     }, LV_EVENT_VALUE_CHANGED, nullptr);
 
@@ -253,6 +267,38 @@ lv_obj_t* SettingsBuilder::action(const char* label, const char* value_text,
     }
 
     return row;
+}
+
+lv_obj_t* SettingsBuilder::button(const char* label, lv_event_cb_t on_click, void* user_data) {
+    lv_obj_t* parent = section_cont_ ? section_cont_ : cont_;
+
+    // Row container (centered)
+    lv_obj_t* row = lv_obj_create(parent);
+    lv_obj_set_size(row, LV_PCT(100), SETTINGS_ROW_H);
+    lv_obj_set_style_bg_opa(row, LV_OPA_TRANSP, 0);
+    lv_obj_set_style_border_width(row, 0, 0);
+    lv_obj_set_style_pad_all(row, 0, 0);
+    lv_obj_set_flex_flow(row, LV_FLEX_FLOW_ROW);
+    lv_obj_set_flex_align(row, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+    lv_obj_clear_flag(row, LV_OBJ_FLAG_SCROLLABLE);
+
+    // Create button
+    lv_obj_t* btn = lv_button_create(row);
+    lv_obj_set_size(btn, LV_SIZE_CONTENT, 28);
+    lv_obj_set_style_pad_hor(btn, 20, 0);
+    lv_obj_set_style_bg_color(btn, COL_ACTIVE, 0);
+    lv_obj_set_style_bg_color(btn, lv_color_hex(GUI_COLOR_TRIAD[0]), LV_STATE_PRESSED);
+
+    lv_obj_t* lbl = lv_label_create(btn);
+    lv_label_set_text(lbl, label);
+    lv_obj_set_style_text_font(lbl, FONT_DEFAULT, 0);
+    lv_obj_center(lbl);
+
+    if (on_click) {
+        lv_obj_add_event_cb(btn, on_click, LV_EVENT_CLICKED, user_data);
+    }
+
+    return btn;
 }
 
 void SettingsBuilder::info(const char* label, const char* value) {

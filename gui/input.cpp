@@ -70,11 +70,34 @@ static void encoder_read_cb(lv_indev_t* indev, lv_indev_data_t* data) {
 static void handle_button_press(InputEvent gesture) {
     switch (gesture) {
         case INPUT_ENC_PRESS:
-            // Short press - click the focused widget
+            // Short press - click the focused widget or exit edit mode
             if (active_focus_builder) {
+                // If in edit mode, exit it
+                if (active_focus_builder->is_edit_mode()) {
+                    active_focus_builder->set_edit_mode(false);
+                    // Close dropdown if open
+                    lv_obj_t* focused = active_focus_builder->get_focused_widget();
+                    if (focused && lv_obj_check_type(focused, &lv_dropdown_class)) {
+                        lv_dropdown_close(focused);
+                    }
+                    break;
+                }
+
                 lv_obj_t* focused = active_focus_builder->get_focused_widget();
                 if (focused) {
-                    lv_obj_send_event(focused, LV_EVENT_CLICKED, nullptr);
+                    // Check widget type to determine behavior
+                    if (lv_obj_check_type(focused, &lv_dropdown_class)) {
+                        // Enter edit mode for dropdowns
+                        active_focus_builder->set_edit_mode(true);
+                        lv_dropdown_open(focused);
+                    } else if (lv_obj_check_type(focused, &lv_slider_class)) {
+                        // Toggle edit mode for sliders
+                        active_focus_builder->set_edit_mode(true);
+                        lv_obj_add_state(focused, LV_STATE_EDITED);
+                    } else {
+                        // Regular click for other widgets (buttons, section headers)
+                        lv_obj_send_event(focused, LV_EVENT_CLICKED, nullptr);
+                    }
                 }
             }
             break;
@@ -87,10 +110,25 @@ static void handle_button_press(InputEvent gesture) {
             break;
 
         case INPUT_ENC_DOUBLE_CLICK:
-            // Double click - let page handle it first, otherwise go back
-            if (active_focus_builder && active_focus_builder->on_double_click) {
-                if (active_focus_builder->on_double_click()) {
-                    break;  // Page handled it
+            // Double click - exit edit mode first, then let page handle or go back
+            if (active_focus_builder) {
+                if (active_focus_builder->is_edit_mode()) {
+                    active_focus_builder->set_edit_mode(false);
+                    // Close dropdown if open
+                    lv_obj_t* focused = active_focus_builder->get_focused_widget();
+                    if (focused) {
+                        if (lv_obj_check_type(focused, &lv_dropdown_class)) {
+                            lv_dropdown_close(focused);
+                        } else if (lv_obj_check_type(focused, &lv_slider_class)) {
+                            lv_obj_clear_state(focused, LV_STATE_EDITED);
+                        }
+                    }
+                    break;
+                }
+                if (active_focus_builder->on_double_click) {
+                    if (active_focus_builder->on_double_click()) {
+                        break;  // Page handled it
+                    }
                 }
             }
             gui_go_back();
@@ -140,10 +178,9 @@ void input_add_focus_style() {
     style_initialized = true;
 
     lv_style_init(&style_focus);
-    lv_style_set_outline_color(&style_focus, lv_color_hex(0x00AA00));  // Green
-    lv_style_set_outline_width(&style_focus, 3);
-    lv_style_set_outline_pad(&style_focus, 2);
-    lv_style_set_outline_opa(&style_focus, LV_OPA_COVER);
+
+    // NOTE: Focus style is now applied per-widget in apply_focus_style()
+    // This global style is kept for backward compatibility but not actively used
 }
 
 lv_indev_t* input_get_encoder_indev() {
@@ -170,7 +207,47 @@ void input_set_group(lv_group_t* group) {
 // =============================================================================
 
 void input_feed_encoder(int delta) {
-    // First, check if the page wants to handle encoder rotation itself
+    // First, check if we're in edit mode (adjusting a widget value)
+    if (active_focus_builder && active_focus_builder->is_edit_mode()) {
+        lv_obj_t* focused = active_focus_builder->get_focused_widget();
+        if (focused) {
+            if (lv_obj_check_type(focused, &lv_dropdown_class)) {
+                // Navigate dropdown options
+                uint32_t opt_cnt = lv_dropdown_get_option_cnt(focused);
+                int32_t sel = lv_dropdown_get_selected(focused);
+                sel += delta;
+                if (sel < 0) sel = opt_cnt - 1;
+                if (sel >= (int32_t)opt_cnt) sel = 0;
+                lv_dropdown_set_selected(focused, sel);
+                // Trigger value changed event
+                lv_obj_send_event(focused, LV_EVENT_VALUE_CHANGED, nullptr);
+            } else if (lv_obj_check_type(focused, &lv_slider_class)) {
+                // Adjust slider value
+                int32_t val = lv_slider_get_value(focused);
+                int32_t min = lv_slider_get_min_value(focused);
+                int32_t max = lv_slider_get_max_value(focused);
+                // Scale delta based on range
+                int step = (max - min > 100) ? 10 : 1;
+                val += delta * step;
+                if (val < min) val = min;
+                if (val > max) val = max;
+                lv_slider_set_value(focused, val, LV_ANIM_ON);
+                // Trigger value changed event
+                lv_obj_send_event(focused, LV_EVENT_VALUE_CHANGED, nullptr);
+            }
+        }
+        // Update speed tracking
+        uint32_t now = lv_tick_get();
+        if (now - last_rotation_time < 100) {
+            rotation_count++;
+        } else {
+            rotation_count = 1;
+        }
+        last_rotation_time = now;
+        return;
+    }
+
+    // Next, check if the page wants to handle encoder rotation itself
     if (active_focus_builder && active_focus_builder->on_encoder_rotation) {
         if (active_focus_builder->on_encoder_rotation(delta)) {
             // Page handled the rotation, update speed tracking and return
@@ -290,6 +367,7 @@ void FocusOrderBuilder::init() {
     group = lv_group_create();
     count = 0;
     current_focus = 0;
+    edit_mode = false;
     on_long_press = nullptr;
     on_encoder_rotation = nullptr;
     on_double_click = nullptr;
@@ -364,21 +442,41 @@ void FocusOrderBuilder::focus_next() {
     // Clear focus state from current widget
     if (current_focus >= 0 && current_focus < count && widgets[current_focus] != nullptr) {
         lv_obj_clear_state(widgets[current_focus], LV_STATE_FOCUSED);
+        lv_obj_clear_state(widgets[current_focus], LV_STATE_EDITED);
     }
 
-    // Find next valid widget (skip nulls and hidden)
+    // Find next valid widget (skip nulls, disabled, and those in hidden sections)
     int start = current_focus;
     do {
         current_focus++;
         if (current_focus >= count) {
             current_focus = 0;  // Wrap around
         }
-        // Check if widget exists and is not hidden
-        if (widgets[current_focus] != nullptr &&
-            !lv_obj_has_flag(widgets[current_focus], LV_OBJ_FLAG_HIDDEN)) {
-            // Set focus state directly on the widget - completely bypass LVGL groups
-            lv_obj_add_state(widgets[current_focus], LV_STATE_FOCUSED);
-            return;
+        if (widgets[current_focus] != nullptr) {
+            // Skip disabled widgets
+            if (lv_obj_has_state(widgets[current_focus], LV_STATE_DISABLED)) {
+                continue;
+            }
+
+            // Check if widget is in a hidden section by walking up the parent chain
+            // looking for a parent with LV_OBJ_FLAG_HIDDEN
+            bool in_hidden_section = false;
+            lv_obj_t* parent = lv_obj_get_parent(widgets[current_focus]);
+            while (parent != nullptr) {
+                if (lv_obj_has_flag(parent, LV_OBJ_FLAG_HIDDEN)) {
+                    in_hidden_section = true;
+                    break;
+                }
+                parent = lv_obj_get_parent(parent);
+            }
+
+            if (!in_hidden_section) {
+                // Set focus state directly on the widget
+                lv_obj_add_state(widgets[current_focus], LV_STATE_FOCUSED);
+                // Scroll to make the focused widget visible (recursive for nested containers)
+                lv_obj_scroll_to_view_recursive(widgets[current_focus], LV_ANIM_ON);
+                return;
+            }
         }
     } while (current_focus != start);  // Prevent infinite loop
 }
@@ -387,21 +485,40 @@ void FocusOrderBuilder::focus_prev() {
     // Clear focus state from current widget
     if (current_focus >= 0 && current_focus < count && widgets[current_focus] != nullptr) {
         lv_obj_clear_state(widgets[current_focus], LV_STATE_FOCUSED);
+        lv_obj_clear_state(widgets[current_focus], LV_STATE_EDITED);
     }
 
-    // Find previous valid widget (skip nulls and hidden)
+    // Find previous valid widget (skip nulls, disabled, and those in hidden sections)
     int start = current_focus;
     do {
         current_focus--;
         if (current_focus < 0) {
             current_focus = count - 1;  // Wrap around
         }
-        // Check if widget exists and is not hidden
-        if (widgets[current_focus] != nullptr &&
-            !lv_obj_has_flag(widgets[current_focus], LV_OBJ_FLAG_HIDDEN)) {
-            // Set focus state directly on the widget - completely bypass LVGL groups
-            lv_obj_add_state(widgets[current_focus], LV_STATE_FOCUSED);
-            return;
+        if (widgets[current_focus] != nullptr) {
+            // Skip disabled widgets
+            if (lv_obj_has_state(widgets[current_focus], LV_STATE_DISABLED)) {
+                continue;
+            }
+
+            // Check if widget is in a hidden section by walking up the parent chain
+            bool in_hidden_section = false;
+            lv_obj_t* parent = lv_obj_get_parent(widgets[current_focus]);
+            while (parent != nullptr) {
+                if (lv_obj_has_flag(parent, LV_OBJ_FLAG_HIDDEN)) {
+                    in_hidden_section = true;
+                    break;
+                }
+                parent = lv_obj_get_parent(parent);
+            }
+
+            if (!in_hidden_section) {
+                // Set focus state directly on the widget
+                lv_obj_add_state(widgets[current_focus], LV_STATE_FOCUSED);
+                // Scroll to make the focused widget visible (recursive for nested containers)
+                lv_obj_scroll_to_view_recursive(widgets[current_focus], LV_ANIM_ON);
+                return;
+            }
         }
     } while (current_focus != start);  // Prevent infinite loop
 }
@@ -410,12 +527,15 @@ void FocusOrderBuilder::focus_index(int idx) {
     // Clear focus state from current widget
     if (current_focus >= 0 && current_focus < count && widgets[current_focus] != nullptr) {
         lv_obj_clear_state(widgets[current_focus], LV_STATE_FOCUSED);
+        lv_obj_clear_state(widgets[current_focus], LV_STATE_EDITED);
     }
 
     if (idx >= 0 && idx < count && widgets[idx] != nullptr) {
         current_focus = idx;
         // Set focus state directly on the widget - completely bypass LVGL groups
         lv_obj_add_state(widgets[idx], LV_STATE_FOCUSED);
+        // Scroll to make the focused widget visible (recursive for nested containers)
+        lv_obj_scroll_to_view_recursive(widgets[idx], LV_ANIM_ON);
     }
 }
 
@@ -427,11 +547,54 @@ lv_obj_t* FocusOrderBuilder::get_focused_widget() {
 }
 
 void FocusOrderBuilder::apply_focus_style(lv_obj_t* widget) {
-    // Green outline when focused
+    // =============================================================================
+    // FOCUS STYLE OPTIONS - Change FOCUS_STYLE to test different styles
+    // =============================================================================
+    // 0 = Green outline (original - outside widget)
+    // 1 = Inverted colors (dark bg + white text) - causes flickering
+    // 2 = Blue border (inside widget, compact)
+    // 3 = Blue left bar accent
+    #define FOCUS_STYLE 2
+
+    #if FOCUS_STYLE == 0
+    // Option 0: Original green outline (outside widget)
     lv_obj_set_style_outline_color(widget, lv_color_hex(FOCUS_COLOR_HEX), LV_STATE_FOCUSED);
     lv_obj_set_style_outline_width(widget, 3, LV_STATE_FOCUSED);
     lv_obj_set_style_outline_pad(widget, 2, LV_STATE_FOCUSED);
     lv_obj_set_style_outline_opa(widget, LV_OPA_COVER, LV_STATE_FOCUSED);
+
+    #elif FOCUS_STYLE == 1
+    // Option 1: Inverted colors
+    // Dark background with white text - clear but causes more redraws
+    lv_obj_set_style_bg_color(widget, lv_color_hex(0x1C5C8C), LV_STATE_FOCUSED);
+    lv_obj_set_style_bg_opa(widget, LV_OPA_COVER, LV_STATE_FOCUSED);
+    lv_obj_set_style_text_color(widget, lv_color_white(), LV_STATE_FOCUSED);
+    lv_obj_set_style_outline_width(widget, 0, LV_STATE_FOCUSED);
+
+    #elif FOCUS_STYLE == 2
+    // Option 2: Blue border (inside widget - no extra space needed)
+    // Uses border instead of outline - stays within widget bounds
+    // Set transparent border in default state to prevent layout shift
+    lv_obj_set_style_border_width(widget, 3, LV_STATE_DEFAULT);
+    lv_obj_set_style_border_opa(widget, LV_OPA_TRANSP, LV_STATE_DEFAULT);
+    // Focused state: show blue border
+    lv_obj_set_style_border_color(widget, lv_color_hex(0x1C5C8C), LV_STATE_FOCUSED);
+    lv_obj_set_style_border_opa(widget, LV_OPA_COVER, LV_STATE_FOCUSED);
+    // Edit state: show green border (actively editing slider/dropdown)
+    lv_obj_set_style_border_color(widget, lv_color_hex(0x00AA00), LV_STATE_EDITED);
+    lv_obj_set_style_border_opa(widget, LV_OPA_COVER, LV_STATE_EDITED);
+    // Disable outline
+    lv_obj_set_style_outline_width(widget, 0, LV_STATE_FOCUSED);
+
+    #elif FOCUS_STYLE == 3
+    // Option 3: Blue left bar accent (modern style)
+    lv_obj_set_style_border_color(widget, lv_color_hex(0x1C5C8C), LV_STATE_FOCUSED);
+    lv_obj_set_style_border_width(widget, 3, LV_STATE_FOCUSED);
+    lv_obj_set_style_border_side(widget, LV_BORDER_SIDE_LEFT, LV_STATE_FOCUSED);
+    lv_obj_set_style_border_opa(widget, LV_OPA_COVER, LV_STATE_FOCUSED);
+    // Disable outline
+    lv_obj_set_style_outline_width(widget, 0, LV_STATE_FOCUSED);
+    #endif
 }
 
 void FocusOrderBuilder::destroy() {
@@ -450,4 +613,5 @@ void FocusOrderBuilder::destroy() {
     }
     count = 0;
     current_focus = 0;
+    edit_mode = false;
 }

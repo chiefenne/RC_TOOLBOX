@@ -38,11 +38,8 @@ static FocusOrderBuilder focus_builder;
 
 // Configuration constants
 namespace {
-    // Number of servos
-    constexpr int NUM_SERVOS = 6;
-
-    // PWM values now come from settings - these are just for step size
-    constexpr int PWM_STEP    = 10;
+    // Number of servos (use from settings.h)
+    // constexpr int NUM_SERVOS = 6;  // Now defined in settings.h
 
     // Timer interval (50Hz update rate)
     constexpr uint32_t SWEEP_INTERVAL_MS = 20;
@@ -68,10 +65,14 @@ namespace {
 
 // State
 struct ServoState {
-    int pwm = 1500;  // Will be reset to PWM_CENTER on page load
+    // Per-servo PWM values (each servo maintains its own position)
+    int pwm[NUM_SERVOS] = {1500, 1500, 1500, 1500, 1500, 1500};
+
+    // Per-servo sweep direction (1 = increasing, -1 = decreasing)
+    int direction[NUM_SERVOS] = {1, 1, 1, 1, 1, 1};
+
     bool auto_mode = true;
     bool running = false;
-    int direction = 1;
     lv_timer_t* timer = nullptr;
 
     // Servo selection (bitmask: bit 0 = servo 1, etc.)
@@ -92,8 +93,79 @@ struct ServoState {
     lv_obj_t* btn_center = nullptr;
     lv_obj_t* btn_max = nullptr;
 
-    void reset() { pwm = PWM_CENTER; auto_mode = true; running = false; direction = 1; selected = 0x01; }
-    void clamp() { pwm = (pwm < PWM_MIN) ? PWM_MIN : (pwm > PWM_MAX) ? PWM_MAX : pwm; }
+    void reset() {
+        for (int i = 0; i < NUM_SERVOS; i++) {
+            pwm[i] = PWM_CENTER;
+            direction[i] = 1;
+        }
+        auto_mode = true; running = false; selected = 0x01;
+    }
+
+    // Get PWM step for a servo from settings
+    int get_pwm_step(int idx) const {
+        if (idx >= 0 && idx < NUM_SERVOS) {
+            return g_settings.servo_pwm_step[idx];
+        }
+        return DEFAULT_PWM_STEP;
+    }
+
+    // Clamp a single servo's PWM value
+    void clamp(int idx) {
+        if (idx >= 0 && idx < NUM_SERVOS) {
+            pwm[idx] = (pwm[idx] < PWM_MIN) ? PWM_MIN : (pwm[idx] > PWM_MAX) ? PWM_MAX : pwm[idx];
+        }
+    }
+
+    // Clamp all selected servos
+    void clamp_selected() {
+        for (int i = 0; i < NUM_SERVOS; i++) {
+            if (is_servo_selected(i)) clamp(i);
+        }
+    }
+
+    // Get the primary (lowest numbered) selected servo index, or -1 if none
+    int get_primary_servo() const {
+        for (int i = 0; i < NUM_SERVOS; i++) {
+            if (is_servo_selected(i)) return i;
+        }
+        return -1;
+    }
+
+    // Get PWM of primary servo (for display)
+    int get_display_pwm() const {
+        int primary = get_primary_servo();
+        return (primary >= 0) ? pwm[primary] : PWM_CENTER;
+    }
+
+    // Check if multiple servos are selected
+    bool is_multi_select() const {
+        int count = 0;
+        for (int i = 0; i < NUM_SERVOS; i++) {
+            if (is_servo_selected(i)) count++;
+            if (count > 1) return true;
+        }
+        return false;
+    }
+
+    // Apply a delta to all selected servos (relative adjustment)
+    void apply_delta(int delta) {
+        for (int i = 0; i < NUM_SERVOS; i++) {
+            if (is_servo_selected(i)) {
+                pwm[i] += delta;
+                clamp(i);
+            }
+        }
+    }
+
+    // Set all selected servos to a specific value (sync/preset)
+    void set_all_selected(int value) {
+        for (int i = 0; i < NUM_SERVOS; i++) {
+            if (is_servo_selected(i)) {
+                pwm[i] = value;
+                clamp(i);
+            }
+        }
+    }
 
     bool is_servo_selected(int idx) const { return (selected & (1 << idx)) != 0; }
     void toggle_servo(int idx) { selected ^= (1 << idx); }
@@ -117,10 +189,19 @@ struct ServoState {
         // Key: Use lv_label_set_text_static when possible, and always use LV_ANIM_OFF
         // during continuous updates to prevent animation queue buildup.
 
-        // 1. Update label only if text changed (avoid redundant invalidation)
-        static char pwm_buf[8];  // Static to persist for lv_label_set_text_static
-        char new_buf[8];
-        snprintf(new_buf, sizeof(new_buf), "%d", pwm);
+        // 1. Get display PWM (primary servo's value)
+        int display_pwm = get_display_pwm();
+        bool multi = is_multi_select();
+
+        // 2. Update label only if text changed (avoid redundant invalidation)
+        //    Show asterisk (*) suffix when multiple servos selected
+        static char pwm_buf[12];  // Static to persist for lv_label_set_text_static
+        char new_buf[12];
+        if (multi) {
+            snprintf(new_buf, sizeof(new_buf), "%d*", display_pwm);
+        } else {
+            snprintf(new_buf, sizeof(new_buf), "%d", display_pwm);
+        }
         const char* current_text = lv_label_get_text(lbl_pwm);
         if (strcmp(current_text, new_buf) != 0) {
             // Copy to static buffer and use set_text_static to avoid internal allocation
@@ -128,19 +209,23 @@ struct ServoState {
             lv_label_set_text_static(lbl_pwm, pwm_buf);
         }
 
-        // 2. Scale slider to 0-100 range based on current PWM range
+        // 3. Scale slider to 0-100 range based on current PWM range
         int range = PWM_MAX - PWM_MIN;
-        int slider_val = (range > 0) ? ((pwm - PWM_MIN) * 100 / range) : 50;
+        int slider_val = (range > 0) ? ((display_pwm - PWM_MIN) * 100 / range) : 50;
 
-        // 3. Update slider only if value changed
+        // 4. Update slider only if value changed
         //    ALWAYS use LV_ANIM_OFF during sweep - animations cause multiple redraws
         int current_slider_val = lv_slider_get_value(slider);
         if (current_slider_val != slider_val) {
             lv_slider_set_value(slider, slider_val, LV_ANIM_OFF);
         }
 
-        // Output PWM to selected servos
-        servo_set_pulse_mask(selected, static_cast<uint16_t>(pwm));
+        // 5. Output PWM to each selected servo with its individual value
+        for (int i = 0; i < NUM_SERVOS; i++) {
+            if (is_servo_selected(i)) {
+                servo_set_pulse(static_cast<uint8_t>(i), static_cast<uint16_t>(pwm[i]));
+            }
+        }
     }
 
     void update_ui() {
@@ -163,6 +248,10 @@ struct ServoState {
             lv_obj_clear_flag(row_start, LV_OBJ_FLAG_HIDDEN);
             lv_obj_clear_flag(btn_start, LV_OBJ_FLAG_HIDDEN);  // Show start button for focus
             lv_obj_add_flag(row_manual, LV_OBJ_FLAG_HIDDEN);
+            // Disable slider in auto mode - still visible but focus skips disabled widgets
+            if (slider) {
+                lv_obj_add_state(slider, LV_STATE_DISABLED);
+            }
             // Hide preset buttons so focus skips them
             if (btn_min) lv_obj_add_flag(btn_min, LV_OBJ_FLAG_HIDDEN);
             if (btn_center) lv_obj_add_flag(btn_center, LV_OBJ_FLAG_HIDDEN);
@@ -173,6 +262,10 @@ struct ServoState {
             lv_obj_add_flag(row_start, LV_OBJ_FLAG_HIDDEN);
             lv_obj_add_flag(btn_start, LV_OBJ_FLAG_HIDDEN);  // Hide start button for focus
             lv_obj_clear_flag(row_manual, LV_OBJ_FLAG_HIDDEN);
+            // Enable slider in manual mode so it can be focused
+            if (slider) {
+                lv_obj_clear_state(slider, LV_STATE_DISABLED);
+            }
             // Show preset buttons so focus includes them
             if (btn_min) lv_obj_clear_flag(btn_min, LV_OBJ_FLAG_HIDDEN);
             if (btn_center) lv_obj_clear_flag(btn_center, LV_OBJ_FLAG_HIDDEN);
@@ -226,9 +319,25 @@ static lv_obj_t* make_btn(lv_obj_t* p, const char* txt, int w, lv_color_t col, l
 // Callbacks
 static void on_timer(lv_timer_t* t) {
     if (!S.running || !S.auto_mode) return;
-    S.pwm += S.direction * PWM_STEP;
-    if (S.pwm >= PWM_MAX) { S.pwm = PWM_MAX; S.direction = -1; }
-    else if (S.pwm <= PWM_MIN) { S.pwm = PWM_MIN; S.direction = 1; }
+
+    // Apply sweep delta to each selected servo individually
+    // Each servo has its own direction and step size
+    for (int i = 0; i < NUM_SERVOS; i++) {
+        if (S.is_servo_selected(i)) {
+            int step = S.get_pwm_step(i);
+            S.pwm[i] += S.direction[i] * step;
+
+            // Check bounds and reverse direction for THIS servo
+            if (S.pwm[i] >= PWM_MAX) {
+                S.pwm[i] = PWM_MAX;
+                S.direction[i] = -1;
+            } else if (S.pwm[i] <= PWM_MIN) {
+                S.pwm[i] = PWM_MIN;
+                S.direction[i] = 1;
+            }
+        }
+    }
+
     S.update_display();
 }
 
@@ -241,8 +350,11 @@ static void on_servo_toggle(lv_event_t* e) {
     bool enabled = S.is_servo_selected(idx);
     servo_enable(static_cast<uint8_t>(idx), enabled);
     if (enabled) {
-        servo_set_pulse(static_cast<uint8_t>(idx), static_cast<uint16_t>(S.pwm));
+        // Output this servo's individual PWM value
+        servo_set_pulse(static_cast<uint8_t>(idx), static_cast<uint16_t>(S.pwm[idx]));
     }
+    // Update display to show the new primary servo's value
+    S.update_display();
 }
 
 // Long-press callback: toggle all servos on/off (works from anywhere on the page)
@@ -253,10 +365,14 @@ static void on_long_press_toggle_all() {
         servo_disable_all();
     } else {
         S.select_all();
-        servo_enable_mask(S.selected, true);
-        servo_set_pulse_mask(S.selected, static_cast<uint16_t>(S.pwm));
+        // Enable all servos and output their individual PWM values
+        for (int i = 0; i < NUM_SERVOS; i++) {
+            servo_enable(static_cast<uint8_t>(i), true);
+            servo_set_pulse(static_cast<uint8_t>(i), static_cast<uint16_t>(S.pwm[i]));
+        }
     }
     S.update_servo_buttons();
+    S.update_display();
 }
 
 // Double-click callback: in manual mode, switch back to auto mode instead of leaving page
@@ -273,22 +389,26 @@ static bool on_double_click() {
 
 // Encoder rotation callback: in manual mode, directly adjust PWM with acceleration
 static bool on_encoder_rotation(int delta) {
-    // In manual mode, encoder rotation adjusts the slider value directly
+    // In manual mode, encoder rotation adjusts all selected servos by relative delta
     if (!S.auto_mode && !S.running) {
         // Get rotation speed for acceleration
         int speed = input_get_rotation_speed();
-        int step = PWM_STEP;
+
+        // Get PWM step from primary servo (use as base step)
+        int primary = S.get_primary_servo();
+        int base_step = (primary >= 0) ? S.get_pwm_step(primary) : DEFAULT_PWM_STEP;
 
         // Acceleration: faster rotation = bigger steps
+        int step = base_step;
         if (speed > 5) {
-            step = PWM_STEP * 5;  // Fast: 50µs steps
+            step = base_step * 5;  // Fast: 5x step
         } else if (speed > 2) {
-            step = PWM_STEP * 2;  // Medium: 20µs steps
+            step = base_step * 2;  // Medium: 2x step
         }
 
         // CW rotation (delta > 0) = increase PWM (slider moves right)
-        S.pwm += delta * step;
-        S.clamp();
+        // Apply relative delta to all selected servos
+        S.apply_delta(delta * step);
         S.update_display();
         return true;  // We handled the rotation
     }
@@ -317,7 +437,9 @@ static void on_start_stop(lv_event_t*) {
 }
 
 static void on_preset(lv_event_t* e) {
-    S.pwm = reinterpret_cast<intptr_t>(lv_event_get_user_data(e));
+    int preset_value = reinterpret_cast<intptr_t>(lv_event_get_user_data(e));
+    // Set all selected servos to this preset value (sync operation)
+    S.set_all_selected(preset_value);
     S.update_display();
 }
 
@@ -325,13 +447,33 @@ static void on_slider(lv_event_t* e) {
     // Slider is 0-100, map to PWM range from settings
     int slider_val = lv_slider_get_value(lv_event_get_target_obj(e));
     int range = PWM_MAX - PWM_MIN;
-    S.pwm = PWM_MIN + (slider_val * range / 100);
-    // Update label only (slider already has correct value from user interaction)
-    static char pwm_buf[8];
-    snprintf(pwm_buf, sizeof(pwm_buf), "%d", S.pwm);
+    int new_pwm = PWM_MIN + (slider_val * range / 100);
+
+    // Calculate delta from primary servo's current position
+    int primary = S.get_primary_servo();
+    if (primary >= 0) {
+        int delta = new_pwm - S.pwm[primary];
+        // Apply relative delta to all selected servos
+        S.apply_delta(delta);
+    }
+
+    // Update display (label) - slider already has correct value from user interaction
+    int display_pwm = S.get_display_pwm();
+    bool multi = S.is_multi_select();
+    static char pwm_buf[12];
+    if (multi) {
+        snprintf(pwm_buf, sizeof(pwm_buf), "%d*", display_pwm);
+    } else {
+        snprintf(pwm_buf, sizeof(pwm_buf), "%d", display_pwm);
+    }
     lv_label_set_text_static(S.lbl_pwm, pwm_buf);
-    // Output PWM to selected servos
-    servo_set_pulse_mask(S.selected, static_cast<uint16_t>(S.pwm));
+
+    // Output PWM to each selected servo with its individual value
+    for (int i = 0; i < NUM_SERVOS; i++) {
+        if (S.is_servo_selected(i)) {
+            servo_set_pulse(static_cast<uint8_t>(i), static_cast<uint16_t>(S.pwm[i]));
+        }
+    }
 }
 
 // Public API
@@ -426,7 +568,8 @@ void page_servo_create(lv_obj_t* parent) {
     lv_obj_set_style_text_color(lbl_title, COL_TEXT, 0);
     S.lbl_pwm = lv_label_create(row_pwm);
     // Use fixed-width text to prevent label size changes causing row reflow
-    lv_obj_set_style_min_width(S.lbl_pwm, 50, 0);  // Enough for "2500"
+    // Extra space for asterisk (*) in multi-select mode
+    lv_obj_set_style_min_width(S.lbl_pwm, 60, 0);  // Enough for "2500*"
     lv_label_set_text(S.lbl_pwm, "1500");
     lv_obj_set_style_text_font(S.lbl_pwm, FONT_MONO_BOLD_LG, 0);
     lv_obj_set_style_text_color(S.lbl_pwm, COL_PRIMARY, 0);
@@ -444,14 +587,17 @@ void page_servo_create(lv_obj_t* parent) {
     lv_obj_clear_flag(row_slider, LV_OBJ_FLAG_SCROLLABLE);
 
     S.slider = lv_slider_create(row_slider);
-    lv_obj_set_size(S.slider, LV_PCT(100), 20);
+    lv_obj_set_size(S.slider, LV_PCT(100), 12);  // Thinner track
     lv_slider_set_range(S.slider, 0, 100);
     lv_slider_set_value(S.slider, 50, LV_ANIM_OFF);
     lv_obj_set_style_bg_color(S.slider, lv_color_hex(GUI_COLOR_GRAYS[7]), 0);
     lv_obj_set_style_bg_color(S.slider, lv_color_hex(GUI_COLOR_MONO[1]), LV_PART_INDICATOR);
     lv_obj_set_style_bg_color(S.slider, COL_PRIMARY, LV_PART_KNOB);
-    // Reduce knob padding to minimize invalidated area during movement
-    lv_obj_set_style_pad_all(S.slider, 2, LV_PART_KNOB);
+    // Make knob larger and more visible
+    lv_obj_set_style_height(S.slider, 20, LV_PART_KNOB);
+    lv_obj_set_style_width(S.slider, 20, LV_PART_KNOB);
+    lv_obj_set_style_radius(S.slider, 10, LV_PART_KNOB);  // Circular
+    lv_obj_set_style_pad_all(S.slider, 0, LV_PART_KNOB);
     lv_obj_add_event_cb(S.slider, on_slider, LV_EVENT_VALUE_CHANGED, nullptr);
     // Add slider to focus builder
     focus_builder.add(S.slider, FO_SLIDER);
@@ -485,9 +631,13 @@ void page_servo_create(lv_obj_t* parent) {
     S.update_ui();
     S.update_servo_buttons();
 
-    // Enable initially selected servo(s) and set pulse
-    servo_enable_mask(S.selected, true);
-    servo_set_pulse_mask(S.selected, static_cast<uint16_t>(S.pwm));
+    // Enable initially selected servo(s) and set their individual pulses
+    for (int i = 0; i < NUM_SERVOS; i++) {
+        if (S.is_servo_selected(i)) {
+            servo_enable(static_cast<uint8_t>(i), true);
+            servo_set_pulse(static_cast<uint8_t>(i), static_cast<uint16_t>(S.pwm[i]));
+        }
+    }
 
     // Add footer buttons to focus order
     focus_builder.add(gui_get_btn_home(), FO_BTN_HOME);
@@ -525,7 +675,10 @@ void page_servo_stop() {
 }
 
 void page_servo_adjust_pwm(int delta) {
-    if (S.slider) { S.pwm += delta; S.clamp(); S.update_display(); }
+    if (S.slider) {
+        S.apply_delta(delta);
+        S.update_display();
+    }
 }
 
 void page_servo_toggle_sweep() {

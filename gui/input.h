@@ -28,7 +28,7 @@ enum InputEvent {
 // Focus Order Helper
 // =============================================================================
 // Maximum widgets per page that can be in focus order
-constexpr int MAX_FOCUS_WIDGETS = 20;
+constexpr int MAX_FOCUS_WIDGETS = 30;
 
 // Focus color (green) - use this in pages for consistent styling
 constexpr uint32_t FOCUS_COLOR_HEX = 0x00AA00;
@@ -50,6 +50,7 @@ struct FocusOrderBuilder {
     lv_obj_t* widgets[MAX_FOCUS_WIDGETS];
     int count;
     int current_focus;  // Current focus index in our order
+    bool edit_mode;     // True when editing a widget (dropdown open, slider adjusting)
     long_press_cb_t on_long_press;  // Optional long-press callback
     encoder_rotation_cb_t on_encoder_rotation;  // Optional rotation handler (return true if handled)
     double_click_cb_t on_double_click;  // Optional double-click handler (return true if handled)
@@ -80,6 +81,12 @@ struct FocusOrderBuilder {
 
     // Get current focus index
     int get_focus_index() const { return current_focus; }
+
+    // Check if in edit mode (dropdown open, slider adjusting)
+    bool is_edit_mode() const { return edit_mode; }
+
+    // Set edit mode
+    void set_edit_mode(bool mode) { edit_mode = mode; }
 
     // Set long-press callback for this page
     void set_long_press_cb(long_press_cb_t cb);

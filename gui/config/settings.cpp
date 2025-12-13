@@ -82,6 +82,7 @@ void settings_load() {
     char line[256];
     while (fgets(line, sizeof(line), f)) {
         int value;
+        int idx;
         if (sscanf(line, " \"version\" : %d", &value) == 1) {
             g_settings.version = (uint8_t)value;
         } else if (sscanf(line, " \"language\" : %d", &value) == 1) {
@@ -100,6 +101,10 @@ void settings_load() {
             g_settings.servo_pwm_max = (uint16_t)value;
         } else if (sscanf(line, " \"servo_frequency\" : %d", &value) == 1) {
             g_settings.servo_frequency = (uint16_t)value;
+        } else if (sscanf(line, " \"servo_pwm_step_%d\" : %d", &idx, &value) == 2) {
+            if (idx >= 0 && idx < NUM_SERVOS) {
+                g_settings.servo_pwm_step[idx] = (uint8_t)value;
+            }
         }
     }
 
@@ -114,6 +119,13 @@ void settings_load() {
     if (g_settings.servo_pwm_center < 1000 || g_settings.servo_pwm_center > 2000) g_settings.servo_pwm_center = 1500;
     if (g_settings.servo_pwm_max < 1500 || g_settings.servo_pwm_max > 2500) g_settings.servo_pwm_max = 2000;
     if (g_settings.servo_frequency < 50 || g_settings.servo_frequency > 400) g_settings.servo_frequency = 50;
+
+    // Validate per-servo PWM step values (1-100 µs range)
+    for (int i = 0; i < NUM_SERVOS; i++) {
+        if (g_settings.servo_pwm_step[i] < 1 || g_settings.servo_pwm_step[i] > 100) {
+            g_settings.servo_pwm_step[i] = DEFAULT_PWM_STEP;
+        }
+    }
 }
 
 void settings_save() {
@@ -131,7 +143,13 @@ void settings_save() {
     fprintf(f, "    \"servo_pwm_min\": %d,\n", g_settings.servo_pwm_min);
     fprintf(f, "    \"servo_pwm_center\": %d,\n", g_settings.servo_pwm_center);
     fprintf(f, "    \"servo_pwm_max\": %d,\n", g_settings.servo_pwm_max);
-    fprintf(f, "    \"servo_frequency\": %d\n", g_settings.servo_frequency);
+    fprintf(f, "    \"servo_frequency\": %d,\n", g_settings.servo_frequency);
+    // Per-servo PWM step values
+    for (int i = 0; i < NUM_SERVOS; i++) {
+        fprintf(f, "    \"servo_pwm_step_%d\": %d%s\n",
+                i, g_settings.servo_pwm_step[i],
+                (i < NUM_SERVOS - 1) ? "," : "");
+    }
     fprintf(f, "}\n");
 
     fclose(f);
@@ -144,4 +162,10 @@ void settings_reset() {
 
 const char* settings_get_path() {
     return SETTINGS_PATH;
+}
+
+void servo_reset_pwm_steps() {
+    for (int i = 0; i < NUM_SERVOS; i++) {
+        g_settings.servo_pwm_step[i] = DEFAULT_PWM_STEP;
+    }
 }
