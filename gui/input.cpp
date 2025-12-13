@@ -72,13 +72,20 @@ static void handle_button_press(InputEvent gesture) {
         case INPUT_ENC_PRESS:
             // Short press - click the focused widget or exit edit mode
             if (active_focus_builder) {
-                // If in edit mode, exit it
+                // If in edit mode, exit it and confirm selection
                 if (active_focus_builder->is_edit_mode()) {
                     active_focus_builder->set_edit_mode(false);
-                    // Close dropdown if open
                     lv_obj_t* focused = active_focus_builder->get_focused_widget();
-                    if (focused && lv_obj_check_type(focused, &lv_dropdown_class)) {
-                        lv_dropdown_close(focused);
+                    if (focused) {
+                        if (lv_obj_check_type(focused, &lv_dropdown_class)) {
+                            // Close dropdown FIRST (before VALUE_CHANGED which may destroy the page)
+                            lv_dropdown_close(focused);
+                            // Confirm dropdown selection - this may trigger page reload
+                            lv_obj_send_event(focused, LV_EVENT_VALUE_CHANGED, nullptr);
+                            // Don't access 'focused' after this - it may be destroyed
+                        } else if (lv_obj_check_type(focused, &lv_slider_class)) {
+                            lv_obj_clear_state(focused, LV_STATE_EDITED);
+                        }
                     }
                     break;
                 }
@@ -212,15 +219,14 @@ void input_feed_encoder(int delta) {
         lv_obj_t* focused = active_focus_builder->get_focused_widget();
         if (focused) {
             if (lv_obj_check_type(focused, &lv_dropdown_class)) {
-                // Navigate dropdown options
+                // Navigate dropdown options (visual only - don't trigger value change yet)
                 uint32_t opt_cnt = lv_dropdown_get_option_cnt(focused);
                 int32_t sel = lv_dropdown_get_selected(focused);
                 sel += delta;
                 if (sel < 0) sel = opt_cnt - 1;
                 if (sel >= (int32_t)opt_cnt) sel = 0;
                 lv_dropdown_set_selected(focused, sel);
-                // Trigger value changed event
-                lv_obj_send_event(focused, LV_EVENT_VALUE_CHANGED, nullptr);
+                // DON'T send VALUE_CHANGED here - only on confirm (encoder press)
             } else if (lv_obj_check_type(focused, &lv_slider_class)) {
                 // Adjust slider value
                 int32_t val = lv_slider_get_value(focused);
@@ -232,7 +238,7 @@ void input_feed_encoder(int delta) {
                 if (val < min) val = min;
                 if (val > max) val = max;
                 lv_slider_set_value(focused, val, LV_ANIM_ON);
-                // Trigger value changed event
+                // Trigger value changed event for sliders (immediate feedback is OK)
                 lv_obj_send_event(focused, LV_EVENT_VALUE_CHANGED, nullptr);
             }
         }
