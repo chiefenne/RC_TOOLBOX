@@ -309,12 +309,14 @@ void page_settings_create(lv_obj_t* parent) {
 
     sb.end_section();
 
-    // System section
+    // System section - only on ESP32 (causes crash in macOS simulator)
+#ifdef ESP32
     lv_obj_t* sec_system = sb.begin_section(tr(STR_SETTINGS_SYSTEM));
     focus_builder.add(sec_system, FO_SEC_SYSTEM);
     sb.info(tr(STR_SETTINGS_FIRMWARE), APP_VERSION);
     sb.info("LVGL", LVGL_VERSION_STRING);
     sb.end_section();
+#endif
 
     // Add footer buttons to focus order
     focus_builder.add(gui_get_btn_home(), FO_BTN_HOME);

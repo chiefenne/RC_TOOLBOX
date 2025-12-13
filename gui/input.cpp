@@ -395,7 +395,9 @@ lv_obj_t* FocusOrderBuilder::add(lv_obj_t* widget, int order_index) {
             count = order_index + 1;
         }
         // Apply focus style immediately
-        apply_focus_style(widget);
+        if (widget != nullptr) {
+            apply_focus_style(widget);
+        }
     }
     return widget;
 }
@@ -473,8 +475,8 @@ void FocusOrderBuilder::focus_next() {
             if (!in_hidden_section) {
                 // Set focus state directly on the widget
                 lv_obj_add_state(widgets[current_focus], LV_STATE_FOCUSED);
-                // Scroll to make the focused widget visible (recursive for nested containers)
-                lv_obj_scroll_to_view_recursive(widgets[current_focus], LV_ANIM_ON);
+                // Scroll to make the focused widget visible (no animation to avoid potential issues)
+                lv_obj_scroll_to_view_recursive(widgets[current_focus], LV_ANIM_OFF);
                 return;
             }
         }
@@ -515,8 +517,8 @@ void FocusOrderBuilder::focus_prev() {
             if (!in_hidden_section) {
                 // Set focus state directly on the widget
                 lv_obj_add_state(widgets[current_focus], LV_STATE_FOCUSED);
-                // Scroll to make the focused widget visible (recursive for nested containers)
-                lv_obj_scroll_to_view_recursive(widgets[current_focus], LV_ANIM_ON);
+                // Scroll to make the focused widget visible (no animation to avoid potential issues)
+                lv_obj_scroll_to_view_recursive(widgets[current_focus], LV_ANIM_OFF);
                 return;
             }
         }
@@ -534,8 +536,8 @@ void FocusOrderBuilder::focus_index(int idx) {
         current_focus = idx;
         // Set focus state directly on the widget - completely bypass LVGL groups
         lv_obj_add_state(widgets[idx], LV_STATE_FOCUSED);
-        // Scroll to make the focused widget visible (recursive for nested containers)
-        lv_obj_scroll_to_view_recursive(widgets[idx], LV_ANIM_ON);
+        // Scroll to make the focused widget visible (no animation to avoid potential issues)
+        lv_obj_scroll_to_view_recursive(widgets[idx], LV_ANIM_OFF);
     }
 }
 
@@ -552,7 +554,7 @@ void FocusOrderBuilder::apply_focus_style(lv_obj_t* widget) {
     // =============================================================================
     // 0 = Green outline (original - outside widget)
     // 1 = Inverted colors (dark bg + white text) - causes flickering
-    // 2 = Blue border (inside widget, compact)
+    // 2 = Blue outline (compact, no DEFAULT state modification - simulator safe)
     // 3 = Blue left bar accent
     #define FOCUS_STYLE 2
 
@@ -572,19 +574,18 @@ void FocusOrderBuilder::apply_focus_style(lv_obj_t* widget) {
     lv_obj_set_style_outline_width(widget, 0, LV_STATE_FOCUSED);
 
     #elif FOCUS_STYLE == 2
-    // Option 2: Blue border (inside widget - no extra space needed)
-    // Uses border instead of outline - stays within widget bounds
-    // Set transparent border in default state to prevent layout shift
-    lv_obj_set_style_border_width(widget, 3, LV_STATE_DEFAULT);
-    lv_obj_set_style_border_opa(widget, LV_OPA_TRANSP, LV_STATE_DEFAULT);
-    // Focused state: show blue border
-    lv_obj_set_style_border_color(widget, lv_color_hex(0x1C5C8C), LV_STATE_FOCUSED);
-    lv_obj_set_style_border_opa(widget, LV_OPA_COVER, LV_STATE_FOCUSED);
-    // Edit state: show green border (actively editing slider/dropdown)
-    lv_obj_set_style_border_color(widget, lv_color_hex(0x00AA00), LV_STATE_EDITED);
-    lv_obj_set_style_border_opa(widget, LV_OPA_COVER, LV_STATE_EDITED);
-    // Disable outline
-    lv_obj_set_style_outline_width(widget, 0, LV_STATE_FOCUSED);
+    // Option 2: Blue outline (tight around widget)
+    // Uses outline with negative padding to appear inside widget
+    // Does NOT modify LV_STATE_DEFAULT - safe for simulator
+    lv_obj_set_style_outline_color(widget, lv_color_hex(0x1C5C8C), LV_STATE_FOCUSED);
+    lv_obj_set_style_outline_width(widget, 3, LV_STATE_FOCUSED);
+    lv_obj_set_style_outline_pad(widget, -1, LV_STATE_FOCUSED);  // Negative = inside widget
+    lv_obj_set_style_outline_opa(widget, LV_OPA_COVER, LV_STATE_FOCUSED);
+    // Edit state: green outline (actively editing slider/dropdown)
+    lv_obj_set_style_outline_color(widget, lv_color_hex(0x00AA00), LV_STATE_EDITED);
+    lv_obj_set_style_outline_width(widget, 3, LV_STATE_EDITED);
+    lv_obj_set_style_outline_pad(widget, -1, LV_STATE_EDITED);
+    lv_obj_set_style_outline_opa(widget, LV_OPA_COVER, LV_STATE_EDITED);
 
     #elif FOCUS_STYLE == 3
     // Option 3: Blue left bar accent (modern style)
