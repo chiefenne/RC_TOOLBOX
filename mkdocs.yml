@@ -1,0 +1,38 @@
+site_name: RC_TOOLBOX
+site_description: User documentation for RC_TOOLBOX (tools for RC enthusiasts)
+repo_url: https://github.com/chiefenne/RC_TOOLBOX
+repo_name: chiefenne/RC_TOOLBOX
+edit_uri: edit/main/docs/
+
+theme:
+  name: material
+  features:
+    - navigation.sections
+    - navigation.indexes
+    - content.action.edit
+    - search.suggest
+    - search.highlight
+
+nav:
+  - Home: index.md
+  - Getting started:
+      - getting-started.md
+      - hardware.md
+      - firmware.md
+  - Usage:
+      - usage/overview.md
+      - usage/servo-tester.md
+      - usage/angle-meter.md
+      - usage/settings.md
+  - Troubleshooting: troubleshooting.md
+  - Developer notes:
+      - dev/architecture.md
+      - dev/adding-a-screen.md
+
+markdown_extensions:
+  - admonition
+  - toc:
+      permalink: true
+
+plugins:
+  - search
