@@ -7,7 +7,7 @@
 
 # RC TOOLBOX
 
-RC TOOLBOX is a suite of software tools tailored for RC enthusiasts.
+RC TOOLBOX is a suite of tools tailored for RC enthusiasts.
 It is designed to run mainly on ESP32-based boards and provides a versatile platform for RC setup, testing, and measurement tasks.
 
 ## 📘 Documentation
