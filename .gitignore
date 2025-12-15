@@ -7,3 +7,6 @@ lvgl
 
 # WiFi credentials (contains personal SSID/password)
 include/wifi_credentials.h
+
+# MkDocs build output
+site/
