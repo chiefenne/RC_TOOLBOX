@@ -1,0 +1,81 @@
+/* GitHub-like styling for MkDocs Material */
+
+:root {
+  /* Tighter base font size */
+  --md-text-font-size: 14px;
+}
+
+/* Body text */
+.md-typeset {
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* Paragraphs - tighter spacing */
+.md-typeset p {
+  margin-bottom: 0.75em;
+}
+
+/* Headings - more compact margins */
+.md-typeset h1 {
+  font-size: 2em;
+  margin: 0.67em 0 0.5em;
+}
+
+.md-typeset h2 {
+  font-size: 1.5em;
+  margin: 1em 0 0.5em;
+  padding-bottom: 0.3em;
+  border-bottom: 1px solid var(--md-default-fg-color--lightest);
+}
+
+.md-typeset h3 {
+  font-size: 1.25em;
+  margin: 1em 0 0.5em;
+}
+
+.md-typeset h4,
+.md-typeset h5,
+.md-typeset h6 {
+  font-size: 1em;
+  margin: 1em 0 0.5em;
+}
+
+/* Lists - tighter */
+.md-typeset ul,
+.md-typeset ol {
+  margin-bottom: 0.75em;
+}
+
+.md-typeset li {
+  margin-bottom: 0.25em;
+}
+
+/* Tables - compact */
+.md-typeset table:not([class]) {
+  font-size: 13px;
+}
+
+.md-typeset table:not([class]) th,
+.md-typeset table:not([class]) td {
+  padding: 6px 13px;
+}
+
+/* Code blocks */
+.md-typeset pre {
+  margin: 0.75em 0;
+}
+
+.md-typeset code {
+  font-size: 85%;
+}
+
+/* Admonitions - slightly more compact */
+.md-typeset .admonition {
+  margin: 0.75em 0;
+  padding: 0 0.75rem 0.75rem;
+}
+
+.md-typeset .admonition-title {
+  padding: 0.5rem 0.75rem;
+}
