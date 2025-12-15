@@ -109,10 +109,6 @@ void settings_load() {
             g_settings.servo_sweep_step = (uint8_t)value;
         } else if (sscanf(line, " \"servo_sweep_step_increment\" : %d", &value) == 1) {
             g_settings.servo_sweep_step_increment = (uint8_t)value;
-        } else if (sscanf(line, " \"screenshot_enabled\" : %d", &value) == 1) {
-            g_settings.screenshot_enabled = (uint8_t)value;
-        } else if (sscanf(line, " \"screenshot_interval\" : %d", &value) == 1) {
-            g_settings.screenshot_interval = (uint8_t)value;
         }
     }
 
@@ -168,10 +164,7 @@ void settings_save() {
     }
     // Auto sweep settings
     fprintf(f, "    \"servo_sweep_step\": %d,\n", g_settings.servo_sweep_step);
-    fprintf(f, "    \"servo_sweep_step_increment\": %d,\n", g_settings.servo_sweep_step_increment);
-    // Screenshot settings
-    fprintf(f, "    \"screenshot_enabled\": %d,\n", g_settings.screenshot_enabled);
-    fprintf(f, "    \"screenshot_interval\": %d\n", g_settings.screenshot_interval);
+    fprintf(f, "    \"servo_sweep_step_increment\": %d\n", g_settings.servo_sweep_step_increment);
     fprintf(f, "}\n");
 
     fclose(f);

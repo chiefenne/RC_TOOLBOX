@@ -8,7 +8,6 @@
 #include "gui/gui.h"
 #include "gui/input.h"
 #include "servo_driver.h"
-#include "screenshot.h"
 
 // TFT instance (configured via build_flags in platformio.ini)
 TFT_eSPI tft = TFT_eSPI();
@@ -86,9 +85,6 @@ void setup()
     Serial.println("[4] Initializing servo driver...");
     Serial.flush();
     servo_driver_init();
-
-    // Initialize screenshot server (WiFi event handler)
-    screenshot_init();
 
     // NeoPixel ready indicator (solid green)
     pixel.begin();

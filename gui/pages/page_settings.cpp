@@ -11,10 +11,6 @@
 #include <cstdio>
 #include <cstring>
 
-#ifdef ESP32
-#include "screenshot.h"
-#endif
-
 // =============================================================================
 // Focus Order Configuration
 // =============================================================================
@@ -39,12 +35,10 @@ enum FocusOrder {
     FO_SERVO_STEP_6 = 16,
     FO_SERVO_RESET  = 17,
     FO_SEC_SYSTEM   = 18,
-    FO_SCREENSHOT   = 19,
-    FO_SCREENSHOT_INTERVAL = 20,
-    FO_BTN_HOME     = 21,
-    FO_BTN_PREV     = 22,
-    FO_BTN_NEXT     = 23,
-    FO_BTN_SETTINGS = 24,
+    FO_BTN_HOME     = 19,
+    FO_BTN_PREV     = 20,
+    FO_BTN_NEXT     = 21,
+    FO_BTN_SETTINGS = 22,
 };
 
 // Focus group builder for this page
@@ -72,7 +66,6 @@ static const char* SERVO_PROTOCOL_OPTIONS =
 // Helper to build translated dropdown options at runtime
 static char bg_color_options[128];
 static char freq_options[64];
-static char refresh_interval_options[128];
 
 static void build_translated_options() {
     // Background colors
@@ -83,11 +76,6 @@ static void build_translated_options() {
     // Frequency options
     snprintf(freq_options, sizeof(freq_options), "%s\n%s",
         tr(STR_FREQ_50HZ), tr(STR_FREQ_333HZ));
-
-    // Screenshot refresh interval options
-    snprintf(refresh_interval_options, sizeof(refresh_interval_options), "%s\n%s\n%s\n%s\n%s",
-        tr(STR_REFRESH_5S), tr(STR_REFRESH_10S), tr(STR_REFRESH_15S),
-        tr(STR_REFRESH_20S), tr(STR_REFRESH_30S));
 }
 
 // UI elements we need to update when protocol changes
@@ -238,77 +226,6 @@ static void on_servo_reset(lv_event_t* e) {
     }
 }
 
-#ifdef ESP32
-// Screenshot URL label (shows IP when enabled)
-static lv_obj_t* lbl_screenshot_url = nullptr;
-static lv_obj_t* btn_screenshot = nullptr;
-static lv_obj_t* dd_refresh_interval = nullptr;
-
-// Update screenshot button text and color based on state
-static void update_screenshot_button() {
-    if (!btn_screenshot) return;
-
-    // Update button text
-    lv_obj_t* label = lv_obj_get_child(btn_screenshot, 0);
-    if (label) {
-        lv_label_set_text(label, g_settings.screenshot_enabled ?
-            tr(STR_SCREENSHOT_ENABLED) : tr(STR_SCREENSHOT_DISABLED));
-    }
-
-    // Update button color: green when enabled, gray when disabled
-    // Also set pressed state to a darker shade of the same color
-    if (g_settings.screenshot_enabled) {
-        lv_obj_set_style_bg_color(btn_screenshot, PageColors::BTN_ACTIVE, LV_STATE_DEFAULT);
-        lv_obj_set_style_bg_color(btn_screenshot, lv_color_hex(0x2E7D32), LV_STATE_PRESSED);  // Darker green
-    } else {
-        lv_obj_set_style_bg_color(btn_screenshot, PageColors::BTN_INACTIVE, LV_STATE_DEFAULT);
-        lv_obj_set_style_bg_color(btn_screenshot, lv_color_hex(0x9E9E9E), LV_STATE_PRESSED);  // Darker gray
-    }
-}
-
-static void on_screenshot_toggle(lv_event_t* e) {
-    (void)e;
-
-    if (g_settings.screenshot_enabled) {
-        // Currently enabled -> disable
-        screenshot_stop();
-        g_settings.screenshot_enabled = 0;
-        if (lbl_screenshot_url) {
-            lv_label_set_text(lbl_screenshot_url, "");
-        }
-        update_screenshot_button();
-    } else {
-        // Currently disabled -> try to enable
-        // Show "Connecting..." feedback immediately
-        if (lbl_screenshot_url) {
-            lv_label_set_text(lbl_screenshot_url, "Connecting...");
-            lv_refr_now(NULL);  // Force screen refresh so user sees the message
-        }
-
-        if (screenshot_start()) {
-            g_settings.screenshot_enabled = 1;
-            // Update URL label with IP address
-            if (lbl_screenshot_url) {
-                char url[48];
-                snprintf(url, sizeof(url), "http://%s/", screenshot_get_ip());
-                lv_label_set_text(lbl_screenshot_url, url);
-            }
-        } else {
-            // Failed to start
-            if (lbl_screenshot_url) {
-                lv_label_set_text(lbl_screenshot_url, "WiFi failed");
-            }
-        }
-        update_screenshot_button();
-    }
-}
-
-static void on_refresh_interval_change(lv_event_t* e) {
-    lv_obj_t* dd = lv_event_get_target_obj(e);
-    g_settings.screenshot_interval = (uint8_t)lv_dropdown_get_selected(dd);
-}
-#endif
-
 void page_settings_create(lv_obj_t* parent) {
     // Initialize focus builder
     focus_builder.init();
@@ -393,48 +310,12 @@ void page_settings_create(lv_obj_t* parent) {
 
     sb.end_section();
 
-    // System section - DISABLED (screenshot feature needs more work)
-    // TODO: Re-enable when screenshot memory issues are resolved
-#if 0  // Disabled for now
+    // System section - shows firmware and LVGL version
     lv_obj_t* sec_system = sb.begin_section(tr(STR_SETTINGS_SYSTEM));
     focus_builder.add(sec_system, FO_SEC_SYSTEM);
-
-    // Screenshot toggle button with label on left
-    btn_screenshot = sb.toggle_button(tr(STR_SETTINGS_SCREENSHOT),
-                                       tr(STR_SCREENSHOT_DISABLED), on_screenshot_toggle);
-    focus_builder.add(btn_screenshot, FO_SCREENSHOT);
-    // Set initial button state
-    update_screenshot_button();
-
-    // URL display (below button) - shows IP when enabled or status message
-    lbl_screenshot_url = lv_label_create(sb.get_section_container());
-    lv_obj_set_width(lbl_screenshot_url, LV_PCT(100));
-    lv_obj_set_style_text_align(lbl_screenshot_url, LV_TEXT_ALIGN_CENTER, 0);
-    lv_obj_set_style_text_color(lbl_screenshot_url, lv_color_hex(0x0066CC), 0);
-    lv_obj_set_style_pad_top(lbl_screenshot_url, 0, 0);
-    lv_obj_set_style_pad_bottom(lbl_screenshot_url, 0, 0);
-    lv_obj_set_style_margin_top(lbl_screenshot_url, -8, 0);  // Pull closer to button
-    if (g_settings.screenshot_enabled && screenshot_is_running()) {
-        char url[48];
-        snprintf(url, sizeof(url), "http://%s/", screenshot_get_ip());
-        lv_label_set_text(lbl_screenshot_url, url);
-    } else {
-        lv_label_set_text(lbl_screenshot_url, "");
-    }
-
-    // Refresh interval dropdown - sub-setting of Screenshot, indented more
-    dd_refresh_interval = sb.dropdown(tr(STR_SETTINGS_REFRESH), refresh_interval_options,
-                                      g_settings.screenshot_interval, on_refresh_interval_change);
-    // Indent the row to show it's a sub-setting of Screenshot
-    lv_obj_t* refresh_row = lv_obj_get_parent(dd_refresh_interval);
-    lv_obj_set_style_pad_left(refresh_row, 50, 0);  // Extra indent (default is 20)
-    lv_obj_set_style_margin_top(refresh_row, -4, 0);  // Pull closer to Screenshot
-    focus_builder.add(dd_refresh_interval, FO_SCREENSHOT_INTERVAL);
-
     sb.info(tr(STR_SETTINGS_FIRMWARE), APP_VERSION);
     sb.info("LVGL", LVGL_VERSION_STRING);
     sb.end_section();
-#endif
 
     // Add footer buttons to focus order
     focus_builder.add(gui_get_btn_home(), FO_BTN_HOME);
@@ -465,10 +346,4 @@ void page_settings_destroy() {
         lbl_servo_step[i] = nullptr;
         sl_servo_step[i] = nullptr;
     }
-
-#ifdef ESP32
-    lbl_screenshot_url = nullptr;
-    btn_screenshot = nullptr;
-    dd_refresh_interval = nullptr;
-#endif
 }

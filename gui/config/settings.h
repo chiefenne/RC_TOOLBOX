@@ -53,10 +53,6 @@ struct Settings {
     // Auto sweep settings
     uint8_t servo_sweep_step = DEFAULT_SWEEP_STEP;            // Current sweep step (µs per tick)
     uint8_t servo_sweep_step_increment = DEFAULT_SWEEP_STEP_INCREMENT;  // Encoder increment
-
-    // Screenshot server (ESP32 only)
-    uint8_t screenshot_enabled = 0;   // 0 = disabled, 1 = enabled
-    uint8_t screenshot_interval = 2;  // Index: 0=5s, 1=10s, 2=15s, 3=20s, 4=30s (default 15s)
 };
 
 // Reset all servo PWM steps to default
