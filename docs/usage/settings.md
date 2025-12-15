@@ -2,8 +2,6 @@
 
 The Settings page lets you configure language, display appearance, servo parameters, and view system information. All changes are saved automatically when you leave the page.
 
-![Settings Page](../assets/images/page_settings.png)
-
 ---
 
 ## Language
