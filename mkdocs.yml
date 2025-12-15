@@ -13,26 +13,33 @@ theme:
     - search.suggest
     - search.highlight
 
+watch:
+  - docs
+  - mkdocs.yml
+
 nav:
-  - Home: index.md
+  - Home:
+      - index.md
   - Getting started:
-      - getting-started.md
-      - hardware.md
-      - firmware.md
+      - Quick Start: getting-started.md
+      - Hardware Setup: hardware.md
+      - Firmware & Flashing: firmware.md
   - Usage:
-      - usage/overview.md
-      - usage/servo-tester.md
-      - usage/angle-meter.md
-      - usage/settings.md
-  - Troubleshooting: troubleshooting.md
+      - Overview: usage/overview.md
+      - Servo Tester: usage/servo-tester.md
+      - Angle Meter: usage/angle-meter.md
+      - Settings: usage/settings.md
+  - Troubleshooting:
+      - troubleshooting.md
   - Developer notes:
-      - dev/architecture.md
-      - dev/adding-a-screen.md
+      - Architecture: dev/architecture.md
+      - Adding a screen: dev/adding-a-screen.md
 
 markdown_extensions:
   - admonition
   - toc:
       permalink: true
+      toc_depth: 3
 
 plugins:
   - search
