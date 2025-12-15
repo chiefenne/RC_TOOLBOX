@@ -7,8 +7,8 @@ edit_uri: edit/main/docs/
 theme:
   name: material
   features:
-    - navigation.sections
     - navigation.indexes
+    - toc.integrate
     - content.action.edit
     - search.suggest
     - search.highlight
