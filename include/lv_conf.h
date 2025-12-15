@@ -62,6 +62,9 @@
 #define LV_USE_LOG 1
 #define LV_LOG_LEVEL LV_LOG_LEVEL_WARN
 
+/* Enable snapshot API for screenshots */
+#define LV_USE_SNAPSHOT 1
+
 /* Enable animations */
 #define LV_USE_ANIMATION 1
 

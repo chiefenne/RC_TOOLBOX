@@ -8,6 +8,7 @@
 #include "gui/gui.h"
 #include "gui/input.h"
 #include "servo_driver.h"
+#include "screenshot.h"
 
 // TFT instance (configured via build_flags in platformio.ini)
 TFT_eSPI tft = TFT_eSPI();
@@ -43,6 +44,8 @@ void setup()
 
     // Touch calibration - run touch-calibration environment to get these values
     // Then update with your specific calibration data:
+    // GEORG'S VALUES:
+    // uint16_t calData[5] = {403, 3387, 375, 3250, 7};
     uint16_t calData[5] = {300, 3600, 300, 3600, 1};  // Default - calibrate for your display!
     tft.setTouch(calData);
 
@@ -83,6 +86,9 @@ void setup()
     Serial.println("[4] Initializing servo driver...");
     Serial.flush();
     servo_driver_init();
+
+    // Initialize screenshot server (WiFi event handler)
+    screenshot_init();
 
     // NeoPixel ready indicator (solid green)
     pixel.begin();

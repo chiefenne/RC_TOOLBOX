@@ -15,6 +15,12 @@
 // Default PWM step size (µs per tick)
 #define DEFAULT_PWM_STEP 10
 
+// Default auto sweep step size (µs per tick)
+#define DEFAULT_SWEEP_STEP 10
+
+// Default sweep step increment (change per encoder detent)
+#define DEFAULT_SWEEP_STEP_INCREMENT 5
+
 // Servo protocol presets
 enum ServoProtocol {
     SERVO_STANDARD = 0,   // 1000-1500-2000 @ 50Hz
@@ -40,9 +46,17 @@ struct Settings {
     uint16_t servo_pwm_max    = 2000;
     uint16_t servo_frequency  = 50;   // Hz
 
-    // Per-servo PWM step size (µs per tick in auto-sweep)
+    // Per-servo PWM step size (µs per tick in manual mode)
     uint8_t servo_pwm_step[NUM_SERVOS] = {DEFAULT_PWM_STEP, DEFAULT_PWM_STEP, DEFAULT_PWM_STEP,
                                           DEFAULT_PWM_STEP, DEFAULT_PWM_STEP, DEFAULT_PWM_STEP};
+
+    // Auto sweep settings
+    uint8_t servo_sweep_step = DEFAULT_SWEEP_STEP;            // Current sweep step (µs per tick)
+    uint8_t servo_sweep_step_increment = DEFAULT_SWEEP_STEP_INCREMENT;  // Encoder increment
+
+    // Screenshot server (ESP32 only)
+    uint8_t screenshot_enabled = 0;   // 0 = disabled, 1 = enabled
+    uint8_t screenshot_interval = 2;  // Index: 0=5s, 1=10s, 2=15s, 3=20s, 4=30s (default 15s)
 };
 
 // Reset all servo PWM steps to default

@@ -321,10 +321,10 @@ static void on_timer(lv_timer_t* t) {
     if (!S.running || !S.auto_mode) return;
 
     // Apply sweep delta to each selected servo individually
-    // Each servo has its own direction and step size
+    // All servos use the same sweep step (adjustable via encoder)
+    int step = g_settings.servo_sweep_step;
     for (int i = 0; i < NUM_SERVOS; i++) {
         if (S.is_servo_selected(i)) {
-            int step = S.get_pwm_step(i);
             S.pwm[i] += S.direction[i] * step;
 
             // Check bounds and reverse direction for THIS servo
@@ -387,8 +387,20 @@ static bool on_double_click() {
     return false;
 }
 
-// Encoder rotation callback: in manual mode, directly adjust PWM with acceleration
+// Encoder rotation callback: adjust sweep speed in auto mode, PWM in manual mode
 static bool on_encoder_rotation(int delta) {
+    // In auto mode RUNNING: encoder adjusts sweep step size
+    if (S.auto_mode && S.running) {
+        int increment = g_settings.servo_sweep_step_increment;
+        int new_step = g_settings.servo_sweep_step + (delta * increment);
+        // Clamp to valid range (1-100)
+        if (new_step < 1) new_step = 1;
+        if (new_step > 100) new_step = 100;
+        g_settings.servo_sweep_step = (uint8_t)new_step;
+        // Note: settings_save() is called when STOP is pressed, not on every tick
+        return true;  // We handled the rotation
+    }
+
     // In manual mode, encoder rotation adjusts all selected servos by relative delta
     if (!S.auto_mode && !S.running) {
         // Get rotation speed for acceleration
@@ -431,8 +443,13 @@ static void on_manual(lv_event_t*) {
 
 static void on_start_stop(lv_event_t*) {
     if (!S.auto_mode) return;
+    bool was_running = S.running;
     S.running = !S.running;
     if (S.timer) S.running ? lv_timer_resume(S.timer) : lv_timer_pause(S.timer);
+    // Persist sweep step when stopping (may have been adjusted via encoder)
+    if (was_running && !S.running) {
+        settings_save();
+    }
     S.update_ui();
 }
 

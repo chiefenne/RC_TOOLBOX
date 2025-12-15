@@ -301,6 +301,29 @@ lv_obj_t* SettingsBuilder::button(const char* label, lv_event_cb_t on_click, voi
     return btn;
 }
 
+lv_obj_t* SettingsBuilder::toggle_button(const char* label, const char* btn_text,
+                                          lv_event_cb_t on_click, void* user_data) {
+    lv_obj_t* row = make_row(label);
+
+    // Create button on the right side
+    lv_obj_t* btn = lv_button_create(row);
+    lv_obj_set_size(btn, LV_SIZE_CONTENT, 26);
+    lv_obj_set_style_pad_hor(btn, 12, 0);
+    lv_obj_set_style_bg_color(btn, lv_color_hex(GUI_COLOR_GRAYS[6]), LV_STATE_DEFAULT);  // Gray default
+    lv_obj_set_style_bg_color(btn, lv_color_hex(GUI_COLOR_GRAYS[4]), LV_STATE_PRESSED);
+
+    lv_obj_t* lbl = lv_label_create(btn);
+    lv_label_set_text(lbl, btn_text);
+    lv_obj_set_style_text_font(lbl, FONT_DEFAULT, 0);
+    lv_obj_center(lbl);
+
+    if (on_click) {
+        lv_obj_add_event_cb(btn, on_click, LV_EVENT_CLICKED, user_data);
+    }
+
+    return btn;
+}
+
 void SettingsBuilder::info(const char* label, const char* value) {
     lv_obj_t* row = make_row(label);
 

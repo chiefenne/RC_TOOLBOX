@@ -51,6 +51,13 @@ public:
     // Centered button (for reset/action buttons)
     lv_obj_t* button(const char* label, lv_event_cb_t on_click, void* user_data = nullptr);
 
+    // Toggle button with label on left (returns the button for color/text updates)
+    lv_obj_t* toggle_button(const char* label, const char* btn_text,
+                            lv_event_cb_t on_click, void* user_data = nullptr);
+
     // Read-only info label
     void info(const char* label, const char* value);
+
+    // Get current section container (for adding custom widgets)
+    lv_obj_t* get_section_container() { return section_cont_ ? section_cont_ : cont_; }
 };

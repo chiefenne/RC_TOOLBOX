@@ -81,5 +81,16 @@ static const char* strings_cs[STR_COUNT] = {
 
     // Frequency options
     "50 Hz",
-    "333 Hz"
+    "333 Hz",
+
+    // Screenshot server
+    "Screenshot",
+    "Deaktivováno",
+    "Aktivováno",
+    "Obnovení",
+    "5 sek",
+    "10 sek",
+    "15 sek",
+    "20 sek",
+    "30 sek"
 };
