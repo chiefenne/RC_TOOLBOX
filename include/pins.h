@@ -62,10 +62,15 @@ constexpr int PIN_ENC_SW  = 37;  // Encoder push button (active LOW)
 // I2C Bus (for future I2C expander, sensors, etc.)
 // =============================================================================
 constexpr int PIN_I2C_SDA = 47;
-constexpr int PIN_I2C_SCL = 48;  // Note: Shared with NeoPixel on DevKitC-1!
-// Alternative I2C pins if NeoPixel conflicts:
-// constexpr int PIN_I2C_SDA = 35;
-// constexpr int PIN_I2C_SCL = 36;
+constexpr int PIN_I2C_SCL = 39;  // Keep NeoPixel on GPIO48
+
+// =============================================================================
+// NFC (PN532) - HW-147C breakout (SPI)
+// =============================================================================
+// Uses shared SPI bus: GPIO11/12/13 (MOSI/SCLK/MISO)
+constexpr int PIN_PN532_SS  = 42; // Chip select (SS)
+constexpr int PIN_PN532_IRQ = 41; // Data ready interrupt (optional)
+constexpr int PIN_PN532_RST = 40; // Reset (recommended)
 
 // =============================================================================
 // GPIO Summary
@@ -90,10 +95,14 @@ constexpr int PIN_I2C_SCL = 48;  // Note: Shared with NeoPixel on DevKitC-1!
 //  35       - Encoder CLK (A)
 //  36       - Encoder DT (B)
 //  37       - Encoder SW (button)
+//  40       - PN532_RST
+//  41       - PN532_IRQ
+//  42       - PN532_SS
 //  47       - I2C SDA (future)
-//  48       - NeoPixel / I2C SCL (conflict, choose one)
+//  39       - I2C SCL (future)
+//  48       - NeoPixel
 //
 // Available GPIOs:
 //   1, 2, 3 - ADC inputs (battery voltage)
-//  38, 39, 40, 41, 42 - General purpose
+//  38       - General purpose
 //  45, 46  - Available (strapping pins, use with care)

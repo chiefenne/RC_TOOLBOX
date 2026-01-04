@@ -8,6 +8,7 @@
 #include "gui/gui.h"
 #include "gui/input.h"
 #include "servo_driver.h"
+#include "nfc_pn532.h"
 
 // TFT instance (configured via build_flags in platformio.ini)
 TFT_eSPI tft = TFT_eSPI();
@@ -86,6 +87,9 @@ void setup()
     Serial.flush();
     servo_driver_init();
 
+    // Initialize NFC (PN532)
+    nfc_pn532_init();
+
     // NeoPixel ready indicator (solid green)
     pixel.begin();
     pixel.setBrightness(30);
@@ -101,6 +105,7 @@ void loop()
     lv_tick_inc(5);
     lv_timer_handler();
     input_poll();  // Poll encoder hardware
+    nfc_pn532_poll();
     delay(5);
 }
 
