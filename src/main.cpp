@@ -7,6 +7,7 @@
 #include <Adafruit_NeoPixel.h>
 #include "gui/gui.h"
 #include "gui/input.h"
+#include "gui/serial_log.h"
 #include "servo_driver.h"
 #include "nfc_pn532.h"
 
@@ -31,13 +32,15 @@ void my_touch_read(lv_indev_t *drv, lv_indev_data_t *data);
 void setup()
 {
     Serial.begin(115200);
-    delay(500);  // Give serial time to connect
-    Serial.println("\n=== RC TOOLBOX BOOT ===");
+    while (!Serial && millis() < 2000) { }  // Wait up to 2s for serial
+    Serial.println("\n\n*** BOOT ***");
     Serial.flush();
 
+    delay(100);
+    log_println("=== RC TOOLBOX BOOT ===");
+
     // Initialize TFT
-    Serial.println("[1] Starting TFT...");
-    Serial.flush();
+    log_println("[1] Starting TFT...");
     tft.init();
     tft.setRotation(1);  // Landscape mode
     tft.fillScreen(TFT_BLACK);
@@ -49,12 +52,10 @@ void setup()
     uint16_t calData[5] = {300, 3600, 300, 3600, 1};  // Default - calibrate for your display!
     tft.setTouch(calData);
 
-    Serial.println("[1] TFT complete");
-    Serial.flush();
+    log_println("[1] TFT complete");
 
     // Initialize LVGL
-    Serial.println("[2] Starting LVGL...");
-    Serial.flush();
+    log_println("[2] Starting LVGL...");
     lv_init();
 
     // Create display (LVGL 9.x API)
@@ -74,17 +75,14 @@ void setup()
     // Initialize encoder input device (EC11 rotary encoder)
     input_init();
 
-    Serial.println("[2] LVGL complete");
-    Serial.flush();
+    log_println("[2] LVGL complete");
 
     // Initialize GUI (shared code with simulator)
-    Serial.println("[3] Starting GUI...");
-    Serial.flush();
+    log_println("[3] Starting GUI...");
     gui_init();
 
     // Initialize servo PWM driver
-    Serial.println("[4] Initializing servo driver...");
-    Serial.flush();
+    log_println("[4] Initializing servo driver...");
     servo_driver_init();
 
     // Initialize NFC (PN532)
@@ -96,8 +94,7 @@ void setup()
     pixel.setPixelColor(0, pixel.Color(0, 255, 0));  // Green
     pixel.show();
 
-    Serial.println("[4] Servo driver complete - RC TOOLBOX ready!");
-    Serial.flush();
+    log_println("[4] Servo driver complete - RC TOOLBOX ready!");
 }
 
 void loop()

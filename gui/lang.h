@@ -34,6 +34,7 @@ enum StringId {
     STR_PAGE_ANGLE,
     STR_PAGE_SETTINGS,
     STR_PAGE_ABOUT,
+    STR_PAGE_SERIAL,
 
     // Home buttons
     STR_BTN_SERVO,

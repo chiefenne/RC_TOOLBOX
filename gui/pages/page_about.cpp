@@ -91,7 +91,7 @@ void page_about_create(lv_obj_t* parent) {
     // LVGL version (in flex column, smaller, at bottom)
     lv_obj_t* club_label = lv_label_create(parent);
     char club_text[48];
-    snprintf(club_text, sizeof(club_text), "MHB Electronics %s 2025", SYM_COPYWRIGHT);
+    snprintf(club_text, sizeof(club_text), "MHB Electronics %s 2026", SYM_COPYWRIGHT);
     lv_label_set_text(club_label, club_text);
     lv_obj_set_style_text_font(club_label, &arial_12, 0);
     lv_obj_set_style_text_color(club_label, lv_color_hex(GUI_COLOR_GRAYS[0]), 0);

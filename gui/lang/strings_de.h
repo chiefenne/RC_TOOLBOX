@@ -22,6 +22,7 @@ static const char* strings_de[STR_COUNT] = {
     "EDW Messung",
     "Einstellungen",
     "Über",
+    "Serieller Monitor",
 
     // Home buttons
     "Servo Tester",

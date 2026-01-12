@@ -10,17 +10,17 @@
 // =============================================================================
 // Define focus order here - change these numbers to reorder navigation
 // Layout (2 columns x 3 rows), then footer buttons:
-//   [0: Servo]     [1: Lipo]
-//   [2: CG Scale]  [3: Deflection]
-//   [4: Angle]     [5: Serial]
+//   [0: About]     [1: Reserved]
+//   [2: Reserved]  [3: Reserved]
+//   [4: Reserved]  [5: Reserved]
 //   Footer: [6: Home] [7: Prev] [8: Next] [9: Settings]
 enum FocusOrder {
-    FO_SERVO      = 0,
-    FO_LIPO       = 1,
-    FO_CG_SCALE   = 2,
-    FO_DEFLECTION = 3,
-    FO_ANGLE      = 4,
-    FO_SERIAL     = 5,
+    FO_ABOUT      = 0,
+    FO_RESERVED_1 = 1,
+    FO_RESERVED_2 = 2,
+    FO_RESERVED_3 = 3,
+    FO_RESERVED_4 = 4,
+    FO_RESERVED_5 = 5,
     FO_BTN_HOME   = 6,
     FO_BTN_PREV   = 7,
     FO_BTN_NEXT   = 8,
@@ -33,12 +33,7 @@ static FocusOrderBuilder focus_builder;
 // =============================================================================
 // Callbacks
 // =============================================================================
-static void btn_servo_cb(lv_event_t* e) { LV_UNUSED(e); gui_set_page(PAGE_SERVO); }
-static void btn_lipo_cb(lv_event_t* e) { LV_UNUSED(e); gui_set_page(PAGE_LIPO); }
-static void btn_cg_scale_cb(lv_event_t* e) { LV_UNUSED(e); gui_set_page(PAGE_CG_SCALE); }
-static void btn_deflection_cb(lv_event_t* e) { LV_UNUSED(e); gui_set_page(PAGE_DEFLECTION); }
-static void btn_incidence_cb(lv_event_t* e) { LV_UNUSED(e); gui_set_page(PAGE_ANGLE); }
-static void btn_serial_cb(lv_event_t* e) { LV_UNUSED(e); gui_set_page(PAGE_SERIAL); }
+static void btn_about_cb(lv_event_t* e) { LV_UNUSED(e); gui_set_page(PAGE_ABOUT); }
 
 // =============================================================================
 // Button Factory
@@ -67,12 +62,12 @@ static lv_obj_t* create_nav_button(lv_obj_t* parent, const char* text, lv_event_
 // =============================================================================
 // Page Create/Destroy
 // =============================================================================
-void page_home_create(lv_obj_t* parent) {
+void page_home2_create(lv_obj_t* parent) {
     // Initialize focus builder
     focus_builder.init();
 
     // Record this page in navigation history
-    input_push_page(PAGE_HOME);
+    input_push_page(PAGE_HOME_2);
 
     // Layout: 2 columns x 3 rows
     lv_obj_set_flex_flow(parent, LV_FLEX_FLOW_ROW_WRAP);
@@ -82,23 +77,23 @@ void page_home_create(lv_obj_t* parent) {
 
     // Create buttons - visual order (left to right, top to bottom)
     // The focus_order parameter controls encoder navigation order
-    create_nav_button(parent, tr(STR_BTN_SERVO), btn_servo_cb, FO_SERVO);
-    create_nav_button(parent, tr(STR_BTN_LIPO), btn_lipo_cb, FO_LIPO);
-    create_nav_button(parent, tr(STR_BTN_CG_SCALE), btn_cg_scale_cb, FO_CG_SCALE);
-    create_nav_button(parent, tr(STR_BTN_DEFLECTION), btn_deflection_cb, FO_DEFLECTION);
-    create_nav_button(parent, tr(STR_BTN_ANGLE), btn_incidence_cb, FO_ANGLE);
-    create_nav_button(parent, "Serial\nMonitor", btn_serial_cb, FO_SERIAL);
+    create_nav_button(parent, tr(STR_BTN_ABOUT), btn_about_cb, FO_ABOUT);
+
+    // Space for future buttons:
+    // create_nav_button(parent, "WiFi\nConfig", btn_wifi_cb, FO_RESERVED_1);
+    // create_nav_button(parent, "Calibrate", btn_calibrate_cb, FO_RESERVED_2);
+    // create_nav_button(parent, "SD Card", btn_sdcard_cb, FO_RESERVED_3);
+    // create_nav_button(parent, "Updates", btn_update_cb, FO_RESERVED_4);
+    // create_nav_button(parent, "Backup", btn_backup_cb, FO_RESERVED_5);
 
     // Add footer buttons to focus order
     focus_builder.add(gui_get_btn_home(), FO_BTN_HOME);
     focus_builder.add(gui_get_btn_prev(), FO_BTN_PREV);
     focus_builder.add(gui_get_btn_next(), FO_BTN_NEXT);
     focus_builder.add(gui_get_btn_settings(), FO_BTN_SETTINGS);
-
-    // Finalize: add widgets to group in specified order
     focus_builder.finalize();
 }
 
-void page_home_destroy() {
-    focus_builder.destroy();
+void page_home2_destroy() {
+    // Nothing to clean up
 }

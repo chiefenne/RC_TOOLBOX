@@ -65,12 +65,11 @@ constexpr int PIN_I2C_SDA = 47;
 constexpr int PIN_I2C_SCL = 39;  // Keep NeoPixel on GPIO48
 
 // =============================================================================
-// NFC (PN532) - HW-147C breakout (SPI)
+// NFC (PN532) - HW-147C breakout (I2C mode, DIP: 1/0)
 // =============================================================================
-// Uses shared SPI bus: GPIO11/12/13 (MOSI/SCLK/MISO)
-constexpr int PIN_PN532_SS  = 42; // Chip select (SS)
-constexpr int PIN_PN532_IRQ = 41; // Data ready interrupt (optional)
-constexpr int PIN_PN532_RST = 40; // Reset (recommended)
+// Uses I2C bus: GPIO47 (SDA), GPIO39 (SCL)
+constexpr int PIN_PN532_IRQ = 41; // Data ready interrupt
+constexpr int PIN_PN532_RST = 40; // Hardware reset
 
 // =============================================================================
 // GPIO Summary
@@ -97,12 +96,12 @@ constexpr int PIN_PN532_RST = 40; // Reset (recommended)
 //  37       - Encoder SW (button)
 //  40       - PN532_RST
 //  41       - PN532_IRQ
-//  42       - PN532_SS
-//  47       - I2C SDA (future)
-//  39       - I2C SCL (future)
+//  47       - I2C SDA (PN532)
+//  39       - I2C SCL (PN532)
 //  48       - NeoPixel
 //
 // Available GPIOs:
 //   1, 2, 3 - ADC inputs (battery voltage)
 //  38       - General purpose
+//  42       - General purpose
 //  45, 46  - Available (strapping pins, use with care)

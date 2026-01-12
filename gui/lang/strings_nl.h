@@ -21,8 +21,7 @@ static const char* strings_nl[STR_COUNT] = {
     "Klepuitslag",
     "Invalshoek",
     "Instellingen",
-    "Over",
-
+    "Over",    "Seriële Monitor",
     // Home buttons
     "Servo Tester",
     "Lipo Checker",

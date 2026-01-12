@@ -21,8 +21,7 @@ static const char* strings_cs[STR_COUNT] = {
     "Výchylka",
     "Úhel Náběhu",
     "Nastavení",
-    "O aplikaci",
-
+    "O aplikaci",    "Sériový Monitor",
     // Home buttons
     "Tester Serv",
     "Kontrola Lipo",

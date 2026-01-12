@@ -9,6 +9,7 @@
 #include "style_utils.h"
 #include "gui/pages/page_splash.h"
 #include "gui/pages/page_home.h"
+#include "gui/pages/page_home2.h"
 #include "gui/pages/page_servo.h"
 #include "gui/pages/page_lipo.h"
 #include "gui/pages/page_cg_scale.h"
@@ -16,6 +17,7 @@
 #include "gui/pages/page_angle.h"
 #include "gui/pages/page_settings.h"
 #include "gui/pages/page_about.h"
+#include "gui/pages/page_serial.h"
 
 // ============================================================================
 // Page Registry - Uniform lifecycle for all pages
@@ -29,6 +31,8 @@ struct PageEntry {
     bool         (*is_busy)();                  // Optional: block navigation if true
     void         (*stop)();                     // Optional: graceful stop before destroy
     const char*  (*subtitle)();                 // Optional: header subtitle (e.g., protocol)
+    void         (*on_prev)();                  // Optional: custom prev button behavior
+    void         (*on_next)();                  // Optional: custom next button behavior
 };
 
 // Get servo protocol name for header display
@@ -42,24 +46,51 @@ static const char* get_servo_protocol_name() {
     return "";
 }
 
+// Home page navigation - only cycle between home pages
+static void home_page_prev() {
+    GuiPage current = gui_get_current_page();
+    if (current == PAGE_HOME) {
+        gui_set_page(PAGE_HOME_2);
+    } else if (current == PAGE_HOME_2) {
+        gui_set_page(PAGE_HOME);
+    }
+}
+
+static void home_page_next() {
+    GuiPage current = gui_get_current_page();
+    if (current == PAGE_HOME) {
+        gui_set_page(PAGE_HOME_2);
+    } else if (current == PAGE_HOME_2) {
+        gui_set_page(PAGE_HOME);
+    }
+}
+
+// Forward declarations for home page navigation
+static void home_page_prev();
+static void home_page_next();
+
 // Page registry - must match GuiPage enum order
 static const PageEntry PAGE_REGISTRY[PAGE_COUNT] = {
-    // PAGE_HOME
-    { STR_PAGE_HOME,       page_home_create,       page_home_destroy,       nullptr,                 nullptr,           nullptr },
-    // PAGE_SERVO
-    { STR_PAGE_SERVO,      page_servo_create,      page_servo_destroy,      page_servo_is_running,   page_servo_stop,   get_servo_protocol_name },
-    // PAGE_LIPO
-    { STR_PAGE_LIPO,       page_lipo_create,       page_lipo_destroy,       nullptr,                 nullptr,           nullptr },
-    // PAGE_CG_SCALE
-    { STR_PAGE_CG_SCALE,   page_cg_scale_create,   page_cg_scale_destroy,   nullptr,                 nullptr,           nullptr },
-    // PAGE_DEFLECTION
-    { STR_PAGE_DEFLECTION, page_deflection_create, page_deflection_destroy, nullptr,                 nullptr,           nullptr },
-    // PAGE_ANGLE
-    { STR_PAGE_ANGLE,      page_angle_create,      page_angle_destroy,      nullptr,                 nullptr,           nullptr },
-    // PAGE_SETTINGS
-    { STR_PAGE_SETTINGS,   page_settings_create,   page_settings_destroy,   nullptr,                nullptr,           nullptr },
-    // PAGE_ABOUT
-    { STR_PAGE_ABOUT,      page_about_create,      page_about_destroy,      nullptr,                 nullptr,           nullptr },
+    // PAGE_HOME - navigate between home pages
+    { STR_PAGE_HOME,       page_home_create,       page_home_destroy,       nullptr,                 nullptr,           nullptr,                    home_page_prev,  home_page_next },
+    // PAGE_HOME_2 - navigate between home pages
+    { STR_PAGE_HOME,       page_home2_create,      page_home2_destroy,      nullptr,                 nullptr,           nullptr,                    home_page_prev,  home_page_next },
+    // PAGE_SERVO - no prev/next navigation
+    { STR_PAGE_SERVO,      page_servo_create,      page_servo_destroy,      page_servo_is_running,   page_servo_stop,   get_servo_protocol_name,    nullptr,         nullptr },
+    // PAGE_LIPO - no prev/next navigation
+    { STR_PAGE_LIPO,       page_lipo_create,       page_lipo_destroy,       nullptr,                 nullptr,           nullptr,                    nullptr,         nullptr },
+    // PAGE_CG_SCALE - no prev/next navigation
+    { STR_PAGE_CG_SCALE,   page_cg_scale_create,   page_cg_scale_destroy,   nullptr,                 nullptr,           nullptr,                    nullptr,         nullptr },
+    // PAGE_DEFLECTION - no prev/next navigation
+    { STR_PAGE_DEFLECTION, page_deflection_create, page_deflection_destroy, nullptr,                 nullptr,           nullptr,                    nullptr,         nullptr },
+    // PAGE_ANGLE - no prev/next navigation
+    { STR_PAGE_ANGLE,      page_angle_create,      page_angle_destroy,      nullptr,                 nullptr,           nullptr,                    nullptr,         nullptr },
+    // PAGE_SETTINGS - no prev/next navigation
+    { STR_PAGE_SETTINGS,   page_settings_create,   page_settings_destroy,   nullptr,                nullptr,           nullptr,                    nullptr,         nullptr },
+    // PAGE_ABOUT - no prev/next navigation
+    { STR_PAGE_ABOUT,      page_about_create,      page_about_destroy,      nullptr,                 nullptr,           nullptr,                    nullptr,         nullptr },
+    // PAGE_SERIAL - no prev/next navigation
+    { STR_PAGE_SERIAL,     page_serial_create,     page_serial_destroy,     nullptr,                 nullptr,           nullptr,                    nullptr,         nullptr },
 };
 
 // ============================================================================
@@ -188,7 +219,7 @@ static void create_splash_footer()
     lv_obj_align(splash_footer_left, LV_ALIGN_LEFT_MID, 10, 0);
 
     splash_footer_right = lv_label_create(footer);
-    lv_label_set_text(splash_footer_right, SYM_COPYWRIGHT " 2025");  // Adjacent string literals are concatenated
+    lv_label_set_text(splash_footer_right, SYM_COPYWRIGHT " 2026");  // Adjacent string literals are concatenated
     lv_obj_set_style_text_font(splash_footer_right, FONT_FOOTER, 0);
     lv_obj_set_style_text_color(splash_footer_right, COLOR_TEXT_BLACK, 0);
     lv_obj_align(splash_footer_right, LV_ALIGN_RIGHT_MID, -10, 0);
@@ -309,6 +340,7 @@ static void btn_home_event_cb(lv_event_t *e)
 {
     LV_UNUSED(e);
     if (gui_page_is_busy()) return;  // Block while page is busy
+    // Always return to first home page
     gui_set_page(PAGE_HOME);
 }
 
@@ -316,28 +348,24 @@ static void btn_prev_event_cb(lv_event_t *e)
 {
     LV_UNUSED(e);
     if (gui_page_is_busy()) return;  // Block while page is busy
-    // Set focus hint so next page focuses on prev button
-    input_set_nav_focus_hint(NAV_FOCUS_PREV);
-    // Navigate: HOME -> SETTINGS -> DATA -> HOME (skip splash)
-    int next_page = (int)active_page - 1;
-    if (next_page < PAGE_HOME) {
-        next_page = PAGE_COUNT - 1;
+
+    // Check if current page has custom prev handler
+    if (active_page < PAGE_COUNT && PAGE_REGISTRY[active_page].on_prev) {
+        PAGE_REGISTRY[active_page].on_prev();
     }
-    gui_set_page((GuiPage)next_page);
+    // Otherwise do nothing - tool pages don't navigate via footer by default
 }
 
 static void btn_next_event_cb(lv_event_t *e)
 {
     LV_UNUSED(e);
     if (gui_page_is_busy()) return;  // Block while page is busy
-    // Set focus hint so next page focuses on next button
-    input_set_nav_focus_hint(NAV_FOCUS_NEXT);
-    // Navigate: HOME -> DATA -> SETTINGS -> HOME (skip splash)
-    int next_page = (int)active_page + 1;
-    if (next_page >= PAGE_COUNT) {
-        next_page = PAGE_HOME;
+
+    // Check if current page has custom next handler
+    if (active_page < PAGE_COUNT && PAGE_REGISTRY[active_page].on_next) {
+        PAGE_REGISTRY[active_page].on_next();
     }
-    gui_set_page((GuiPage)next_page);
+    // Otherwise do nothing - tool pages don't navigate via footer by default
 }
 
 static void btn_settings_event_cb(lv_event_t *e)

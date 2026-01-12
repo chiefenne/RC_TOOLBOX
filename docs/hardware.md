@@ -95,27 +95,34 @@ These displays are widely available on AliExpress, Amazon, etc. Look for "2.4 in
 |----------|------|-------|
 | NeoPixel | 48 | Built-in RGB LED |
 | SD_CS | 4 | SD card (optional) |
-| I2C_SDA | 47 | Future expansion |
-| I2C_SCL | 39 | Future expansion (GPIO48 reserved for NeoPixel) |
+| I2C_SDA | 47 | I2C data (used by PN532 NFC) |
+| I2C_SCL | 39 | I2C clock (GPIO48 reserved for NeoPixel) |
 
-### NFC (PN532, SPI)
+### NFC (PN532, I2C)
 
 | Function | GPIO | Notes |
 |----------|------|-------|
-| PN532_SS | 42 | PN532 chip select |
-| PN532_IRQ | 41 | Optional data-ready interrupt |
-| PN532_RST | 40 | PN532 reset (recommended) |
+| PN532_IRQ | 41 | Data-ready interrupt |
+| PN532_RST | 40 | PN532 hardware reset |
+| I2C_SDA | 47 | Shared I2C data |
+| I2C_SCL | 39 | Shared I2C clock |
+
+!!! note "PN532 DIP switch settings"
+    Set DIP switches to **1/0** for I2C mode:
+
+    - 0/0 = HSU (High Speed UART)
+    - **1/0 = I2C** ← use this
+    - 0/1 = SPI
 
 !!! note "I2C pin choice"
     The ESP32-S3 DevKitC-1 uses GPIO48 for the built-in NeoPixel.
     To avoid conflicts, I2C SCL is assigned to GPIO39 (see `include/pins.h`).
 
 !!! note "Reserved pins / conflicts"
-    - SPI bus (shared): GPIO11 (MOSI), GPIO12 (SCLK), GPIO13 (MISO)
-    - SPI chip selects (already used): GPIO10 (TFT_CS), GPIO14 (TOUCH_CS), GPIO4 (SD_CS)
+    - SPI bus (TFT/Touch only): GPIO11 (MOSI), GPIO12 (SCLK), GPIO13 (MISO)
+    - SPI chip selects: GPIO10 (TFT_CS), GPIO14 (TOUCH_CS), GPIO4 (SD_CS)
     - GPIO48 is reserved for the built-in NeoPixel
     - GPIO45/GPIO46 are available but are strapping-related pins (use with care)
-    - Good general-purpose candidates for add-ons (e.g. PN532 SS/IRQ/RST): GPIO38, GPIO40, GPIO41, GPIO42
 
 ---
 

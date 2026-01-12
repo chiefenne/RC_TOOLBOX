@@ -1,155 +1,120 @@
+// nfc_pn532.cpp - NFC driver using Adafruit PN532 library
+// Hardware: Elechouse PN532 V3 @ I2C address 0x24
+// Connections: SDA=GPIO47, SCL=GPIO39, IRQ=GPIO41, RST=GPIO40
+
 #include "nfc_pn532.h"
 
 #if defined(ESP_PLATFORM) || defined(ARDUINO)
 
-#include <Arduino.h>
-#include <SPI.h>
+#include <Wire.h>
 #include <Adafruit_PN532.h>
-
 #include "pins.h"
+#include "gui/serial_log.h"
+
+// Create PN532 instance with I2C (IRQ and RESET pins)
+Adafruit_PN532 nfc(PIN_PN532_IRQ, PIN_PN532_RST);
 
 namespace {
-Adafruit_PN532 nfc(PIN_PN532_SS, &SPI);
+  bool nfc_ready = false;
+  uint8_t last_uid[10] = {0};
+  uint8_t last_uid_len = 0;
+  bool tag_present = false;  // Track if tag is currently present
 
-bool nfc_ready = false;
-uint8_t last_uid[10] = {0};
-uint8_t last_uid_len = 0;
-
-volatile bool pn532_irq_fired = false;
-
-void IRAM_ATTR pn532_irq_isr() {
-  pn532_irq_fired = true;
-}
-
-void reset_pn532_hw() {
-  pinMode(PIN_PN532_RST, OUTPUT);
-  digitalWrite(PIN_PN532_RST, HIGH);
-  delay(5);
-  digitalWrite(PIN_PN532_RST, LOW);
-  delay(5);
-  digitalWrite(PIN_PN532_RST, HIGH);
-  delay(50);
-}
-
-bool uid_equals_last(const uint8_t *uid, uint8_t uid_len) {
-  if (uid_len != last_uid_len) {
-    return false;
+  bool uid_equals_last(const uint8_t *uid, uint8_t uid_len) {
+    if (uid_len != last_uid_len) return false;
+    for (uint8_t i = 0; i < uid_len; i++) {
+      if (uid[i] != last_uid[i]) return false;
+    }
+    return true;
   }
-  for (uint8_t i = 0; i < uid_len; i++) {
-    if (uid[i] != last_uid[i]) {
-      return false;
+
+  void store_last_uid(const uint8_t *uid, uint8_t uid_len) {
+    last_uid_len = uid_len;
+    for (size_t i = 0; i < sizeof(last_uid); i++) {
+      last_uid[i] = (i < uid_len) ? uid[i] : 0;
     }
   }
-  return true;
-}
 
-void store_last_uid(const uint8_t *uid, uint8_t uid_len) {
-  last_uid_len = uid_len;
-  for (uint8_t i = 0; i < sizeof(last_uid); i++) {
-    last_uid[i] = (i < uid_len) ? uid[i] : 0;
-  }
-}
-
-void print_uid(const uint8_t *uid, uint8_t uid_len) {
-  Serial.print("[NFC] UID (");
-  Serial.print(uid_len);
-  Serial.print(" bytes): ");
-  for (uint8_t i = 0; i < uid_len; i++) {
-    if (uid[i] < 0x10) {
-      Serial.print('0');
+  void print_uid(const uint8_t *uid, uint8_t uid_len) {
+    char uid_msg[128];
+    char temp[16];
+    snprintf(uid_msg, sizeof(uid_msg), "[NFC] TAG DETECTED (%d bytes): ", uid_len);
+    for (uint8_t i = 0; i < uid_len; i++) {
+      snprintf(temp, sizeof(temp), "%02X", uid[i]);
+      strcat(uid_msg, temp);
+      if (i + 1 < uid_len) strcat(uid_msg, ":");
     }
-    Serial.print(uid[i], HEX);
-    if (i + 1 < uid_len) {
-      Serial.print(':');
-    }
+    log_println(uid_msg);
   }
-  Serial.println();
 }
-
-bool start_detection() {
-  // Arms the PN532 to detect a tag and signal via IRQ.
-  // IRQ goes low when data is ready.
-  pn532_irq_fired = false;
-  bool ok = nfc.startPassiveTargetIDDetection(PN532_MIFARE_ISO14443A);
-  if (!ok) {
-    Serial.println("[NFC] ERROR: startPassiveTargetIDDetection failed");
-    return false;
-  }
-  return true;
-}
-} // namespace
 
 void nfc_pn532_init() {
-  Serial.println("[NFC] Initializing PN532 (SPI)...");
+  log_println("[NFC] Initializing Adafruit PN532 library...");
 
-  pinMode(PIN_PN532_SS, OUTPUT);
-  digitalWrite(PIN_PN532_SS, HIGH);
+  // Initialize I2C
+  Wire.begin(PIN_I2C_SDA, PIN_I2C_SCL);
 
-  pinMode(PIN_PN532_IRQ, INPUT_PULLUP);
-  attachInterrupt(digitalPinToInterrupt(PIN_PN532_IRQ), pn532_irq_isr, FALLING);
-
-  reset_pn532_hw();
-
+  // Initialize PN532
   nfc.begin();
 
+  // Check firmware version
   uint32_t versiondata = nfc.getFirmwareVersion();
   if (!versiondata) {
-    Serial.println("[NFC] ERROR: PN532 not found (check wiring/DIP/SPI bus)");
+    log_println("[NFC] ERROR: No PN532 found - check wiring!");
     nfc_ready = false;
     return;
   }
 
-  Serial.print("[NFC] Found PN5");
-  Serial.print((versiondata >> 24) & 0xFF, HEX);
-  Serial.print(" FW ");
-  Serial.print((versiondata >> 16) & 0xFF, DEC);
-  Serial.print('.');
-  Serial.println((versiondata >> 8) & 0xFF, DEC);
+  // Print version info
+  char version_msg[64];
+  snprintf(version_msg, sizeof(version_msg),
+           "[NFC] Found PN5%02X, Firmware v%d.%d",
+           (versiondata >> 24) & 0xFF,
+           (versiondata >> 16) & 0xFF,
+           (versiondata >> 8) & 0xFF);
+  log_println(version_msg);
 
-  if (!nfc.SAMConfig()) {
-    Serial.println("[NFC] ERROR: SAMConfig failed");
-    nfc_ready = false;
-    return;
-  }
+  // Configure board to read RFID tags
+  nfc.SAMConfig();
 
-  // With IRQ-driven detection we don't want the PN532 to block waiting for a card.
-  // We'll arm detection once and wait for IRQ.
-  nfc.setPassiveActivationRetries(0xFF);
-
-  if (!start_detection()) {
-    nfc_ready = false;
-    return;
-  }
-
-  Serial.println("[NFC] Ready (IRQ mode). Present an ISO14443A tag...");
+  log_println("[NFC] Ready - waiting for ISO14443A tags...");
   nfc_ready = true;
 }
 
 void nfc_pn532_poll() {
-  if (!nfc_ready) {
-    return;
-  }
+  if (!nfc_ready) return;
 
-  if (!pn532_irq_fired) {
-    return;
-  }
+  // Poll every 250ms
+  static uint32_t last_poll = 0;
+  uint32_t now = millis();
+  if (now - last_poll < 250) return;
+  last_poll = now;
 
-  // Clear flag early to avoid losing back-to-back events.
-  pn532_irq_fired = false;
+  // Try to read a tag
+  uint8_t uid[7];
+  uint8_t uidLength;
 
-  uint8_t uid[10];
-  uint8_t uidLength = 0;
-
-  bool success = nfc.readDetectedPassiveTargetID(uid, &uidLength);
-  if (success) {
-    if (!uid_equals_last(uid, uidLength)) {
+  // Use passive mode with 100ms timeout
+  if (nfc.readPassiveTargetID(PN532_MIFARE_ISO14443A, uid, &uidLength, 100)) {
+    // Tag detected
+    if (!tag_present) {
+      // Tag just appeared (was absent, now present)
+      print_uid(uid, uidLength);
+      store_last_uid(uid, uidLength);
+      tag_present = true;
+    } else if (!uid_equals_last(uid, uidLength)) {
+      // Different tag detected while previous was present
       print_uid(uid, uidLength);
       store_last_uid(uid, uidLength);
     }
+    // Same tag still present - don't spam
+  } else {
+    // No tag detected
+    if (tag_present) {
+      log_println("[NFC] Tag removed");
+      tag_present = false;
+    }
   }
-
-  // Re-arm detection for the next card.
-  start_detection();
 }
 
 #endif

@@ -22,6 +22,7 @@ static const char* strings_it[STR_COUNT] = {
     "Angolo di Incidenza",
     "Impostazioni",
     "Info",
+    "Monitor Seriale",
 
     // Home buttons
     "Tester Servo",
