@@ -143,3 +143,12 @@ A custom PCB is available for a cleaner build:
 ![Custom PCB Back](assets/Custom_PCB_02.png)
 
 ![Custom PCB Assembled](assets/Custom_PCB_03.png)
+
+PCB design sources and manufacturing outputs live in the repository under the `hardware/` folder:
+
+- Board layout: `hardware/RC TOOLBOX.fbrd`
+- Schematic: `hardware/RC TOOLBOX.fsch`
+- Schematic PDF: `hardware/RC TOOLBOX_Schematic_v194.pdf`
+- Gerbers: `hardware/RC TOOLBOX_Gerber_v432.zip`
+
+Browse/download here: <https://github.com/chiefenne/RC_TOOLBOX/tree/main/hardware>
