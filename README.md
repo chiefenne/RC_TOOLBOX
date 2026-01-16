@@ -28,7 +28,7 @@ The **full user documentation** (features, modules, roadmap, hardware, usage, si
 - CG Scale
 - Flap Deflection & Angle of Incidence tools
 - Touch-driven UI (ILI9341)
-- Rotary encoder + tactile buttons
+- User input via rotary encoder with button
 - Multi-language UI
 - macOS GUI simulator for rapid development
 

@@ -31,7 +31,6 @@ RC TOOLBOX is a suite of software tools tailored for RC enthusiasts. Designed to
 
 - **Touch screen** – Intuitive touch-based interaction on ILI9341 TFT display
 - **EC11 rotary encoder with push button** – Precise value adjustment and menu navigation
-- **Tactile buttons** – Quick shortcuts for Home, Back, and Action commands
 
 ### User Experience
 
