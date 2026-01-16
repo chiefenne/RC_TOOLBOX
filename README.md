@@ -21,12 +21,31 @@ The **full user documentation** (features, modules, roadmap, hardware, usage, si
 - Servo Tester (up to 6 channels)
 - Servo Signal Analyzer
 - LiPo Checker
+- NFC reader/writer
+  - Tag for batteries (buying date, capacity, charge current, etc.)
+  - Tag planes (CG location, weight, span, etc.)
+  - UAS Operator ID (EU regulation)
 - CG Scale
 - Flap Deflection & Angle of Incidence tools
 - Touch-driven UI (ILI9341)
 - Rotary encoder + tactile buttons
 - Multi-language UI
 - macOS GUI simulator for rapid development
+
+## Hardware
+
+### PCB
+
+
+<p align="center">
+    <span>
+        <img src="docs/assets/RC_TOOLBOX_PCB_ISO_front.png" width="220" style="vertical-align:middle; margin-right:16px;">
+        <img src="docs/assets/RC_TOOLBOX_PCB_ISO_back.png" width="400" style="vertical-align:middle;">
+    </span>
+    <br>
+    <em>PCB for ESP32-S3 DevKitC-1 and ILI9341 2.4&quot; TFT touch display</em>
+</p>
+
 
 ## Credits
 
