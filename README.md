@@ -46,6 +46,15 @@ The **full user documentation** (features, modules, roadmap, hardware, usage, si
     <em>PCB for ESP32-S3 DevKitC-1 and ILI9341 2.4&quot; TFT touch display</em>
 </p>
 
+The PCB design sources and manufacturing outputs are stored in the repository under the `hardware/` folder:
+
+- Board layout: `hardware/RC TOOLBOX.fbrd`
+- Schematic: `hardware/RC TOOLBOX.fsch`
+- Schematic PDF: `hardware/RC TOOLBOX_Schematic_v194.pdf`
+- Gerbers: `hardware/RC TOOLBOX_Gerber_v432.zip`
+
+Direct link: <https://github.com/chiefenne/RC_TOOLBOX/tree/main/hardware>
+
 
 ## Credits
 

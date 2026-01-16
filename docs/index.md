@@ -132,7 +132,7 @@ The application features a graphical user interface (GUI) built with [LVGL](http
 
 ## Hardware
 
-### Development PCB
+### Custom PCB
 
 <p align="center">
     <span>
@@ -143,11 +143,16 @@ The application features a graphical user interface (GUI) built with [LVGL](http
     <em>PCB for ESP32-S3 DevKitC-1 and ILI9341 2.4&quot; TFT touch display</em>
 </p>
 
-A custom PCB has been designed for software development to minimize cable clutter and provide a clean, reliable test platform.
-The PCB ODB++ files are available from the [AISLER PCB Project Page](https://aisler.net/p/NGHJDVLN).
-The schematics can be found in the assets folder.
+A custom PCB is available to minimize cable clutter and provide a clean, reliable test platform.
 
-> **Note:** The PCB is an early prototype and has not yet been fully validated. Electrical performance, power requirements, and potential design issues have not been thoroughly analyzed.
+The PCB design sources and manufacturing outputs are stored in the repository under the `hardware/` folder:
+
+- **Board layout**: `hardware/RC TOOLBOX.fbrd`
+- **Schematic**: `hardware/RC TOOLBOX.fsch`
+- **Schematic PDF**: `hardware/RC TOOLBOX_Schematic_v194.pdf`
+- **Gerbers**: `hardware/RC TOOLBOX_Gerber_v432.zip`
+
+Browse/download here: <https://github.com/chiefenne/RC_TOOLBOX/tree/main/hardware>
 
 > **Known Issue:** The silkscreen labels for the LED power jumper (display backlight at 100%) are swapped—3.3V and 5V are reversed.
 
