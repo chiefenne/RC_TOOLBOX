@@ -49,7 +49,7 @@ RC TOOLBOX is a suite of software tools tailored for RC enthusiasts. Designed to
 - ✅ Persistent settings (JSON on SPIFFS)
 - ✅ Multi-language support (7 languages)
 - ✅ Custom focus navigation with FocusOrderBuilder
-- ⬜ SD card support for logging/export
+- ✅ NFC card support for tags (batteries, planes)
 
 ### Servo Tester
 
@@ -136,8 +136,8 @@ The application features a graphical user interface (GUI) built with [LVGL](http
 
 <p align="center">
     <span>
-        <img src="assets/Custom_PCB_01.png" width="220" style="vertical-align:middle; margin-right:16px;">
-        <img src="assets/Custom_PCB_03.png" width="400" style="vertical-align:middle;">
+        <img src="assets/RC_TOOLBOX_PCB_ISO_front.png" width="220" style="vertical-align:middle; margin-right:16px;">
+        <img src="assets/RC_TOOLBOX_PCB_ISO_back.png" width="400" style="vertical-align:middle;">
     </span>
     <br>
     <em>Custom development PCB for ESP32-S3 DevKitC-1 and ILI9341 2.4&quot; TFT touch display</em>
