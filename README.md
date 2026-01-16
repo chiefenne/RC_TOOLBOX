@@ -39,7 +39,7 @@ The **full user documentation** (features, modules, roadmap, hardware, usage, si
 
 <p align="center">
     <span>
-        <img src="docs/assets/RC_TOOLBOX_PCB_ISO_front.png" width="220" style="vertical-align:middle; margin-right:16px;">
+        <img src="docs/assets/RC_TOOLBOX_PCB_ISO_front.png" width="400" style="vertical-align:middle; margin-right:16px;">
         <img src="docs/assets/RC_TOOLBOX_PCB_ISO_back.png" width="400" style="vertical-align:middle;">
     </span>
     <br>
