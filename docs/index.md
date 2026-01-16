@@ -140,7 +140,7 @@ The application features a graphical user interface (GUI) built with [LVGL](http
         <img src="assets/RC_TOOLBOX_PCB_ISO_back.png" width="400" style="vertical-align:middle;">
     </span>
     <br>
-    <em>Custom development PCB for ESP32-S3 DevKitC-1 and ILI9341 2.4&quot; TFT touch display</em>
+    <em>PCB for ESP32-S3 DevKitC-1 and ILI9341 2.4&quot; TFT touch display</em>
 </p>
 
 A custom PCB has been designed for software development to minimize cable clutter and provide a clean, reliable test platform.
