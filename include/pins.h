@@ -75,7 +75,10 @@ constexpr int PIN_PN532_RST = 40; // Hardware reset
 // GPIO Summary
 // =============================================================================
 // Used GPIOs:
-//   4       - SD_CS
+//   1       - free GPIO
+//   2       - free GPIO
+//   3       - free GPIO
+//   4       - free GPIO (SD card chip select not used)
 //   5       - TFT Backlight PWM
 //   6       - Servo 1
 //   7       - TOUCH_IRQ
@@ -103,5 +106,4 @@ constexpr int PIN_PN532_RST = 40; // Hardware reset
 //  42       - IRQ_BREAK (SPI breakout)
 
 // Available GPIOs:
-//   1, 2, 3 - ADC inputs (battery voltage)
 //  45, 46  - Available (strapping pins, use with care)
