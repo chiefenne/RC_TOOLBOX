@@ -99,9 +99,9 @@ constexpr int PIN_PN532_RST = 40; // Hardware reset
 //  47       - I2C SDA (PN532)
 //  39       - I2C SCL (PN532)
 //  48       - NeoPixel
-//
+//  38       - CS_BREAK (SPI breakout)
+//  42       - IRQ_BREAK (SPI breakout)
+
 // Available GPIOs:
 //   1, 2, 3 - ADC inputs (battery voltage)
-//  38       - General purpose
-//  42       - General purpose
 //  45, 46  - Available (strapping pins, use with care)
