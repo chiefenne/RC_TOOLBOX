@@ -87,7 +87,7 @@ The PCB is designed around a small set of off-the-shelf modules.
 
 - **What it does:** Accurate LiPo voltage readings **up to 6S** using external 16-bit ADCs.
 - **Capacity:** With two ADS1115 modules, **2 ADC channels remain free** after the 6S measurement inputs.
-- **Resistors:** For best accuracy, use high-accuracy resistors (**1% or better**) with **low thermal drift** in the voltage divider network so the ADS1115 resolution can be fully utilized.
+- **Resistors:** For best accuracy, use high-accuracy resistors (**1% or better**) with **low thermal drift** in the voltage divider network so the ADS1115 resolution can be fully utilized (see [schematic PDF](hardware/RC%20TOOLBOX_Schematic_v194.pdf)).
 
 <p align="center">
     <span>
