@@ -42,7 +42,7 @@ The **full user documentation** (features, modules, roadmap, hardware, usage, si
         <img src="docs/assets/RC_TOOLBOX_PCB_ISO_back.png" width="400" style="vertical-align:middle;">
     </span>
     <br>
-    <em>PCB for ESP32-S3 DevKitC-1 and ILI9341 2.4&quot; TFT touch display</em>
+    <em>PCB for ESP32-S3 DevKitC-1 and 2.4&quot; TFT touch display</em>
 </p>
 
 The PCB design sources and manufacturing outputs are stored in the repository under the `hardware/` folder:
@@ -113,7 +113,7 @@ The PCB is designed around a small set of off-the-shelf modules. (Images will be
 
 #### 2.4" TFT touch display (UI)
 
-- **What it does:** Main user interface display and touch input.
+- **What it does:** Main user interface with capacitive touch input. Uses an **ILI9341 display driver** and **XPT2046 touch controller**.
 - **Module style:** One of the common **red Arduino/ESP maker TFT touch displays**.
 
 <p align="center">
