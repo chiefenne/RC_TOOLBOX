@@ -47,10 +47,10 @@ The **full user documentation** (features, modules, roadmap, hardware, usage, si
 
 The PCB design sources and manufacturing outputs are stored in the repository under the `hardware/` folder:
 
-- Board layout: `RC TOOLBOX.fbrd`
-- Schematic: `RC TOOLBOX.fsch`
-- Schematic PDF: `RC TOOLBOX_Schematic_v194.pdf`
-- Gerbers: `RC TOOLBOX_Gerber_v432.zip`
+- Board layout: `hardware/RC TOOLBOX.fbrd`
+- Schematic: `hardware/RC TOOLBOX.fsch`
+- Schematic PDF: `hardware/RC TOOLBOX_Schematic_v194.pdf`
+- Gerbers: `hardware/RC TOOLBOX_Gerber_v432.zip`
 
 Direct link: <https://github.com/chiefenne/RC_TOOLBOX/tree/main/hardware>
 
@@ -108,7 +108,7 @@ The PCB is designed around a small set of off-the-shelf modules.
 
 - **What it does:** Accurate LiPo voltage readings **up to 6S** using external 16-bit ADCs.
 - **Capacity:** With two ADS1115 modules, **2 ADC channels remain free** after the 6S measurement inputs.
-- **Resistors:** For best accuracy, use high-accuracy resistors (**1% or better**) with **low thermal drift** in the voltage divider network so the ADS1115 resolution can be fully utilized (see page 2 on the [schematic PDF](hardware/RC%20TOOLBOX_Schematic_v194.pdf)).
+- **Resistors:** For best accuracy, use high-accuracy resistors (**1% or better**) with **low thermal drift** in the voltage divider network so the ADS1115 resolution can be fully utilized (see page 2 on the [schematic PDF](https://github.com/chiefenne/RC_TOOLBOX/blob/main/hardware/RC%20TOOLBOX_Schematic_v194.pdf)).
 
 <p align="center">
     <span>
