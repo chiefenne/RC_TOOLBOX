@@ -96,10 +96,20 @@ The PCB is designed around a small set of off-the-shelf modules. (Images will be
     <em>PCB for ESP32-S3 DevKitC-1</em>
 </p>
 
-#### Elechouse PN532 NFC RFID Module v3 (NFC tagging)
+#### PN532 NFC RFID Module (NFC tagging)
 
 - **What it does:** NFC reader/writer module used for tagging and reading data.
-- **Image placeholder:** `docs/assets/modules/elechouse-pn532-v3.png`
+
+<p align="center">
+    <span>
+        <img src="docs/assets/PN532_NFC_v3.png" width="300" style="vertical-align:middle; margin-right:16px;">
+    </span>
+    <br>
+    <em>PCB for ESP32-S3 DevKitC-1</em>
+</p>
+
+> **Note**
+> Only the I2C bus is wired on the PCB
 
 #### 2.4" TFT touch display (UI)
 
@@ -114,6 +124,8 @@ The PCB is designed around a small set of off-the-shelf modules. (Images will be
     <em>PCB for ESP32-S3 DevKitC-1</em>
 </p>
 
+> **Note**
+> Some of these modules exist in a variety of versions (different PCB sizes, pinouts/headers, and component placements). Before ordering/assembling, double-check that the specific module variant you have physically fits the PCB footprint and matches the expected connections.
 
 ## Credits
 
