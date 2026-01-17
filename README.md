@@ -54,6 +54,12 @@ The PCB design sources and manufacturing outputs are stored in the repository un
 
 Direct link: <https://github.com/chiefenne/RC_TOOLBOX/tree/main/hardware>
 
+> **Note:**
+> The PCB has not been fully validated. Order based on the supplied Gerbers at your own risk.
+
+> **Note:**
+> Some modules (see below) come in different variants (pinouts, and component layouts vary). Before ordering or assembling, verify that your specific module physically fits the PCB footprint and matches the expected connections.
+
 ### Modules
 
 The PCB is designed around a small set of off-the-shelf modules.
@@ -124,9 +130,6 @@ The PCB is designed around a small set of off-the-shelf modules.
     <br>
     <em>2.4" TFT touch display</em>
 </p>
-
-> **Note:**
-> Some of these modules exist in a variety of versions (different PCB sizes, pinouts/headers, and component placements). Before ordering/assembling, double-check that the specific module variant you have physically fits the PCB footprint and matches the expected connections.
 
 ## Credits
 
