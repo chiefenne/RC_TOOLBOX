@@ -64,10 +64,10 @@ The PCB is designed around a small set of off-the-shelf modules.
 
 <p align="center">
     <span>
-        <img src="docs/assets/ESP32-S3_DevKitC-1_board.jpg" width="350" style="vertical-align:middle; margin-right:16px;">
+        <img src="docs/assets/ESP32-S3_DevKitC-1_board.png" width="400" style="vertical-align:middle; margin-right:16px;">
     </span>
     <br>
-    <em>PCB for ESP32-S3 DevKitC-1</em>
+    <em>ESP32-S3 DevKitC-1</em>
 </p>
 
 #### MP2307-based DC/DC buck modules (Power, x2)
@@ -80,7 +80,7 @@ The PCB is designed around a small set of off-the-shelf modules.
         <img src="docs/assets/MP2307_HW133ABC_board.jpg" width="250" style="vertical-align:middle; margin-right:16px;">
     </span>
     <br>
-    <em>PCB for ESP32-S3 DevKitC-1</em>
+    <em>MP2307 based board (e.g., HW133ABC)</em>
 </p>
 
 #### ADS1115 16-bit ADC modules (LiPo voltage measurement, x2)
@@ -93,7 +93,7 @@ The PCB is designed around a small set of off-the-shelf modules.
         <img src="docs/assets/ADS1115_board.jpg" width="200" style="vertical-align:middle; margin-right:16px;">
     </span>
     <br>
-    <em>PCB for ESP32-S3 DevKitC-1</em>
+    <em>ADS1115 16-bit ADC</em>
 </p>
 
 #### PN532 NFC RFID Module (NFC tagging)
@@ -105,7 +105,7 @@ The PCB is designed around a small set of off-the-shelf modules.
         <img src="docs/assets/PN532_NFC_v3.png" width="300" style="vertical-align:middle; margin-right:16px;">
     </span>
     <br>
-    <em>PCB for ESP32-S3 DevKitC-1</em>
+    <em>NFC reader/writer</em>
 </p>
 
 > **Note**
@@ -121,7 +121,7 @@ The PCB is designed around a small set of off-the-shelf modules.
         <img src="docs/assets/2.4inch_TFT_touch display.png" width="400" style="vertical-align:middle; margin-right:16px;">
     </span>
     <br>
-    <em>PCB for ESP32-S3 DevKitC-1</em>
+    <em>2.4" TFT touch display</em>
 </p>
 
 > **Note**
