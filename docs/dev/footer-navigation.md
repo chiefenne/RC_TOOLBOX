@@ -18,6 +18,8 @@ The RC TOOLBOX uses a **hub-and-spoke** navigation pattern:
 - **Home button**: Goes to PAGE_HOME (same as clicking any home button)
 - **Settings button**: Opens settings page
 
+> **Note:** The Home hub can consist of more than two pages as the number of tools grows.
+
 ### On Tool Pages (Servo, Lipo, CG Scale, etc.)
 - **Prev/Next buttons**: By default, do nothing (can be customized per page)
 - **Home button**: Always returns to PAGE_HOME

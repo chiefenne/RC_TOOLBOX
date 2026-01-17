@@ -129,6 +129,21 @@ The application features a graphical user interface (GUI) built with [LVGL](http
   <em>Servo screen running in the LVGL simulator</em>
 </p>
 
+### App navigation
+
+RC TOOLBOX uses a **hub-and-spoke** navigation model optimized for touch and rotary-encoder operation:
+
+- **Home pages (hub):** `PAGE_HOME` is the default landing page. As the project grows, there can be **multiple Home pages** (Home screens) to host additional tool buttons.
+- **Tool pages (spokes):** Individual tools (Servo, LiPo, CG Scale, etc.) are entered from the Home pages.
+
+The UI has a consistent **header** (page title) and **footer bar**:
+
+- **Home:** Always returns to the default landing page (`PAGE_HOME`).
+- **Prev / Next:** On Home pages, cycles through the available Home screens (wrap-around). On tool pages it is typically unused unless a page defines a custom behavior.
+- **Settings:** Opens the settings page.
+
+Tip: A dedicated **Serial Monitor** page is available from the Home screen(s) to show live debug output on the TFT.
+
 ## Hardware
 
 ### PCB
@@ -230,7 +245,7 @@ The PCB is designed around a small set of off-the-shelf modules.
 > **Note:**
 > Only the I2C bus is wired on the PCB
 
-## Building
+## Building the firmware
 
 ### Prerequisites
 
