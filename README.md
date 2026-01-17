@@ -22,20 +22,19 @@ The **full user documentation** (features, modules, roadmap, hardware, usage, si
 - Servo Signal Analyzer
 - LiPo Checker
 - NFC reader/writer
-  - Tag for batteries (buying date, capacity, charge current, etc.)
-  - Tag planes (CG location, weight, span, etc.)
-  - UAS Operator ID (EU regulation)
-- CG Scale
-- Flap Deflection & Angle of Incidence tools
+  - Tags for batteries (buying date, capacity, charge current, etc.)
+  - Tags planes (CG location, weight, span, etc.)
+  - UAS operator ID (EU regulation)
+- CG Scale remote
+- Flap deflection & angle of incidence tools
 - Touch-driven UI (ILI9341)
 - User input via rotary encoder with button
 - Multi-language UI
-- macOS GUI simulator for rapid development
+- GUI simulator for rapid development
 
 ## Hardware
 
 ### PCB
-
 
 <p align="center">
     <span>
@@ -48,12 +47,72 @@ The **full user documentation** (features, modules, roadmap, hardware, usage, si
 
 The PCB design sources and manufacturing outputs are stored in the repository under the `hardware/` folder:
 
-- Board layout: `hardware/RC TOOLBOX.fbrd`
-- Schematic: `hardware/RC TOOLBOX.fsch`
-- Schematic PDF: `hardware/RC TOOLBOX_Schematic_v194.pdf`
-- Gerbers: `hardware/RC TOOLBOX_Gerber_v432.zip`
+- Board layout: `RC TOOLBOX.fbrd`
+- Schematic: `RC TOOLBOX.fsch`
+- Schematic PDF: `RC TOOLBOX_Schematic_v194.pdf`
+- Gerbers: `RC TOOLBOX_Gerber_v432.zip`
 
 Direct link: <https://github.com/chiefenne/RC_TOOLBOX/tree/main/hardware>
+
+### Modules
+
+The PCB is designed around a small set of off-the-shelf modules. (Images will be added; placeholders below show the intended file names/locations.)
+
+#### ESP32-S3 DevKitC-1 (Microcontroller)
+
+- **What it does:** Main controller module running the RC TOOLBOX firmware and driving the UI and peripherals.
+
+<p align="center">
+    <span>
+        <img src="docs/assets/ESP32-S3_DevKitC-1_board.jpg" width="350" style="vertical-align:middle; margin-right:16px;">
+    </span>
+    <br>
+    <em>PCB for ESP32-S3 DevKitC-1</em>
+</p>
+
+#### MP2307-based DC/DC buck modules (Power, x2)
+
+- **What it does:** Converts a **2S/3S LiPo input** to regulated rails.
+- **Outputs:** One module provides **3.3V**, one provides **5V**.
+
+<p align="center">
+    <span>
+        <img src="docs/assets/MP2307_HW133ABC_board.jpg" width="250" style="vertical-align:middle; margin-right:16px;">
+    </span>
+    <br>
+    <em>PCB for ESP32-S3 DevKitC-1</em>
+</p>
+
+#### ADS1115 16-bit ADC modules (LiPo voltage measurement, x2)
+
+- **What it does:** Accurate LiPo voltage readings **up to 6S** using external 16-bit ADCs.
+- **Capacity:** With two ADS1115 modules, **2 ADC channels remain free** after the 6S measurement inputs.
+
+<p align="center">
+    <span>
+        <img src="docs/assets/ADS1115_board.jpg" width="200" style="vertical-align:middle; margin-right:16px;">
+    </span>
+    <br>
+    <em>PCB for ESP32-S3 DevKitC-1</em>
+</p>
+
+#### Elechouse PN532 NFC RFID Module v3 (NFC tagging)
+
+- **What it does:** NFC reader/writer module used for tagging and reading data.
+- **Image placeholder:** `docs/assets/modules/elechouse-pn532-v3.png`
+
+#### 2.4" TFT touch display (UI)
+
+- **What it does:** Main user interface display and touch input.
+- **Module style:** One of the common **red Arduino/ESP maker TFT touch displays**.
+
+<p align="center">
+    <span>
+        <img src="docs/assets/2.4inch_TFT_touch display.png" width="400" style="vertical-align:middle; margin-right:16px;">
+    </span>
+    <br>
+    <em>PCB for ESP32-S3 DevKitC-1</em>
+</p>
 
 
 ## Credits
