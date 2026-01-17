@@ -54,6 +54,8 @@ The PCB design sources and manufacturing outputs are stored in the repository un
 
 Direct link: <https://github.com/chiefenne/RC_TOOLBOX/tree/main/hardware>
 
+<br>
+
 > **Note:**
 > The PCB has not been fully validated. Order based on the supplied Gerbers at your own risk.
 
