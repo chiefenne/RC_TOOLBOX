@@ -78,6 +78,19 @@ The PCB is designed around a small set of off-the-shelf modules.
     <em>ESP32-S3 DevKitC-1</em>
 </p>
 
+#### 2.4" TFT touch display (UI)
+
+- **What it does:** Main user interface with capacitive touch input. Uses an **ILI9341 display driver** and **XPT2046 touch controller**.
+- **Module style:** One of the common **red Arduino/ESP maker TFT touch displays**.
+
+<p align="center">
+    <span>
+        <img src="docs/assets/2.4inch_TFT_touch display.png" width="400" style="vertical-align:middle; margin-right:16px;">
+    </span>
+    <br>
+    <em>2.4" TFT touch display</em>
+</p>
+
 #### MP2307-based DC/DC buck modules (Power, x2)
 
 - **What it does:** Converts a **2S/3S LiPo input** to regulated rails.
@@ -119,19 +132,6 @@ The PCB is designed around a small set of off-the-shelf modules.
 
 > **Note:**
 > Only the I2C bus is wired on the PCB
-
-#### 2.4" TFT touch display (UI)
-
-- **What it does:** Main user interface with capacitive touch input. Uses an **ILI9341 display driver** and **XPT2046 touch controller**.
-- **Module style:** One of the common **red Arduino/ESP maker TFT touch displays**.
-
-<p align="center">
-    <span>
-        <img src="docs/assets/2.4inch_TFT_touch display.png" width="400" style="vertical-align:middle; margin-right:16px;">
-    </span>
-    <br>
-    <em>2.4" TFT touch display</em>
-</p>
 
 ## Credits
 
