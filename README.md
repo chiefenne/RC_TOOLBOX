@@ -108,7 +108,7 @@ The PCB is designed around a small set of off-the-shelf modules.
     <em>NFC reader/writer</em>
 </p>
 
-> **Note**
+> **Note:**
 > Only the I2C bus is wired on the PCB
 
 #### 2.4" TFT touch display (UI)
@@ -124,7 +124,7 @@ The PCB is designed around a small set of off-the-shelf modules.
     <em>2.4" TFT touch display</em>
 </p>
 
-> **Note**
+> **Note:**
 > Some of these modules exist in a variety of versions (different PCB sizes, pinouts/headers, and component placements). Before ordering/assembling, double-check that the specific module variant you have physically fits the PCB footprint and matches the expected connections.
 
 ## Credits
