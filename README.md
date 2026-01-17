@@ -56,7 +56,7 @@ Direct link: <https://github.com/chiefenne/RC_TOOLBOX/tree/main/hardware>
 
 ### Modules
 
-The PCB is designed around a small set of off-the-shelf modules. (Images will be added; placeholders below show the intended file names/locations.)
+The PCB is designed around a small set of off-the-shelf modules.
 
 #### ESP32-S3 DevKitC-1 (Microcontroller)
 
