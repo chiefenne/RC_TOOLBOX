@@ -42,7 +42,15 @@ The **full user documentation** (features, modules, roadmap, hardware, usage, si
         <img src="docs/assets/RC_TOOLBOX_PCB_ISO_back.png" width="400" style="vertical-align:middle;">
     </span>
     <br>
-    <em>PCB for ESP32-S3 DevKitC-1 and 2.4&quot; TFT touch display</em>
+    <em>PCB for the RC TOOLBOX</em>
+</p>
+
+<p align="center">
+    <span>
+        <img src="docs/assets/RC_TOOLBOX_Enclosure_02.png" width="400" style="vertical-align:middle; margin-right:16px;">
+    </span>
+    <br>
+    <em>RC TOOLBOX installed in the enclosure</em>
 </p>
 
 The PCB design sources and manufacturing outputs are stored in the repository under the `hardware/` folder:
