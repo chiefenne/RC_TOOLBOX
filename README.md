@@ -49,11 +49,13 @@ The **full user documentation** (features, modules, roadmap, hardware, usage, si
 
 <p align="center">
     <span>
-        <img src="docs/assets/RC_TOOLBOX_Enclosure_03.png" width="400" style="vertical-align:middle; margin-right:16px;">
+        <img src="docs/assets/RC_TOOLBOX_Enclosure_03.png" width="600" style="vertical-align:middle; margin-right:16px;">
     </span>
     <br>
     <em>RC TOOLBOX installed in the enclosure</em>
 </p>
+
+<br>
 
 The PCB design sources and manufacturing outputs are stored in the repository under the `hardware/` folder:
 
