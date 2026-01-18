@@ -45,6 +45,8 @@ The **full user documentation** (features, modules, roadmap, hardware, usage, si
     <em>PCB for the RC TOOLBOX</em>
 </p>
 
+<br>
+
 <p align="center">
     <span>
         <img src="docs/assets/RC_TOOLBOX_Enclosure_02.png" width="400" style="vertical-align:middle; margin-right:16px;">
