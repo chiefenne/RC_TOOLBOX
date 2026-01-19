@@ -228,6 +228,9 @@ The PCB is designed around a small set of off-the-shelf modules.
   <em>MP2307 based board (e.g., HW133ABC)</em>
 </p>
 
+> **Note:**
+> If you have problems with these modules, [this video](https://www.youtube.com/watch?v=gQ5fs7hofPk) might help.
+
 #### ADS1115 16-bit ADC modules (LiPo voltage measurement, x2)
 
 - **What it does:** Accurate LiPo voltage readings **up to 6S** using external 16-bit ADCs.
