@@ -68,7 +68,7 @@ The PCB design sources and manufacturing outputs are stored in the repository un
 
 - Board layout: `hardware/RC TOOLBOX.fbrd`
 - Schematic: `hardware/RC TOOLBOX.fsch`
-- Schematic PDF: `hardware/RC TOOLBOX_Schematic_v194.pdf`
+- Schematic PDF: `hardware/RC TOOLBOX_Schematic_v200.pdf`
 - Gerbers: `hardware/RC TOOLBOX_Gerber_v432.zip`
 
 Direct link: <https://github.com/chiefenne/RC_TOOLBOX/tree/main/hardware>
