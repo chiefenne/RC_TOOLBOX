@@ -2,6 +2,13 @@
   <img src="assets/RC_Toolbox_Logo.png" width="280">
 </p>
 
+> [!WARNING]
+> **Schematic issue in versions < v200:** Early schematics contained a severe error in the LiPo measurement resistor divider design.
+> - The divider resistor values were originally selected for **5V ADC operation**, but the ADC actually runs at **3.3V** (fixed in v200+).
+> - More importantly, the divider resistors were **wired incorrectly** with respect to the balancer connector voltage levels (fixed in v200+).
+>
+> The PCB can still be used, but only if you **place/wire the divider resistors according to the corrected v200+ schematics** and use the **correct divider values for 3.3V ADC operation**.
+
 > **⚠️ Work in Progress**
 > This project is currently under active development. Features and documentation may change frequently.
 
