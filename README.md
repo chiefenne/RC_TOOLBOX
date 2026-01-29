@@ -9,6 +9,9 @@
 >
 > The PCB can still be used, but only if you **place/wire the divider resistors according to the corrected v200+ schematics** and use the **correct divider values for 3.3V ADC operation**.
 
+> [!WARNING]
+> **Encoder footprint mapping issue:** The rotary encoder symbol/footprint mapping in my Fusion library is incorrect, so the PCB wiring for A/B/SW is wrong. On affected boards the encoder will not work unless wired off-board or reworked (cut traces + hand wiring). Verify the correct pin mapping before assembly.
+
 > **⚠️ Work in Progress**
 > This project is currently under active development. Features and documentation may change frequently.
 
