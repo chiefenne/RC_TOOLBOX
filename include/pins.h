@@ -54,8 +54,11 @@ constexpr float ADC_VOLTAGE_DIVIDER = 2.0f;
 // =============================================================================
 // Rotary Encoder (EC11 with push button)
 // =============================================================================
-constexpr int PIN_ENC_CLK = 35;  // Encoder output A (CLK)
-constexpr int PIN_ENC_DT  = 36;  // Encoder output B (DT)
+// constexpr int PIN_ENC_CLK = 35;  // Encoder output A (CLK)
+// constexpr int PIN_ENC_DT  = 36;  // Encoder output B (DT)
+// switch A and B to match wiring
+constexpr int PIN_ENC_CLK = 36;  // Encoder output A (CLK)
+constexpr int PIN_ENC_DT  = 35;  // Encoder output B (DT)
 constexpr int PIN_ENC_SW  = 37;  // Encoder push button (active LOW)
 
 // =============================================================================
