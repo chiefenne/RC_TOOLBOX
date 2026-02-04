@@ -12,6 +12,9 @@
 > [!WARNING]
 > **Encoder footprint mapping issue:** The rotary encoder symbol/footprint mapping in my Fusion library is incorrect, so the PCB wiring for A/B/SW is wrong. On affected boards the encoder will not work unless wired off-board or reworked (cut traces + hand wiring). Verify the correct pin mapping before assembly.
 
+> [!WARNING]
+> **PN532 I2C SDA/SCL swapped:** The PCB’s PN532 I2C footprint was initially designed for a HW-147C clone where SDA/SCL are swapped compared to the Elechouse board. If you use an Elechouse PN532, SDA/SCL will be reversed on the PCB (use the software swap or rework accordingly). You can swap SDA/SCL in software via the `PN532_SWAP_I2C` flag in platformio.ini.
+
 > **⚠️ Work in Progress**
 > This project is currently under active development. Features and documentation may change frequently.
 

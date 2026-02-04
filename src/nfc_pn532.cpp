@@ -11,8 +11,59 @@
 #include "pins.h"
 #include "gui/serial_log.h"
 
+#ifndef PN532_SWAP_I2C
+#define PN532_SWAP_I2C 0
+#endif
+
+// ============================================================================
+// Debug Flags - Set to 1 to enable specific debug features
+// ============================================================================
+#define I2C_DEBUG 1     // Enable I2C bus scanner at startup
+
 // Create PN532 instance with I2C (IRQ and RESET pins)
 Adafruit_PN532 nfc(PIN_PN532_IRQ, PIN_PN532_RST);
+
+// ============================================================================
+// I2C Scanner - Scans all addresses to find connected devices
+// ============================================================================
+#if I2C_DEBUG
+void i2c_scan(int sda_pin, int scl_pin) {
+  log_println("[I2C] Scanning I2C bus...");
+  serial_printf("[I2C] SDA=GPIO%d, SCL=GPIO%d\n", sda_pin, scl_pin);
+
+  int devices_found = 0;
+  for (uint8_t addr = 1; addr < 127; addr++) {
+    Wire.beginTransmission(addr);
+    uint8_t error = Wire.endTransmission();
+
+    if (error == 0) {
+      // Device found
+      devices_found++;
+      const char* device_name = "";
+
+      // Known device identification
+      if (addr == 0x24) {
+        device_name = " <- PN532 (Elechouse V3)";
+      } else if (addr == 0x28) {
+        device_name = " <- PN532 (HW-147C/alternate)";
+      } else if (addr == 0x48) {
+        device_name = " <- PN532 (alternate address)";
+      }
+
+      serial_printf("[I2C] Found device at 0x%02X%s\n", addr, device_name);
+    } else if (error == 4) {
+      serial_printf("[I2C] Unknown error at 0x%02X\n", addr);
+    }
+  }
+
+  if (devices_found == 0) {
+    log_println("[I2C] ERROR: No devices found on I2C bus!");
+    log_println("[I2C] Check: SDA/SCL wiring, pull-up resistors, power");
+  } else {
+    serial_printf("[I2C] Scan complete: %d device(s) found\n", devices_found);
+  }
+}
+#endif
 
 namespace {
   bool nfc_ready = false;
@@ -52,7 +103,17 @@ void nfc_pn532_init() {
   log_println("[NFC] Initializing Adafruit PN532 library...");
 
   // Initialize I2C
-  Wire.begin(PIN_I2C_SDA, PIN_I2C_SCL);
+  const int pn532_sda = PN532_SWAP_I2C ? PIN_I2C_SCL : PIN_I2C_SDA;
+  const int pn532_scl = PN532_SWAP_I2C ? PIN_I2C_SDA : PIN_I2C_SCL;
+  pinMode(pn532_sda, INPUT_PULLUP);
+  pinMode(pn532_scl, INPUT_PULLUP);
+  Wire.begin(pn532_sda, pn532_scl);
+  Wire.setClock(100000);
+
+#if I2C_DEBUG
+  // Scan I2C bus to verify PN532 is visible
+  i2c_scan(pn532_sda, pn532_scl);
+#endif
 
   // Initialize PN532
   nfc.begin();
